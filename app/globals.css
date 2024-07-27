@@ -1,0 +1,91 @@
+/* app/global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-foreground/20;
+  }
+}
+
+.animate-in {
+  animation: animateIn 0.3s ease 0.15s both;
+}
+
+@keyframes animateIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+}
+
+.embla__slide {
+  overflow: hidden;
+  margin: 0 5px;
+}
+
+@media (min-width: 640px) {
+  .embla__slide {
+    width: 50%;
+  }
+}
+
+@media (min-width: 768px) {
+  .embla__slide {
+    width: 33.33%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .embla__slide {
+    width: 25%;
+  }
+}
+
+.embla__wrapper {
+  padding: 0 40px; 
+  position: relative;
+}
+
+.embla__button {
+  align-items: center;
+  background: white;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  z-index: 1;
+}
+
+.embla__button:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.embla__button--prev {
+  left: -20px;
+}
+
+.embla__button--next {
+  right: -20px;
+}
