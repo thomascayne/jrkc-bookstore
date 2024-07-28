@@ -3,7 +3,7 @@
 
 import React, { ReactNode } from "react";
 import { useSidePanel } from "@/contexts/SidePanelContext";
-import { Button } from "@nextui-org/button";
+import { Button } from "@nextui-org/react";
 
 interface PanelButtonsProps {
   LeftContent: ReactNode;

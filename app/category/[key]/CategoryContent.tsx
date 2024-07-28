@@ -4,7 +4,7 @@
 
 import { BiArrowToTop, BiCaretDown } from "react-icons/bi";
 import { Book } from "@/interfaces/Book";
-import { Button } from "@nextui-org/button";
+import { Button } from "@nextui-org/react";
 import { fetchBookDetails } from "@/utils/bookApi";
 import { useEffect, useState } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
