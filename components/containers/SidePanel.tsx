@@ -48,7 +48,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ side }) => {
   if (!isRendered) return null;
 
   return (
-    <div
+    <aside
       className={`side-panel-outer-container fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
@@ -82,11 +82,13 @@ const SidePanel: React.FC<SidePanelProps> = ({ side }) => {
             {content}
           </div>
           {footer && (
-            <div className="side-panel-footer border-t p-4">{footer}</div>
+            <section className="side-panel-footer border-t p-4">
+              {footer}
+            </section>
           )}
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 
