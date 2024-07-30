@@ -3,6 +3,7 @@
 "use client";
 
 import { useSidePanel } from "@/contexts/SidePanelContext";
+import { waitSomeTime } from "@/utils/wait-some-time";
 import React, { useEffect, useState } from "react";
 import { IoMdClose } from "react-icons/io";
 
@@ -38,10 +39,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ side }) => {
     if (isOpen) {
       setIsRendered(true);
     } else {
-      const timer = setTimeout(() => {
-        setIsRendered(false);
-      }, 300);
-      return () => clearTimeout(timer);
+      waitSomeTime(300);
+      setIsRendered(false);
+      return;
     }
   }, [isOpen]);
 
