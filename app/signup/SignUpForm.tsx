@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { Input } from "@nextui-org/react";
 
 export default function SignUpForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -104,59 +105,51 @@ export default function SignUpForm() {
   };
 
   return (
-    <form className="signup-form flex flex-col w-full justify-center gap-4 text-foreground">
+    <form className="signup-form flex flex-col w-full justify-center gap-6 text-foreground">
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="email">
-          Email
-        </label>
-        <input
-          className="w-full rounded-md px-4 py-2 bg-inherit border"
+        <Input
           id="email"
+          label="Email"
           name="email"
-          type="email"
-          placeholder="you@example.com"
+          radius="none"
           required
+          type="email"
+          variant="bordered"
         />
       </div>
       <div className="relative">
-        <label className="block text-sm font-medium mb-1" htmlFor="password">
-          Password
-        </label>
-        <input
-          className="w-full rounded-md px-4 py-2 bg-inherit border"
+        <Input
           id="password"
+          label="Password"
           name="password"
-          placeholder="••••••••"
+          radius="none"
           required
           type={showPassword ? "text" : "password"}
+          variant="bordered"
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="text-blue-500 underline mr-2 absolute right-0 top-2/4"
+          className="text-blue-500 underline mr-2 absolute right-0 top-[20px]"
         >
           {showPassword ? <FaEyeSlash /> : <FaEye />}
         </button>
       </div>
       <div className="relative">
-        <label
-          className="block text-sm font-medium mb-1"
-          htmlFor="password_confirm"
-        >
-          Confirm Password
-        </label>
-        <input
-          className="w-full rounded-md px-4 py-2 bg-inherit border"
-          id="password_confirm"
+        <Input
+          aria-label="Confirm Password"
+          id="password-confirm"
+          label="Confirm Password"
           name="password_confirm"
-          placeholder="••••••••"
+          radius="none"
           required
           type={showConfirmPassword ? "text" : "password"}
+          variant="bordered"
         />
         <button
           type="button"
           onClick={() => setConfirmShowPassword(!showConfirmPassword)}
-          className="text-blue-500 underline mr-2 absolute right-0 top-2/4"
+          className="text-blue-500 underline mr-2 absolute right-0 top-[20px]"
         >
           {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
         </button>
@@ -168,11 +161,20 @@ export default function SignUpForm() {
       >
         Create Account
       </SubmitButton>
-      <div className="text-sm text-center mt-4">
+      <p className="text-sm text-center">
+        <span className="mr-2">Already have an account?</span>
         <Link href="/signin" className="text-blue-600 hover:text-blue-800">
-          Already have an account? Sign in
+          Sign in
         </Link>
-      </div>
+      </p>
+      <p className="text-sm text-center">
+        <Link
+          href="/reset-password"
+          className="text-blue-600 hover:text-blue-800"
+        >
+          Forgot your password?
+        </Link>
+      </p>
       {errorMessage && (
         <div
           className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"

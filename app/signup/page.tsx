@@ -12,15 +12,14 @@ export default async function SignUpPage() {
   return (
     <>
       <AuthNavbar initialUser={data.user} />
-      <div className="flex min-h-screen flex-col items-center justify-center">
-        <div className="signup-form-wrapper w-full max-w-md px-8 mt-[-6rem]">
+      <section className="flex min-h-screen flex-col items-center justify-center">
+        <div className="sign-up-form-wrapper w-full max-w-md px-8 pt-8 pb-12 mt-[-6rem] border border-gray-400 rounded-md">
           <h1 className="text-2xl font-bold mb-6 text-center">
             Create an Account
           </h1>
           <SignUpForm />
         </div>
-      </div>
-      <Footer />
+      </section>
     </>
   );
 }
