@@ -23,7 +23,7 @@ export default async function CategoryPage({
       <AuthNavbar initialUser={user} />
 
       <div className="CategoryPage flex-1 w-full flex flex-col items-center min-h-[100%]">
-        <Suspense fallback={<Loading />}>
+        <Suspense>
           <CategoryContent params={params} />
         </Suspense>
       </div>
