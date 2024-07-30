@@ -1,6 +1,6 @@
 {
   "name": "jrkc-bookstore",
-  "version": "0.1.0",
+  "version": "1.2.0",
   "private": true,
   "title": "JRKC Bookstore",
   "appName": "JRKC Bookstore Management System",
@@ -20,10 +20,11 @@
   ],
   "description": "Bookstore Management System for CTU University",
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
+    "dev": "next dev",
+    "lint": "next lint",
     "start": "next start",
-    "lint": "next lint"
+    "update-version": "ts-node update-version.ts"
   },
   "dependencies": {
     "@nextui-org/react": "^2.4.6",
@@ -42,16 +43,19 @@
     "react-dom": "^18",
     "react-icons": "^5.2.1",
     "react-svg-credit-card-payment-icons": "^3.1.1",
-    "recharts": "^2.12.7"
+    "recharts": "^2.12.7",
+    "semver": "^7.6.3"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/semver": "^7.5.8",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
     "tailwindcss": "^3",
     "typescript": "^5"
-  }
+  },
+  "type": "module"
 }
