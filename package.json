@@ -1,6 +1,6 @@
 {
   "name": "jrkc-bookstore",
-  "version": "1.2.0",
+  "version": "1.1.0",
   "private": true,
   "title": "JRKC Bookstore",
   "appName": "JRKC Bookstore Management System",
@@ -20,11 +20,13 @@
   ],
   "description": "Bookstore Management System for CTU University",
   "scripts": {
+    "build-major": "node update-version.mjs major && next build",
+    "build-minor": "node update-version.mjs minor && next build",
+    "build-patch": "node update-version.mjs patch && next build",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
-    "update-version": "ts-node update-version.ts"
+    "start": "next start"
   },
   "dependencies": {
     "@nextui-org/react": "^2.4.6",
@@ -56,6 +58,10 @@
     "postcss": "^8",
     "tailwindcss": "^3",
     "typescript": "^5"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-dom": "*"
   },
   "type": "module"
 }
