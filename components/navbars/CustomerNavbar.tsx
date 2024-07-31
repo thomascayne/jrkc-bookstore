@@ -50,7 +50,7 @@ export default function CustomerNavbar({
   const signOut = useSignOut();
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
-  const apiUrl = "https://www.googleapis.com/books/v1/volumes";
+  const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
   const url = `${apiUrl}?q=subject:fiction&orderBy=relevance&maxResults=40&key=${apiKey}`;
 
   useEffect(() => {
