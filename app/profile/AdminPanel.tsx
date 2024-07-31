@@ -44,7 +44,7 @@ export default function AdminPanel({ user }: AdminPanelProps) {
     }
 
     fetchAdminData();
-  }, []);
+  }, [supabase]);
 
   // Sample data for the chart
   const data = [
