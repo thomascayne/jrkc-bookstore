@@ -1,7 +1,7 @@
 // hooks/useBookFetch.ts
 
 import { useState, useEffect } from 'react';
-import { Book } from "@/app/interfaces/Book";
+import { Book } from "@/interfaces/Book";
 
 export function useBookFetch(category: { key: string; label: string }) {
     const [books, setBooks] = useState<Book[]>([]);

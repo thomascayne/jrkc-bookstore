@@ -1,16 +1,14 @@
+// app/layout.tsx
+
 import AuthNavbar from "@/components/AuthNavbar";
-import SidePanel from "@/components/containers/SidePanel";
-import { SidePanelProvider } from "@/contexts/SidePanelContext";
+import Footer from "@/components/Footer";
 import { createClient } from "@/utils/supabase/server";
 import { GeistSans } from "geist/font/sans";
 import { Metadata } from "next";
 
 import packageInfo from "../package.json";
 
-// app/layout.tsx
-
 import "./globals.css";
-import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: packageInfo?.appName || "JRKC Bookstore",
@@ -47,13 +45,9 @@ export default async function RootLayout({
       <body className="flex flex-col pt-[75px] min-h-screen">
         <AuthNavbar initialUser={user} />
 
-        <SidePanelProvider>
-          <main className="flex flex-col flex-grow h-full relative">
-            {children}
-          </main>
-          <SidePanel side="left" />
-          <SidePanel side="right" />
-        </SidePanelProvider>
+        <main className="flex flex-col flex-grow h-full relative">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>

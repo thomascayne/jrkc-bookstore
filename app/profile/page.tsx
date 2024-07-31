@@ -5,11 +5,11 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
-import Address from "./Address";
-import AdminPanel from "./AdminPanel";
+import Address from "@/app/profile/Address";
+import AdminPanel from "@/app/profile/AdminPanel";
 import AuthNavbar from "@/components/AuthNavbar";
-import PaymentMethods from "./PaymentMethods";
-import PersonalInformation from "./PersonalInformation";
+import PaymentMethods from "@/app/profile/PaymentMethods";
+import PersonalInformation from "@/app/profile/PersonalInformation";
 
 interface Tab {
   component: React.ComponentType<{ user: User | null }>;

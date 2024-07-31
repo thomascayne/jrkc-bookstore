@@ -3,7 +3,6 @@
 import AuthNavbar from "@/components/AuthNavbar";
 import { createClient } from "@/utils/supabase/server";
 import SignUpForm from "@/app/signup/SignUpForm";
-import Footer from "@/components/Footer";
 
 export default async function SignUpPage() {
   const supabase = createClient();
