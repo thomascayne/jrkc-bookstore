@@ -1,6 +1,6 @@
 // app/confirm/page.tsx
 
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/server";
 
 export default async function Confirm() {
   const supabase = createClient();

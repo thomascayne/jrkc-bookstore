@@ -20,7 +20,8 @@ export default function ThemeSwitch({
 
   useEffect(() => {
     applyTheme(theme);
-  }, [theme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const applyTheme = (selectedTheme: Theme) => {
     if (selectedTheme === "dark") {

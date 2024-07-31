@@ -1,7 +1,7 @@
 // app/update-password/UpdatePasswordForm.tsx
 "use client";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 import { SubmitButton } from "@/components/submit-button";
 import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";

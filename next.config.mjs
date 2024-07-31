@@ -1,7 +1,25 @@
-/** @type {import('next').NextConfig} */
+// next.config.mjs
+/** @type { version } */
+
+import { version } from './version.mjs';
+
 const nextConfig = {
+    env: {
+        APP_VERSION: version,
+    },
     images: {
-        domains: ['books.google.com', 'via.placeholder.com'],
+        remotePatterns: [
+            {
+                hostname: 'books.google.com',
+                pathname: '**',
+                protocol: 'https'
+            },
+            {
+                hostname: 'via.placeholder.com',
+                pathname: '**',
+                protocol: 'https'
+            }
+        ],
     },
 }
 

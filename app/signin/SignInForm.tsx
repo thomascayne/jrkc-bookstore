@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { Input } from "@nextui-org/react";
 
 export default function SignInForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -39,15 +40,14 @@ export default function SignInForm() {
   return (
     <form className="signin-form flex flex-col w-full justify-center gap-4 text-foreground">
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="email">
-          Email
-        </label>
-        <input
-          className="w-full rounded-md px-4 py-2 bg-inherit border"
+        <Input
+          aria-label="Email"
+          className="mb-2"
           id="email"
-          name="email"
+          label="Email"
+          radius="none"
           type="email"
-          placeholder="you@example.com"
+          variant="bordered"
           required
         />
       </div>
@@ -55,18 +55,20 @@ export default function SignInForm() {
         <label className="block text-sm font-medium mb-1" htmlFor="password">
           Password
         </label>
-        <input
-          className="w-full rounded-md px-4 py-2 bg-inherit border"
+        <Input
+          aria-label="Password"
+          className="mb-2"
           id="password"
-          type={showPassword ? "text" : "password"}
+          label="Password"
           name="password"
-          placeholder="••••••••"
           required
+          type={showPassword ? "text" : "password"}
+          variant="bordered"
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="text-blue-500 underline mr-2 absolute right-0 top-2/4"
+          className="text-blue-500 underline mr-2 absolute right-0 top-[20px]"
         >
           {showPassword ? <FaEyeSlash /> : <FaEye />}
         </button>
@@ -88,7 +90,7 @@ export default function SignInForm() {
       </div>
       <div className="text-sm text-center">
         <Link href="/signup" className="text-blue-600 hover:text-blue-800">
-          Don't have an account? Sign up
+          Do not have an account? Sign up
         </Link>
       </div>
       {errorMessage && (

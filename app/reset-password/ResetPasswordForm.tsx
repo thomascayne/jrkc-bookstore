@@ -1,7 +1,7 @@
 // app/reset-password/ResetPasswordForm.tsx
 "use client";
 
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 import { SubmitButton } from "../../components/submit-button";
 import { useState } from "react";
 import Link from "next/link";

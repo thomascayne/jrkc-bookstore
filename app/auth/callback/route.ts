@@ -1,3 +1,5 @@
+// app/auth/callback/route.ts
+
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -11,7 +13,23 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && data?.user) {
+
+      // Check if there's a pending email change
+      const pendingEmail = data.user.user_metadata.pendingEmailChange;
+      if (pendingEmail && pendingEmail === data.user.email) {
+
+        // Email change confirmed, clear the pending change
+        await supabase.auth.updateUser({
+          data: { pendingEmailChange: null }
+        });
+
+        // Redirect to a confirmation page
+        return NextResponse.redirect(`${origin}/email-change-confirmed`);
+      }
+    }
   }
 
   // URL to redirect to after sign up process completes
