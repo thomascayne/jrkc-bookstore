@@ -10,14 +10,16 @@ const nextConfig = {
     images: {
         remotePatterns: [
             {
-                hostname: 'books.google.com',
+                hostname: '**.google.com',
                 pathname: '**',
-                protocol: 'https'
+                protocol: 'https',
+                port: ''
             },
             {
-                hostname: 'via.placeholder.com',
+                hostname: '**.placeholder.com',
                 pathname: '**',
-                protocol: 'https'
+                protocol: 'https',
+                port: ''
             }
         ],
     },
