@@ -7,9 +7,17 @@ import { cartStore, removeItem, updateQuantity } from "@/stores/cartStore";
 import Link from "next/link";
 import Image from "next/image";
 import { Button, Input } from "@nextui-org/react";
+import PlaceholderImage from "@/components/PlaceholderImage";
+import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
 import { IBook } from "@/interfaces/IBook";
+import BookDetails from "@/components/BookDetails";
+import { GoogleBook } from "@/interfaces/GoogleBook";
+import { fetchBookDetails } from "@/utils/bookApi";
+import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
 
 const CartPage = () => {
+  const { openModal } = useFullScreenModal();
+
   const cartItems = useStore(cartStore, (state) => state.items) as IBook[];
   const total = cartItems.reduce(
     (sum, item) => sum + (item.list_price || 0) * item.quantity,
@@ -21,6 +29,33 @@ const CartPage = () => {
       updateQuantity(id, quantity);
     } else {
       removeItem(id);
+    }
+  };
+  const handleBookClick = async (book: IBook) => {
+    try {
+      // fetch book details from supabase
+      const supabaseBook = await fetchBookFromSupabase<IBook>(book.id);
+
+      // fetch additional book details from Google Books API
+      const googleBookDetails = await fetchBookDetails<GoogleBook>(book.id);
+
+      const bookDetails = {
+        ...supabaseBook,
+        ...googleBookDetails,
+      };
+
+      const bookTitle = `${book.title}`;
+
+      openModal(
+        <BookDetails
+          bookDetails={bookDetails}
+          selectedBook={book}
+          imageLink={book.small_thumbnail_image_link || ""}
+        />,
+        bookTitle
+      );
+    } catch (error) {
+      console.error("Error fetching book details:", error);
     }
   };
 
@@ -45,17 +80,32 @@ const CartPage = () => {
         <div className="md:w-2/3">
           {cartItems.map((item) => (
             <div key={item.id} className="flex items-center border-b py-4">
-              <Image
-                src={item.thumbnail_image_link || "/placeholder.png"}
-                alt={item.title}
-                width={80}
-                height={120}
-                className="object-cover mr-4"
-              />
-              <div className="flex-grow">
-                <h2 className="font-semibold">{item.title}</h2>
-                <p className="text-gray-600">by {item.authors}</p>
-                <p className="text-gray-600">${item.list_price?.toFixed(2)}</p>
+              {item.is_promotion ? (
+                <Image
+                  src={item.small_thumbnail_image_link}
+                  alt={item.title}
+                  width={50}
+                  height={75}
+                  className="object-cover mr-4"
+                />
+              ) : (
+                <div className="mr-4">
+                  <PlaceholderImage />
+                </div>
+              )}
+              <div className="flex-grow min-w-0">
+                <Link
+                  className="font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleBookClick(item);
+                  }}
+                >
+                  {item.title}
+                </Link>
+                <p className="">by {item.authors}</p>
+                <p className="">${item.list_price?.toFixed(2)}</p>
               </div>
               <div className="flex items-center">
                 <Button

@@ -9,8 +9,9 @@ import { Metadata } from "next";
 import packageInfo from "../package.json";
 
 import "./globals.css";
-import { SidePanelProvider } from "../contexts/SidePanelContext";
+import { SidePanelProvider } from "@/contexts/SidePanelContext";
 import SidePanel from "@/components/SidePanel";
+import { FullScreenModalProvider } from "@/contexts/FullScreenModalContext";
 
 export const metadata: Metadata = {
   title: packageInfo?.appName || "JRKC Bookstore",
@@ -45,16 +46,18 @@ export default async function RootLayout({
         />
       </head>
       <body className="flex flex-col pt-[75px] min-h-screen">
-        <AuthNavbar initialUser={user} />
+        <FullScreenModalProvider>
+          <AuthNavbar initialUser={user} />
 
-        <SidePanelProvider>
-          <SidePanel side="left" />
-          <main className="flex flex-col flex-grow h-full relative">
-            {children}
-          </main>
-          <SidePanel side="right" />
-        </SidePanelProvider>
-        <Footer />
+          <SidePanelProvider>
+            <SidePanel side="left" />
+            <main className="flex flex-col flex-grow h-full relative">
+              {children}
+            </main>
+            <SidePanel side="right" />
+          </SidePanelProvider>
+          <Footer />
+        </FullScreenModalProvider>
       </body>
     </html>
   );

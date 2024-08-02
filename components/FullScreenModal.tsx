@@ -2,10 +2,11 @@
 
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardBody } from "@nextui-org/react";
 import { IoMdClose } from "react-icons/io";
 import AppLogo from "@/components/AppLogo";
+import { waitSomeTime } from "@/utils/wait-some-time";
 
 interface FullScreenModalProps {
   children: React.ReactNode;
@@ -20,6 +21,19 @@ const FullScreenModal: React.FC<FullScreenModalProps> = ({
   onClose,
   title,
 }) => {
+  const [isRendered, setIsRendered] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsRendered(true);
+    } else {
+      (async () => {
+        await waitSomeTime(300);
+        setIsRendered(false);
+      })();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -39,7 +53,11 @@ const FullScreenModal: React.FC<FullScreenModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center overflow-hidden transition-transform duration-500 ease-in-out transform ${
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+    >
       <Card className="w-full h-full" shadow="lg" radius="none">
         <CardHeader className="">
           <div className="flex flex-row w-full justify-between items-center">

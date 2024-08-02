@@ -13,7 +13,6 @@ import BookImage from "@/components/BookImage";
 import Image from "next/image";
 import SafeHTML from "@/components/SafeHTML";
 import StarRating from "@/components/StarRating";
-import FullScreenModal from "@/components/FullScreenModal";
 import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
 import { GoogleBook } from "@/interfaces/GoogleBook";
 import { IBook } from "@/interfaces/IBook";
@@ -21,6 +20,8 @@ import { fetchBooksByCategory } from "@/utils/fetchBooksByCategory ";
 import EmptyBookshelf from "@/components/EmptyBookshelf";
 import { useStore } from "@tanstack/react-store";
 import { addItem, cartStore } from "@/stores/cartStore";
+import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
+import BookDetails from "@/components/BookDetails";
 
 export default function CategoryContent({
   params,
@@ -38,8 +39,6 @@ export default function CategoryContent({
   const [imageLink, setImageLink] = useState("");
   const [imageSize, setImageSize] = useState("thumbnail");
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPromotionBadge, setIsPromotionBadge] = useState(false);
   const [selectedBook, setSelectedBook] = useState<IBook>();
   const [showBackToTop, setShowBackToTop] = useState(false);
   const cartItems = useStore(cartStore, (state) => state.items);
@@ -47,8 +46,7 @@ export default function CategoryContent({
   const isMedium = useMediaQuery("(min-width: 641px) and (max-width: 1024px)");
   const isSmall = useMediaQuery("(max-width: 640px)");
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const { openModal } = useFullScreenModal();
 
   const booksPerLoad = 10;
   const label = searchParams.get("label") as string;
@@ -61,7 +59,6 @@ export default function CategoryContent({
         const { category, fetchedBooks, books, displayedBooks } =
           await fetchBooksByCategory(params.key, booksPerLoad);
 
-        console.log("category:", category);
         setCategory(category);
         setFetchedBooks(fetchedBooks);
         setBooks(books);
@@ -131,7 +128,14 @@ export default function CategoryContent({
         setImageLink(thisBookDetails.volumeInfo.imageLinks.large);
       }
 
-      openModal();
+      openModal(
+        <BookDetails
+          bookDetails={bookDetails}
+          selectedBook={book}
+          imageLink={imageLink}
+        />,
+        bookTitle
+      );
     } catch (error) {
       console.error("Error fetching book details:", error);
     }
@@ -143,71 +147,6 @@ export default function CategoryContent({
 
   return (
     <section>
-      <FullScreenModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        title={bookTitle}
-      >
-        <div className="container space-y-4 w-full px-4 sm:px-0 sm:w-[480px] lg:w-[640px]">
-          <div>
-            {
-              <h2 className="text-xl font-bold flex md:hidden mb-4">
-                {bookTitle}
-              </h2>
-            }
-            {bookDetails?.volumeInfo.subtitle && (
-              <h3 className="text-xl mb-2">
-                {bookDetails?.volumeInfo.subtitle}
-              </h3>
-            )}
-            {imageLink && (
-              <div className="relative shadow-large border bg-transparent pt-4 rounded-sm border-gray-300 dark:border-gray-600">
-                {selectedBook?.is_promotion &&
-                  selectedBook.discount_percentage && (
-                    <div className="absolute top-0 left-[0] bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-br z-10">
-                      {`${selectedBook.discount_percentage}% OFF`}
-                    </div>
-                  )}
-
-                <BookImage
-                  imageUrl={imageLink}
-                  title={bookDetails!.volumeInfo.title}
-                />
-              </div>
-            )}
-            <p className="mb-2 mt-6">
-              <strong>Author(s):</strong>{" "}
-              {bookDetails?.volumeInfo.authors?.join(", ")}
-            </p>
-            <p className="mb-2">
-              <strong>Published:</strong>{" "}
-              {bookDetails?.volumeInfo.publishedDate} by{" "}
-              {bookDetails?.volumeInfo.publisher}
-            </p>
-            <p className="mb-2">
-              <strong>Pages:</strong> {bookDetails?.volumeInfo.pageCount}
-            </p>
-            <div className="mb-4 flex flex-col gap-2">
-              <strong>Description:</strong>
-              <SafeHTML html={bookDetails?.volumeInfo.description || ""} />
-            </div>
-            {bookDetails?.volumeInfo.categories && (
-              <p className="mb-2">
-                <strong>Categories:</strong>{" "}
-                {bookDetails?.volumeInfo.categories.join(", ")}
-              </p>
-            )}
-            {bookDetails?.volumeInfo.averageRating && (
-              <div className="flex gap-2 items-center">
-                <strong>Rating:</strong>
-                <StarRating rating={bookDetails.volumeInfo.averageRating} />
-                <span>({bookDetails.volumeInfo.ratingsCount} ratings)</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </FullScreenModal>
-
       <div className="CategoryContent-container h-full flex flex-col flex-grow">
         <div className="CategoryContent container mx-auto px-4 pb-4 my-8 relative flex-grow">
           <div className="flex flex-col items-center mb-4">
