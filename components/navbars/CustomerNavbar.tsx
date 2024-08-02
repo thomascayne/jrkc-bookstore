@@ -18,7 +18,6 @@ import {
   DropdownItem,
 } from "@nextui-org/react";
 import { BiCategory } from "react-icons/bi";
-import { bookCategories } from "@/utils/bookCategories";
 import { FaRegUser } from "react-icons/fa";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
@@ -30,6 +29,8 @@ import { Role, ROLES, getRoleColor } from "@/utils/roles";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import { FaChevronDown } from "react-icons/fa";
 import useSignOut from "@/hooks/useSignOut";
+import { fetchBookCategories } from "@/utils/bookCategoriesApi";
+import { BookCategory } from "@/interfaces/BookCategory";
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -52,6 +53,21 @@ export default function CustomerNavbar({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
   const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
   const url = `${apiUrl}?q=subject:fiction&orderBy=relevance&maxResults=40&key=${apiKey}`;
+
+  const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categories = await fetchBookCategories();
+        setBookCategories(categories);
+      } catch (error) {
+        console.error("Error fetching book categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme") as Theme | null;
@@ -125,7 +141,7 @@ export default function CustomerNavbar({
         justify="center"
         className="this-is-for-when-menu-is-close-on-md-and-up ml-auto"
       >
-        <Dropdown>
+        <Dropdown backdrop="blur" radius="none">
           <NavbarItem className="hidden sm:flex">
             <DropdownTrigger>
               <Button
@@ -163,10 +179,14 @@ export default function CustomerNavbar({
             }}
           >
             {(category) => (
-              <DropdownItem key={category.key}>
+              <DropdownItem
+                key={category.key}
+                className="rounded-none"
+                variant="faded"
+              >
                 <Link
                   href={`/category/${encodeURIComponent(category.key)}`}
-                  className="flex items-center p-2 w-full"
+                  className="flex items-center p-0 w-full"
                 >
                   <span>{category.label}</span>
                 </Link>

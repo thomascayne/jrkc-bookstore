@@ -1,6 +1,6 @@
 // utils/bookApi.ts
 
-export async function fetchBookDetails(bookId: string) {
+export async function fetchBookDetails<GoogleBook>(bookId: string) {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
     const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
 
