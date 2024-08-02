@@ -21,9 +21,9 @@ export default function NotFound() {
               you back to our main collection.
             </p>
             <div className="flex justify-center mb-6">
-              <div className="w-16 h-24 bg-blue-500 rounded transform -rotate-6 mr-2"></div>
-              <div className="w-16 h-24 bg-green-500 rounded transform rotate-6 mr-2"></div>
-              <div className="w-16 h-24 bg-red-500 rounded transform -rotate-3"></div>
+              <div className="w-12 h-24 bg-blue-500 rounded transform -rotate-6 mr-2"></div>
+              <div className="w-12 h-32 bg-green-500 rounded transform rotate-6 mr-2"></div>
+              <div className="w-12 h-24 bg-red-500 rounded transform -rotate-3"></div>
             </div>
             <Link
               href="/"
