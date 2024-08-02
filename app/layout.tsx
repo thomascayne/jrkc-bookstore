@@ -9,6 +9,8 @@ import { Metadata } from "next";
 import packageInfo from "../package.json";
 
 import "./globals.css";
+import { SidePanelProvider } from "../contexts/SidePanelContext";
+import SidePanel from "@/components/SidePanel";
 
 export const metadata: Metadata = {
   title: packageInfo?.appName || "JRKC Bookstore",
@@ -45,9 +47,13 @@ export default async function RootLayout({
       <body className="flex flex-col pt-[75px] min-h-screen">
         <AuthNavbar initialUser={user} />
 
-        <main className="flex flex-col flex-grow h-full relative">
-          {children}
-        </main>
+        <SidePanelProvider>
+          <SidePanel side="left" />
+          <main className="flex flex-col flex-grow h-full relative">
+            {children}
+          </main>
+          <SidePanel side="right" />
+        </SidePanelProvider>
         <Footer />
       </body>
     </html>

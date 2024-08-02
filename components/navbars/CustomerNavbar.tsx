@@ -16,11 +16,12 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Badge,
 } from "@nextui-org/react";
 import { BiCategory } from "react-icons/bi";
 import { FaRegUser } from "react-icons/fa";
 import { User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { RiShoppingCart2Line } from "react-icons/ri";
 import { VscSignIn, VscSignOut } from "react-icons/vsc";
 import AppLogo from "@/components/AppLogo";
@@ -31,6 +32,11 @@ import { FaChevronDown } from "react-icons/fa";
 import useSignOut from "@/hooks/useSignOut";
 import { fetchBookCategories } from "@/utils/bookCategoriesApi";
 import { BookCategory } from "@/interfaces/BookCategory";
+import { useStore } from "@tanstack/react-store";
+import { cartStore } from "@/stores/cartStore";
+import CartIcon from "@/components/CartIcon";
+import { useSidePanel } from "@/contexts/SidePanelContext";
+import CartSidePanel from "@/components/CartSidePanel";
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -45,10 +51,15 @@ export default function CustomerNavbar({
   onRoleChange,
   user,
 }: CustomerNavbarProps) {
+  const cartItems = useStore(cartStore, (state) => state.items);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
+  const { openRightPanel } = useSidePanel();
+  const currentPath = usePathname();
   const router = useRouter();
   const signOut = useSignOut();
+
+  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
   const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
@@ -114,6 +125,21 @@ export default function CustomerNavbar({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
     color: "black",
     transition: "background-color 0.3s ease",
+  };
+
+  /**
+   * Handles the click event on the cart button.
+   * When the cart is empty, it redirects to the cart page.
+   * or it opens the shopping cart panel.
+   *
+   * @return {void} No return value.
+   */
+  const handleCartClick = () => {
+    if (cartItemCount === 0) {
+      router.push("/cart");
+    } else {
+      openRightPanel(<CartSidePanel currentPath={currentPath} />, "sm:w-[400px]", "Shopping Cart");
+    }
   };
 
   return (
@@ -198,10 +224,23 @@ export default function CustomerNavbar({
           <Link
             color="foreground"
             href="#"
-            className="flex border-transparent hover:border-current border-1 rounded-md p-1"
+            className="relative flex border-transparent hover:border-current border-1 rounded-md p-1"
+            onClick={(e) => {
+              e.preventDefault();
+              handleCartClick();
+            }}
           >
-            <RiShoppingCart2Line className="mr-1" />
-            <span>Cart</span>
+            <Badge
+              className="top-0 right-[-5px]"
+              color="danger"
+              content={cartItemCount}
+              isInvisible={cartItemCount === 0}
+              placement="top-right"
+              shape="circle"
+            >
+              <span className="cart-only-show-with-this-question-mark"> </span>
+              <CartIcon />
+            </Badge>
           </Link>
         </NavbarItem>
       </NavbarContent>

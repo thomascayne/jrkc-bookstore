@@ -19,6 +19,8 @@ import { GoogleBook } from "@/interfaces/GoogleBook";
 import { IBook } from "@/interfaces/IBook";
 import { fetchBooksByCategory } from "@/utils/fetchBooksByCategory ";
 import EmptyBookshelf from "@/components/EmptyBookshelf";
+import { useStore } from "@tanstack/react-store";
+import { addItem, cartStore } from "@/stores/cartStore";
 
 export default function CategoryContent({
   params,
@@ -27,22 +29,23 @@ export default function CategoryContent({
 }) {
   const searchParams = useSearchParams();
 
+  const [bookDetails, setBookDetails] = useState<Book>();
   const [books, setBooks] = useState<IBook[]>([]);
+  const [bookTitle, setBookTitle] = useState("");
+  const [category, setCategory] = useState("");
   const [displayedBooks, setDisplayedBooks] = useState<IBook[]>([]);
   const [fetchedBooks, setFetchedBooks] = useState<IBook[]>([]);
+  const [imageLink, setImageLink] = useState("");
+  const [imageSize, setImageSize] = useState("thumbnail");
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPromotionBadge, setIsPromotionBadge] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<IBook>();
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const cartItems = useStore(cartStore, (state) => state.items);
   const isLarge = useMediaQuery("(min-width: 1025px)");
   const isMedium = useMediaQuery("(min-width: 641px) and (max-width: 1024px)");
   const isSmall = useMediaQuery("(max-width: 640px)");
-  const [bookDetails, setBookDetails] = useState<Book>();
-  const [imageSize, setImageSize] = useState("thumbnail");
-  const [imageLink, setImageLink] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [bookTitle, setBookTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [isPromotionBadge, setIsPromotionBadge] = useState(false);
-  const [selectedBook, setSelectedBook] = useState<IBook>();
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -132,6 +135,10 @@ export default function CategoryContent({
     } catch (error) {
       console.error("Error fetching book details:", error);
     }
+  };
+
+  const handleAddToCart = (book: IBook) => {
+    addItem(book);
   };
 
   return (
@@ -295,11 +302,8 @@ export default function CategoryContent({
                     </div>
                   )}
                   <div
-                    className="absolute cursor-pointer bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 transform translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log(`Quick Add clicked for book: ${book.title}`);
-                    }}
+                    className="absolute cursor-pointer bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 transform translate-y-full transition-transform duration-500 ease-in-out group-hover:translate-y-0"
+                    onClick={() => handleAddToCart(book)}
                   >
                     QUICK ADD
                   </div>

@@ -33,7 +33,12 @@ export default function SignInForm() {
       setErrorMessage("Incorrect email or password. Please try again.");
     } else {
       setSuccessMessage("Signed in successfully. Redirecting...");
-      router.push("/");
+      const params = new URLSearchParams(window.location.search);
+      /**
+       * Redirect to the page specified in the query string or to the home page
+       */
+      const redirectUrl = params.get("redirect") || "/";
+      router.push(redirectUrl);
     }
   };
 
