@@ -219,7 +219,7 @@ const CartPage = () => {
                 <span>Total</span>
                 <span>${total.toFixed(2)}</span>
               </div>
-              <Button className="w-full my-6" color="primary" radius="md">
+              <Button className="w-full my-6" color="primary" radius="none">
                 Proceed to Checkout
               </Button>
             </CardBody>
@@ -231,21 +231,26 @@ const CartPage = () => {
             <Divider className="my-4" />
             <CardBody>
               <div className="flex">
-                <Input placeholder="Enter code" className="flex-grow" />
-                <Button className="ml-2">Apply</Button>
+                <Input
+                  placeholder="Enter code"
+                  className="flex-grow"
+                  radius="none"
+                />
+                <Button className="ml-2" radius="none">
+                  Apply
+                </Button>
               </div>
             </CardBody>
           </Card>
         </div>
       </div>
       <div className="mt-8">
-        <Link
+        <Button
           onClick={handleContinueShopping}
-          href="#"
-          className="bg-primary-500 hover:bg-primary-700 rounded-sm text-white px-4 py-2"
+          className="bg-primary-500 hover:bg-primary-700 rounded-none text-white px-6 text-lg py-2"
         >
           Continue Shopping
-        </Link>
+        </Button>
       </div>
     </section>
   );

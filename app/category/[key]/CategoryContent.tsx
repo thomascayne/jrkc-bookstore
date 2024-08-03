@@ -236,7 +236,11 @@ export default function CategoryContent({
           !isLoading &&
           books.length > 0 && (
             <div className="flex justify-center my-8">
-              <Button onClick={scrollToTop} className="mx-2 flex items-center">
+              <Button
+                radius="none"
+                onClick={scrollToTop}
+                className="px-2 flex items-center"
+              >
                 <span>Back to top </span> <BiArrowToTop className="ml-2" />
               </Button>
             </div>

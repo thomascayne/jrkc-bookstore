@@ -224,13 +224,15 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
             </div>
             <div className="w-full flex-col sm:flex-row flex justify-between gap-4">
               <Button
-                className="w-full bg-gray-200 text-gray-800 py-2 rounded"
+                radius="none"
+                className="w-full bg-gray-200 text-gray-800 py-2"
                 onClick={handleContinueShopping}
               >
                 Continue Shopping
               </Button>
               <Button
-                className="w-full mb-2 bg-blue-500 text-white py-2 rounded"
+                radius="none"
+                className="w-full mb-2 bg-blue-500 text-white py-2"
                 onClick={() => handleCheckout()}
               >
                 Checkout
