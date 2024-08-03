@@ -5,9 +5,8 @@ export interface PasswordValidationResult {
     message: string;
 }
 
-export function validatePassword(password: string, confirmPassword: string): PasswordValidationResult {
-    console.log(password, confirmPassword)
-    if (password !== confirmPassword) {
+export function validatePassword(password: string, confirmPassword: string, isConfirmPassword: boolean): PasswordValidationResult {
+    if ((password !== confirmPassword) && isConfirmPassword) {
         return { isValid: false, message: "Passwords do not match!" };
     }
 
@@ -35,6 +34,5 @@ export function validatePassword(password: string, confirmPassword: string): Pas
         return { isValid: false, message: "Password must not contain any spaces!" };
     }
 
-    // Password is valid
     return { isValid: true, message: "Password input valid. Go update your password, then sign in again." };
 }

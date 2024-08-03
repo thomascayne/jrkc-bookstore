@@ -6,15 +6,17 @@ import { useEffect, useState } from "react";
 
 export function SubmitButton({
   children,
-  pendingText,
   className,
   formAction,
+  isDisabled,
+  pendingText,
   ...props
 }: {
   children: React.ReactNode;
-  pendingText: string;
   className?: string;
   formAction: (formData: FormData) => Promise<void>;
+  isDisabled?: boolean;
+  pendingText: string;
 } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "formAction">) {
   const { pending } = useFormStatus();
   const [isPending, setIsPending] = useState(false);
@@ -36,10 +38,10 @@ export function SubmitButton({
 
   return (
     <button
-      className={`${className} ${
-        isPending ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-      disabled={isPending}
+      className={`${
+        isDisabled ? "cursor-not-allowed bg-blue-200" : ""
+      } ${className} ${isPending ? "opacity-50 cursor-not-allowed" : ""}`}
+      disabled={isPending || isDisabled}
       onClick={handleClick}
       {...props}
     >
