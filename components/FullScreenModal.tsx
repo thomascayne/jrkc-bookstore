@@ -62,7 +62,9 @@ const FullScreenModal: React.FC<FullScreenModalProps> = ({
         <CardHeader className="">
           <div className="flex flex-row w-full justify-between items-center">
             <AppLogo />
-            <h2 className="text-xl font-bold hidden md:flex">{title}</h2>
+            <h2 className="text-2xl font-bold hidden md:block ml-[-76px]">
+              {title}
+            </h2>
             <button
               onClick={onClose}
               className="flex text-2xl hover:text-red-600 transition-colors"

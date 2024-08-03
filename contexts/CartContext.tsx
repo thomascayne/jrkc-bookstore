@@ -9,20 +9,22 @@ import React, {
   useSyncExternalStore,
 } from "react";
 import {
-  cartStore,
   addItem,
+  calculateDiscountedPrice,
+  cartStore,
+  getTotal,
   removeItem,
   updateQuantity,
-  getTotal,
 } from "@/stores/cartStore";
 import { IBook } from "@/interfaces/IBook";
 
 interface CartContextType {
-  cartItems: IBook[];
   addItem: (item: IBook) => void;
+  calculateDiscountedPrice: (item: IBook) => number;
+  cartItems: IBook[];
   removeItem: (itemId: string) => void;
-  updateItemQuantity: (itemId: string, quantity: number) => void;
   totalPrice: number;
+  updateItemQuantity: (itemId: string, quantity: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export const useCart = (): CartContextType => {
 
     // Return a default object with no-op functions
     return {
+      calculateDiscountedPrice: () => 0,
       cartItems: [],
       addItem: () =>
         console.warn("CartProvider not found. Unable to add item."),
@@ -73,11 +76,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const value: CartContextType = {
-    cartItems,
+    calculateDiscountedPrice: calculateDiscountedPrice,
     addItem: addItemToCart,
+    cartItems,
     removeItem: removeItemFromCart,
-    updateItemQuantity: updateItemQuantityInCart,
     totalPrice,
+    updateItemQuantity: updateItemQuantityInCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

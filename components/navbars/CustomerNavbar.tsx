@@ -32,11 +32,10 @@ import { FaChevronDown } from "react-icons/fa";
 import useSignOut from "@/hooks/useSignOut";
 import { fetchBookCategories } from "@/utils/bookCategoriesApi";
 import { BookCategory } from "@/interfaces/BookCategory";
-import { useStore } from "@tanstack/react-store";
-import { cartStore } from "@/stores/cartStore";
 import CartIcon from "@/components/CartIcon";
 import { useSidePanel } from "@/contexts/SidePanelContext";
-import CartSidePanel from "@/components/CartSidePanel";
+import CartContent from "@/components/CartContent";
+import { useCart } from "@/contexts/CartContext";
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -51,17 +50,17 @@ export default function CustomerNavbar({
   onRoleChange,
   user,
 }: CustomerNavbarProps) {
-  const cartItems = useStore(cartStore, (state) => state.items);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>("light");
   const { openRightPanel } = useSidePanel();
   const currentPath = usePathname();
   const router = useRouter();
   const signOut = useSignOut();
+  const { cartItems } = useCart();
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
   const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
   const url = `${apiUrl}?q=subject:fiction&orderBy=relevance&maxResults=40&key=${apiKey}`;
 
@@ -98,6 +97,8 @@ export default function CustomerNavbar({
 
   const handleCategorySelect = async (key: string, label: string) => {
     try {
+      console.log("url: ", url);
+
       const response = await fetch(url);
       const data = await response.json();
       localStorage.setItem("categoryBooks", JSON.stringify(data.items));
@@ -113,7 +114,7 @@ export default function CustomerNavbar({
 
   const menuItems = [
     { item: "Categories", icon: <BiCategory /> },
-    { item: "Cart", icon: <RiShoppingCart2Line /> },
+    { item: "Cart", icon: <RiShoppingCart2Line />, special: true },
     { item: user ? "Profile" : "", icon: user ? <FaRegUser /> : "" },
     {
       item: user ? "Sign Out" : "Sign In",
@@ -134,11 +135,19 @@ export default function CustomerNavbar({
    *
    * @return {void} No return value.
    */
-  const handleCartClick = () => {
+  const handleCartClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+
     if (cartItemCount === 0) {
       router.push("/cart");
     } else {
-      openRightPanel(<CartSidePanel currentPath={currentPath} />, "sm:w-[400px]", "Shopping Cart");
+      if (currentPath !== "/cart") {
+        openRightPanel(
+          <CartContent currentPath={currentPath} />,
+          "w-full sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[640px]",
+          false
+        );
+      }
     }
   };
 
@@ -162,7 +171,6 @@ export default function CustomerNavbar({
           </Link>
         </NavbarBrand>
       </NavbarContent>
-
       <NavbarContent
         justify="center"
         className="this-is-for-when-menu-is-close-on-md-and-up ml-auto"
@@ -225,10 +233,7 @@ export default function CustomerNavbar({
             color="foreground"
             href="#"
             className="relative flex border-transparent hover:border-current border-1 rounded-md p-1"
-            onClick={(e) => {
-              e.preventDefault();
-              handleCartClick();
-            }}
+            onClick={handleCartClick}
           >
             <Badge
               className="top-0 right-[-5px]"
@@ -244,7 +249,6 @@ export default function CustomerNavbar({
           </Link>
         </NavbarItem>
       </NavbarContent>
-
       <NavbarContent justify="end">
         <NavbarItem>
           {isAdmin && (
@@ -291,15 +295,34 @@ export default function CustomerNavbar({
           className="lg:hidden"
         />
       </NavbarContent>
-
       <NavbarMenu className="this-is-for-when-the-menu-is-open sm:flex">
-        {menuItems.map(({ item, icon }, index) => (
+        {menuItems.map(({ item, icon, special }, index) => (
           <NavbarMenuItem
             key={`${item}-${index}`}
-            className="hover:bg-default-300 text-blue-500 dark:hover:bg-gray-200 dark:hover:text-black"
+            className="hover:bg-default-300 text-blue-500 dark:hover:bg-gray-200 dark:hover:text-black py-2"
           >
-            {item === "Sign Out" ? (
-              <button className="w-full flex text-danger text-lg items-center">
+            {special && item === "Cart" ? (
+              <Link
+                color="foreground"
+                className="w-full flex items-center"
+                href="#"
+                onClick={handleCartClick}
+              >
+                <Badge
+                  color="danger"
+                  content={cartItemCount}
+                  isInvisible={cartItemCount === 0}
+                  shape="circle"
+                >
+                  <CartIcon />
+                </Badge>
+                <span className="ml-2">Cart</span>
+              </Link>
+            ) : item === "Sign Out" ? (
+              <button
+                className="w-full flex text-danger text-lg items-center"
+                onClick={signOut}
+              >
                 {icon && <span className="mr-2">{icon}</span>}
                 {item}
               </button>
@@ -360,7 +383,13 @@ export default function CustomerNavbar({
                     : "foreground"
                 }
                 className="w-full"
-                href={item === "Sign In" ? "/signin" : "#"}
+                href={
+                  item === "Sign In"
+                    ? "/signin"
+                    : item === "Profile"
+                    ? "/profile"
+                    : "#"
+                }
                 size="lg"
               >
                 {icon && <span className="mr-2">{icon}</span>}
@@ -369,7 +398,7 @@ export default function CustomerNavbar({
             )}
           </NavbarMenuItem>
         ))}
-      </NavbarMenu>
+      </NavbarMenu>{" "}
     </Navbar>
   );
 }

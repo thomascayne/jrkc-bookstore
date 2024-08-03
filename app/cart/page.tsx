@@ -1,12 +1,25 @@
 // app/cart/page.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useStore } from "@tanstack/react-store";
-import { cartStore, removeItem, updateQuantity } from "@/stores/cartStore";
+import {
+  calculateDiscountedPrice,
+  cartStore,
+  getTotal,
+  removeItem,
+  updateQuantity,
+} from "@/stores/cartStore";
 import Link from "next/link";
 import Image from "next/image";
-import { Button, Input } from "@nextui-org/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Divider,
+  Input,
+} from "@nextui-org/react";
 import PlaceholderImage from "@/components/PlaceholderImage";
 import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
 import { IBook } from "@/interfaces/IBook";
@@ -14,15 +27,20 @@ import BookDetails from "@/components/BookDetails";
 import { GoogleBook } from "@/interfaces/GoogleBook";
 import { fetchBookDetails } from "@/utils/bookApi";
 import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
+import InputButtonGroup from "@/components/CartInputGroup";
+import { useRouter } from "next/navigation";
+import CartLoadingSkeleton from "@/components/CartLoadingSkeleton";
 
 const CartPage = () => {
+  const [isClient, setIsClient] = useState(false);
   const { openModal } = useFullScreenModal();
-
   const cartItems = useStore(cartStore, (state) => state.items) as IBook[];
-  const total = cartItems.reduce(
-    (sum, item) => sum + (item.list_price || 0) * item.quantity,
-    0
-  );
+  const router = useRouter();
+  const total = useStore(cartStore, getTotal);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity > 0) {
@@ -59,9 +77,13 @@ const CartPage = () => {
     }
   };
 
+  if (!isClient) {
+    return <CartLoadingSkeleton />;
+  }
+
   if (cartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <section className="container flex flex-col items-center w-full mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-4">Your Cart is Empty</h1>
         <p className="mb-4">
           Looks like you have not added any items to your cart yet.
@@ -69,17 +91,39 @@ const CartPage = () => {
         <Link href="/" className="text-blue-500 hover:underline">
           Continue Shopping
         </Link>
-      </div>
+      </section>
     );
   }
 
+  const handleContinueShopping = () => {
+    const historyLength = window.history.length;
+
+    if (historyLength > 1) {
+      for (let i = historyLength - 2; i >= 0; i--) {
+        const prevPath = window.history.state[i];
+        console.log(`Continue Shopping previousPath: ${prevPath}`);
+
+        if (prevPath && !prevPath.includes("/cart")) {
+          window.history.go(i - historyLength);
+          return;
+        }
+      }
+    }
+
+    // If no suitable previous path is found, navigate to the root path
+    // window.history.pushState({}, "", "/");
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <section className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Your Shopping Cart</h1>
       <div className="flex flex-col md:flex-row gap-8">
         <div className="md:w-2/3">
           {cartItems.map((item) => (
-            <div key={item.id} className="flex items-center border-b py-4">
+            <div
+              key={item.id}
+              className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4"
+            >
               {item.is_promotion ? (
                 <Image
                   src={item.small_thumbnail_image_link}
@@ -93,7 +137,7 @@ const CartPage = () => {
                   <PlaceholderImage />
                 </div>
               )}
-              <div className="flex-grow min-w-0">
+              <div className="flex-grow min-w-0 max-w-[560px]">
                 <Link
                   className="font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
                   href="#"
@@ -105,80 +149,105 @@ const CartPage = () => {
                   {item.title}
                 </Link>
                 <p className="">by {item.authors}</p>
-                <p className="">${item.list_price?.toFixed(2)}</p>
+                <p className="list_price text-lg">
+                  {item.is_promotion && item.discount_percentage ? (
+                    <>
+                      <span className="text-gray-400 line-through">
+                        ${item.list_price.toFixed(2)}
+                      </span>
+                      <span className="ml-2">
+                        ${calculateDiscountedPrice(item).toFixed(2)}
+                      </span>
+                      <span className="text-red-500 ml-2">
+                        ({item.discount_percentage}% off)
+                      </span>
+                    </>
+                  ) : (
+                    <span>${item.list_price.toFixed(2)}</span>
+                  )}
+                </p>
+
+                {/* <p className="">${item.list_price?.toFixed(2)}</p> */}
               </div>
-              <div className="flex items-center">
-                <Button
-                  onClick={() =>
+              <div className="flex items-center mr-4">
+                <InputButtonGroup
+                  value={item.quantity || 1}
+                  onChange={(value) =>
+                    handleQuantityChange(item.id, value as number)
+                  }
+                  onDecrement={() =>
                     handleQuantityChange(item.id, item.quantity - 1)
                   }
-                >
-                  -
-                </Button>
-                <Input
-                  className="w-16 mx-2 text-center"
-                  type="number"
-                  onChange={(e) =>
-                    handleQuantityChange(item.id, parseInt(e.target.value))
-                  }
-                  min="1"
-                />
-                <Button
-                  onClick={() =>
+                  onIncrement={() =>
                     handleQuantityChange(item.id, item.quantity + 1)
                   }
-                >
-                  +
-                </Button>
+                  min={1}
+                />
               </div>
-              <p className="ml-4 font-semibold">
+              <p className="mx-4 font-semibold">
                 ${((item.list_price || 0) * item.quantity).toFixed(2)}
               </p>
-              <Button
-                variant="light"
-                color="danger"
-                className="ml-4"
-                onClick={() => removeItem(item.id)}
+              <Link
+                href="#"
+                className="[&:important]:px-0 hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
+                onClick={(e) => {
+                  e.preventDefault();
+                  removeItem(item.id);
+                }}
               >
                 Remove
-              </Button>
+              </Link>
             </div>
           ))}
         </div>
         <div className="md:w-1/3">
-          <div className="bg-gray-100 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-            <div className="flex justify-between mb-2">
-              <span>Subtotal</span>
-              <span>${total.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span>Shipping</span>
-              <span>Calculated at checkout</span>
-            </div>
-            <div className="flex justify-between font-semibold text-lg mt-4">
-              <span>Total</span>
-              <span>${total.toFixed(2)}</span>
-            </div>
-            <Button className="w-full mt-6" color="primary">
-              Proceed to Checkout
-            </Button>
-          </div>
-          <div className="mt-6">
-            <h3 className="font-semibold mb-2">Have a promo code?</h3>
-            <div className="flex">
-              <Input placeholder="Enter code" className="flex-grow" />
-              <Button className="ml-2">Apply</Button>
-            </div>
-          </div>
+          <Card shadow="md" className="mb-4">
+            <CardHeader>
+              <h2 className="text-xl font-semibold py-2">Order Summary</h2>
+            </CardHeader>
+            <Divider />
+            <CardBody>
+              <div className="flex justify-between my-2">
+                <span>Subtotal</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span>Shipping</span>
+                <span>Calculated at checkout</span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg mt-4">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              <Button className="w-full my-6" color="primary" radius="md">
+                Proceed to Checkout
+              </Button>
+            </CardBody>
+          </Card>
+          <Card shadow="md">
+            <CardHeader>
+              <h3 className="font-semibold">Have a promo code?</h3>
+            </CardHeader>
+            <Divider className="my-4" />
+            <CardBody>
+              <div className="flex">
+                <Input placeholder="Enter code" className="flex-grow" />
+                <Button className="ml-2">Apply</Button>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       </div>
       <div className="mt-8">
-        <Link href="/" className="text-blue-500 hover:underline">
+        <Link
+          onClick={handleContinueShopping}
+          href="#"
+          className="bg-primary-500 hover:bg-primary-700 rounded-sm text-white px-4 py-2"
+        >
           Continue Shopping
         </Link>
       </div>
-    </div>
+    </section>
   );
 };
 

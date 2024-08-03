@@ -1,14 +1,14 @@
 // components/BookDetails.tsx
 
 import React from "react";
-import { Book } from "@/interfaces/Book";
 import { IBook } from "@/interfaces/IBook";
 import BookImage from "@/components/BookImage";
 import SafeHTML from "@/components/SafeHTML";
 import StarRating from "@/components/StarRating";
+import { GoogleBook } from "@/interfaces/GoogleBook";
 
 interface BookDetailsProps {
-  bookDetails: Book;
+  bookDetails: GoogleBook;
   selectedBook: IBook;
   imageLink: string;
 }
@@ -21,8 +21,15 @@ const BookDetails: React.FC<BookDetailsProps> = ({
   return (
     <div className="book-details-modal container space-y-4 w-full px-4 sm:px-0 sm:w-[480px] lg:w-[640px]">
       <div>
+        {bookDetails?.volumeInfo.title && (
+          <h1 className="text-2xl md:text-3xl block md:hidden font-bold mb-2 text-center w-full">
+            {bookDetails?.volumeInfo.title}
+          </h1>
+        )}
         {bookDetails?.volumeInfo.subtitle && (
-          <h3 className="text-xl mb-2">{bookDetails?.volumeInfo.subtitle}</h3>
+          <h3 className="text-xl mb-2 text-center">
+            {bookDetails?.volumeInfo.subtitle}
+          </h3>
         )}
         {imageLink && (
           <div className="relative shadow-large border bg-transparent pt-4 rounded-sm border-gray-300 dark:border-gray-600">

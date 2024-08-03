@@ -1,10 +1,10 @@
 // hooks/useBookFetch.ts
 
+import { GoogleBook } from '@/interfaces/GoogleBook';
 import { useState, useEffect } from 'react';
-import { Book } from "@/interfaces/Book";
 
 export function useBookFetch(category: { key: string; label: string }) {
-    const [books, setBooks] = useState<Book[]>([]);
+    const [books, setBooks] = useState<GoogleBook[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -25,7 +25,7 @@ export function useBookFetch(category: { key: string; label: string }) {
                 const fetchedItems = data.items || [];
 
                 const booksWithImages = fetchedItems.filter(
-                    (book: Book) =>
+                    (book: GoogleBook) =>
                         book.volumeInfo &&
                         book.volumeInfo.imageLinks &&
                         book.volumeInfo.imageLinks.thumbnail

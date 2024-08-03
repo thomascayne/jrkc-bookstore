@@ -4,6 +4,7 @@
 
 import { useSidePanel } from "@/contexts/SidePanelContext";
 import { waitSomeTime } from "@/utils/wait-some-time";
+import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/react";
 import React, { useEffect, useState } from "react";
 import { IoMdClose } from "react-icons/io";
 
@@ -21,19 +22,18 @@ const SidePanel: React.FC<SidePanelProps> = ({ side }) => {
     rightContent,
     leftWidth,
     rightWidth,
-    leftTitle,
-    rightTitle,
-    leftFooter,
-    rightFooter,
+    leftIsDismissable,
+    rightIsDismissable,
   } = useSidePanel();
+
   const [isRendered, setIsRendered] = useState(false);
 
   const isOpen = side === "left" ? isLeftOpen : isRightOpen;
   const closePanel = side === "left" ? closeLeftPanel : closeRightPanel;
   const content = side === "left" ? leftContent : rightContent;
   const width = side === "left" ? leftWidth : rightWidth;
-  const title = side === "left" ? leftTitle : rightTitle;
-  const footer = side === "left" ? leftFooter : rightFooter;
+  const isDismissable =
+    side === "left" ? leftIsDismissable : rightIsDismissable;
 
   useEffect(() => {
     if (isOpen) {
@@ -48,47 +48,25 @@ const SidePanel: React.FC<SidePanelProps> = ({ side }) => {
   if (!isRendered) return null;
 
   return (
-    <aside
-      className={`side-panel-outer-container fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
-      onClick={closePanel}
+      onClick={isDismissable ? closePanel : undefined}
     >
       <div
-        className={`side-panel-inner-container w-full sm:w-[400px] md:w-[640px] ${
-          width ? width : "lg:w-[768px]"
-        } fixed top-0 ${
-          side === "left" ? "left-0" : "right-0"
-        } h-full bg-white dark:bg-gray-800 overflow-hidden transition-transform duration-300 ease-in-out transform ${
+        className={`fixed top-0 ${side}-0 h-full bg-white dark:bg-gray-800 overflow-hidden transition-transform duration-300 ease-in-out transform ${
           isOpen
             ? "translate-x-0"
             : side === "left"
             ? "-translate-x-full"
             : "translate-x-full"
-        }`}
-        onClick={(e) => e.stopPropagation()}
+        } ${width || "w-full sm:w-[400px] md:w-[640px] lg:w-[768px]"}`}
+        onClick={isDismissable ? closePanel : undefined}
       >
-        <div className="side-panel-content-wrapper h-full flex flex-col">
-          <div className="side-panel-header flex justify-between items-center p-4 border-b">
-            <h2 className="text-xl font-bold truncate">{title}</h2>
-            <button
-              onClick={closePanel}
-              className="side-panel-close-button text-2xl hover:text-red-500 transition-all duration-300 ease-in-out"
-            >
-              <IoMdClose />
-            </button>
-          </div>
-          <div className="side-panel-content p-4 flex-grow overflow-y-auto">
-            {content}
-          </div>
-          {footer && (
-            <section className="side-panel-footer border-t p-4">
-              {footer}
-            </section>
-          )}
-        </div>
+        {content}
       </div>
-    </aside>
+    </div>
   );
 };
 

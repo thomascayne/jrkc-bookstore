@@ -3,70 +3,66 @@
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+export interface SidePanelContentProps {
+  content: ReactNode;
+  width?: string;
+  isDismissable?: boolean;
+}
+
 interface SidePanelContextType {
   isLeftOpen: boolean;
   isRightOpen: boolean;
-  leftContent: ReactNode;
-  rightContent: ReactNode;
-  leftWidth: string;
-  rightWidth: string;
-  leftTitle: string;
-  rightTitle: string;
-  leftFooter: ReactNode;
-  rightFooter: ReactNode;
   openLeftPanel: (
     content: ReactNode,
     width?: string,
-    title?: string,
-    footer?: ReactNode
+    isDismissable?: boolean
   ) => void;
   openRightPanel: (
     content: ReactNode,
     width?: string,
-    title?: string,
-    footer?: ReactNode
+    isDismissable?: boolean
   ) => void;
   closeLeftPanel: () => void;
   closeRightPanel: () => void;
+  leftContent: ReactNode;
+  rightContent: ReactNode;
+  leftWidth?: string;
+  rightWidth?: string;
+  leftIsDismissable: boolean;
+  rightIsDismissable: boolean;
 }
 
-const SidePanelContext = createContext<SidePanelContextType | null>(null);
+const SidePanelContext = createContext<SidePanelContextType | undefined>(
+  undefined
+);
 
-export function SidePanelProvider({ children }: { children: ReactNode }) {
+export const SidePanelProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [isLeftOpen, setIsLeftOpen] = useState(false);
   const [isRightOpen, setIsRightOpen] = useState(false);
-  const [leftContent, setLeftContent] = useState<ReactNode>(null);
-  const [rightContent, setRightContent] = useState<ReactNode>(null);
-  const [leftWidth, setLeftWidth] = useState("");
-  const [rightWidth, setRightWidth] = useState("");
-  const [leftTitle, setLeftTitle] = useState("");
-  const [rightTitle, setRightTitle] = useState("");
-  const [leftFooter, setLeftFooter] = useState<ReactNode>(null);
-  const [rightFooter, setRightFooter] = useState<ReactNode>(null);
+  const [leftContent, setLeftContent] = useState<SidePanelContentProps>({
+    content: null,
+  });
+  const [rightContent, setRightContent] = useState<SidePanelContentProps>({
+    content: null,
+  });
 
   const openLeftPanel = (
     content: ReactNode,
     width?: string,
-    title?: string,
-    footer?: ReactNode
+    isDismissable: boolean = true
   ) => {
-    setLeftContent(content);
-    setLeftWidth(width || "");
-    setLeftTitle(title || "");
-    setLeftFooter(footer || null);
+    setLeftContent({ content, width, isDismissable });
     setIsLeftOpen(true);
   };
 
   const openRightPanel = (
     content: ReactNode,
     width?: string,
-    title?: string,
-    footer?: ReactNode
+    isDismissable: boolean = true
   ) => {
-    setRightContent(content);
-    setRightWidth(width || "");
-    setRightTitle(title || "");
-    setRightFooter(footer || null);
+    setRightContent({ content, width, isDismissable });
     setIsRightOpen(true);
   };
 
@@ -78,50 +74,32 @@ export function SidePanelProvider({ children }: { children: ReactNode }) {
     setIsRightOpen(false);
   };
 
-  const value: SidePanelContextType = {
-    isLeftOpen,
-    isRightOpen,
-    leftContent,
-    rightContent,
-    leftWidth,
-    rightWidth,
-    leftTitle,
-    rightTitle,
-    leftFooter,
-    rightFooter,
-    openLeftPanel,
-    openRightPanel,
-    closeLeftPanel,
-    closeRightPanel,
-  };
-
   return (
-    <SidePanelContext.Provider value={value}>
+    <SidePanelContext.Provider
+      value={{
+        isLeftOpen,
+        isRightOpen,
+        openLeftPanel,
+        openRightPanel,
+        closeLeftPanel,
+        closeRightPanel,
+        leftContent: leftContent.content,
+        rightContent: rightContent.content,
+        leftWidth: leftContent.width,
+        rightWidth: rightContent.width,
+        leftIsDismissable: leftContent.isDismissable ?? true,
+        rightIsDismissable: rightContent.isDismissable ?? true,
+      }}
+    >
       {children}
     </SidePanelContext.Provider>
   );
-}
+};
 
 export function useSidePanel(): SidePanelContextType {
   const context = useContext(SidePanelContext);
-  if (context === null) {
-    console.warn("useSidePanel must be used within a SidePanelProvider");
-    return {
-      isLeftOpen: false,
-      isRightOpen: false,
-      leftContent: null,
-      rightContent: null,
-      leftWidth: "",
-      rightWidth: "",
-      leftTitle: "",
-      rightTitle: "",
-      leftFooter: null,
-      rightFooter: null,
-      openLeftPanel: () => {},
-      openRightPanel: () => {},
-      closeLeftPanel: () => {},
-      closeRightPanel: () => {},
-    };
+  if (context === undefined) {
+    throw new Error("useSidePanel must be used within a SidePanelProvider");
   }
   return context;
 }
