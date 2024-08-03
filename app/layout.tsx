@@ -53,7 +53,9 @@ export default async function RootLayout({
               <AuthNavbar initialUser={user} />
               <div className="flex flex-grow overflow-hidden">
                 <SidePanel side="left" />
-                <main className="flex-grow overflow-y-auto">{children}</main>
+                <main className="flex flex-grow overflow-y-auto">
+                  {children}
+                </main>
                 <SidePanel side="right" />
               </div>
               <Footer />
