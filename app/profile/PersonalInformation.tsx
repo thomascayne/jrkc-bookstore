@@ -12,7 +12,7 @@ import {
   validatePassword,
 } from "@/utils/passwordChecker";
 import { useRouter } from "next/navigation";
-import { Profile } from "@/interfaces/profile";
+import { UserProfile } from "@/interfaces/UserProfile";
 import {
   validateAndFormatPhone,
   PhoneValidationResult,
@@ -44,7 +44,7 @@ export default function PersonalInformation({ user }: PersonalInfoProps) {
     useState<PasswordValidationResult>();
   const [phone, setPhone] = useState("");
   const [phoneMessage, setPhoneMessage] = useState<PhoneValidationResult>();
-  const [profileData, setProfileData] = useState<Profile>();
+  const [profileData, setProfileData] = useState<UserProfile>();
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -78,7 +78,7 @@ export default function PersonalInformation({ user }: PersonalInfoProps) {
 
   useEffect(() => {
     if (isPasswordTouched) {
-      const result = validatePassword(newPassword, confirmPassword);
+      const result = validatePassword(newPassword, confirmPassword, true);
       setPasswordMessage(result);
       setIsPasswordValid(result.isValid);
     }
@@ -104,9 +104,7 @@ export default function PersonalInformation({ user }: PersonalInfoProps) {
       return;
     }
 
-    console.log("Phone number:", formattedNumber);
     // Update phone in auth.users
-
     const { error: profileError } = await supabase
       .from("profiles")
       .update({ phone: formattedNumber })

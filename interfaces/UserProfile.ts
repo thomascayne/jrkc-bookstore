@@ -1,6 +1,6 @@
-// interfaces/profile.ts
+// interfaces/UserProfile.ts
 
-export interface Profile {
+export interface UserProfile {
     city?: string | null;
     country?: string | null;
     created_at?: string;
