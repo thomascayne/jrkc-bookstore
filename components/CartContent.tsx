@@ -74,21 +74,9 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
       // fetch additional book details from Google Books API
       const googleBookDetails = await fetchBookDetails<GoogleBook>(book.id);
 
-      const bookDetails = {
-        ...supabaseBook,
-        ...googleBookDetails,
-      };
-
       const bookTitle = `${book.title}`;
 
-      openModal(
-        <BookDetails
-          bookDetails={bookDetails}
-          selectedBook={book}
-          imageLink={book.small_thumbnail_image_link || ""}
-        />,
-        bookTitle
-      );
+      openModal(<BookDetails bookId={book.id} />, bookTitle);
     } catch (error) {
       console.error("Error fetching book details:", error);
     }
