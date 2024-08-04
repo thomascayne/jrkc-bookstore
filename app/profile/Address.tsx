@@ -7,7 +7,7 @@ import { Button, Card, Input } from "@nextui-org/react";
 import { User } from "@supabase/supabase-js";
 import { BillingAddress } from "../../interfaces/BillingAddress";
 import { ShippingAddress } from "@/interfaces/ShippingAddress";
-import { Profile } from "@/interfaces/profile";
+import { UserProfile } from "@/interfaces/UserProfile";
 
 interface AddressProps {
   user: User | null;
@@ -36,7 +36,7 @@ export default function Address({ user }: AddressProps) {
     shipping_phone: "",
   };
 
-  const [profileData, setProfileData] = useState<Profile>();
+  const [profileData, setProfileData] = useState<UserProfile>();
   const [showBillingAddressForm, setShowBillingAddressForm] = useState(false);
   const [showShippingAddressForm, setShowShippingAddressForm] = useState(false);
 
