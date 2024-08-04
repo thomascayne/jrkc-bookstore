@@ -1,11 +1,12 @@
-// components/BookDetails.tsx
-
-import React from "react";
 import BookImage from "@/components/BookImage";
 import SafeHTML from "@/components/SafeHTML";
 import StarRating from "@/components/StarRating";
 import { useBookFromSupabase } from "@/utils/useBookFromSupabase";
 import { useGoogleBookDetails } from "@/utils/useGoogleBookDetails";
+import Link from "next/link";
+// components/BookDetails.tsx
+
+import React from "react";
 
 interface BookDetailsProps {
   bookId: string;

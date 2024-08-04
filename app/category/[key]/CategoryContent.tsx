@@ -89,62 +89,84 @@ export default function CategoryContent({
           <h1 className="text-3xl font-bold mb-4 pt-4">{data.category}</h1>
         </div>
 
-        <div className="masonry-grid container mx-auto columns-2 sm:columns-3 md:columns-4 lg:columns-6 xl:columns-8 gap-3 w-full">
-          {displayedBooks.map((book, index) => (
-            <div
-              key={book.id}
-              className="relative group overflow-hidden shadow-sm mb-4 flex transition-all ease-in-out duration-400 flex-col items-center justify-center border p-4 rounded hover:border-blue-500 break-inside-avoid"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
+        <div className="container mx-auto px-4 pb-4 my-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+            {displayedBooks.map((book, index) => (
               <div
-                className="w-full flex flex-col items-center cursor-pointer pt-1 hover:bg-gray-100"
-                onClick={() => handleBookClick(book)}
+                key={book.id}
+                className="flex flex-col h-full border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ease-in-out group opacity-0 animate-fade-in"
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: "forwards",
+                }}
               >
-                {book.is_promotion && book.discount_percentage && (
-                  <div className="absolute top-0 left-[0] bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-br z-10">
-                    {`${book.discount_percentage}% OFF`}
-                  </div>
-                )}
-
-                <div className="relative w-32 h-48 mb-2">
+                <div
+                  className="relative aspect-[2/3] cursor-pointer p-2"
+                  onClick={() => handleBookClick(book)}
+                >
                   {book.thumbnail_image_link && (
-                    <Image
-                      alt={book.title}
-                      className="mb-2"
-                      fill
-                      src={book.thumbnail_image_link}
-                      style={{ objectFit: "cover" }}
-                    />
+                    <div className="relative w-full h-full flex items-start justify-center">
+                      <div
+                        className="relative w-full"
+                        style={{ paddingBottom: "150%" }}
+                      >
+                        <Image
+                          alt={book.title}
+                          src={book.thumbnail_image_link}
+                          layout="fill"
+                          objectFit="contain"
+                          objectPosition="top"
+                          className="transition-transform duration-300 ease-in-out group-hover:scale-105"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {book.is_promotion && book.discount_percentage && (
+                    <div className="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-br z-10">
+                      {`${book.discount_percentage}% OFF`}
+                    </div>
                   )}
                 </div>
-                <h2 className="font-bold book-name whitespace-normal">
-                  {book.title}
-                </h2>
-              </div>
-              <p className="book-authors">{book.authors.substring(0, 20)}</p>
-              {book.average_rating && (
-                <div className="flex mt-2">
-                  <StarRating rating={book.average_rating} />
-                  <span className="mt-[-3px] ml-2 text-lg">
-                    {book.average_rating}
-                  </span>
+
+                <div className="flex-grow p-4 flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-sm font-normal line-clamp-2 mb-2">
+                      {book.title}
+                    </h2>
+                    <p className="text-xs text-gray-600 line-clamp-1">
+                      {book.authors}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto">
+                    {book.average_rating && (
+                      <div className="flex items-center mb-2">
+                        <StarRating rating={book.average_rating} />
+                        <span className="ml-2 text-sm">
+                          {book.average_rating}
+                        </span>
+                      </div>
+                    )}
+                    {book.list_price && (
+                      <div className="text-sm">$ {book.list_price}</div>
+                    )}
+                  </div>
                 </div>
-              )}
-              {book.list_price && (
-                <div className="flex mt-2 book-price">
-                  <span className="mt-[-2px] ml-2 text-lg">
-                    $ {book.list_price}
-                  </span>
+
+                <div className="relative">
+                  <div
+                    className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 cursor-pointer transform translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCart(book);
+                    }}
+                  >
+                    QUICK ADD
+                  </div>
                 </div>
-              )}
-              <div
-                className="absolute cursor-pointer bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 transform translate-y-full transition-transform duration-500 ease-in-out group-hover:translate-y-0"
-                onClick={() => handleAddToCart(book)}
-              >
-                QUICK ADD
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {displayedBooks.length < data.books.length && (
