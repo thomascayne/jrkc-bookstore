@@ -64,14 +64,7 @@ const CartPage = () => {
 
       const bookTitle = `${book.title}`;
 
-      openModal(
-        <BookDetails
-          bookDetails={bookDetails}
-          selectedBook={book}
-          imageLink={book.small_thumbnail_image_link || ""}
-        />,
-        bookTitle
-      );
+      openModal(<BookDetails bookId={book.id} />, bookTitle);
     } catch (error) {
       console.error("Error fetching book details:", error);
     }
@@ -101,7 +94,6 @@ const CartPage = () => {
     if (historyLength > 1) {
       for (let i = historyLength - 2; i >= 0; i--) {
         const prevPath = window.history.state[i];
-        console.log(`Continue Shopping previousPath: ${prevPath}`);
 
         if (prevPath && !prevPath.includes("/cart")) {
           window.history.go(i - historyLength);

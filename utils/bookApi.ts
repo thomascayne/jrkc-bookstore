@@ -6,9 +6,12 @@ export async function fetchBookDetails<GoogleBook>(bookId: string) {
 
     try {
         const response = await fetch(`${apiUrl}/${bookId}?key=${apiKey}`);
+
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            console.error('Network response was not ok');
+            return;
         }
+
         const data = await response.json();
         return data;
     } catch (error) {

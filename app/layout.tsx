@@ -13,6 +13,7 @@ import { SidePanelProvider } from "@/contexts/SidePanelContext";
 import SidePanel from "@/components/SidePanel";
 import { FullScreenModalProvider } from "@/contexts/FullScreenModalContext";
 import { CartProvider } from "@/contexts/CartContext";
+import Providers from "@/providers/Providers";
 
 export const metadata: Metadata = {
   title: packageInfo?.appName || "JRKC Bookstore",
@@ -32,7 +33,11 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   return (
-    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${GeistSans.className}`}
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -47,21 +52,23 @@ export default async function RootLayout({
         />
       </head>
       <body className="flex flex-col pt-[75px] min-h-screen">
-        <FullScreenModalProvider>
-          <SidePanelProvider>
-            <CartProvider>
-              <AuthNavbar initialUser={user} />
-              <div className="flex flex-grow overflow-hidden">
-                <SidePanel side="left" />
-                <main className="flex flex-grow overflow-y-auto">
-                  {children}
-                </main>
-                <SidePanel side="right" />
-              </div>
-              <Footer />
-            </CartProvider>
-          </SidePanelProvider>
-        </FullScreenModalProvider>
+        <Providers>
+          <FullScreenModalProvider>
+            <SidePanelProvider>
+              <CartProvider>
+                <AuthNavbar initialUser={user} />
+                <div className="flex flex-grow overflow-hidden">
+                  <SidePanel side="left" />
+                  <main className="flex flex-grow overflow-y-auto">
+                    {children}
+                  </main>
+                  <SidePanel side="right" />
+                </div>
+                <Footer />
+              </CartProvider>
+            </SidePanelProvider>
+          </FullScreenModalProvider>
+        </Providers>
       </body>
     </html>
   );
