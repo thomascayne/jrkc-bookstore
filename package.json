@@ -32,6 +32,8 @@
     "@nextui-org/react": "^2.4.6",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
+    "@tanstack/react-query": "^5.51.21",
+    "@tanstack/react-query-devtools": "^5.51.21",
     "@tanstack/react-store": "^0.5.5",
     "autoprefixer": "10",
     "embla-carousel": "^8",
