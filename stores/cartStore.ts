@@ -1,7 +1,7 @@
+import { IBook } from '@/interfaces/IBook';
 // stores/cartStore.ts
 
 import { Store } from '@tanstack/react-store';
-import { IBook } from '@/interfaces/IBook';
 
 export interface CartState {
     items: IBook[];
@@ -63,6 +63,8 @@ export const updateQuantity = (id: string, quantity: number) => {
 };
 
 export const calculateDiscountedPrice = (item: IBook) => {
+    if (!item) return 0;
+
     if (item.is_promotion && item.discount_percentage) {
         const discountAmount = item.list_price * (item.discount_percentage / 100);
         return item.list_price - discountAmount;
@@ -72,6 +74,10 @@ export const calculateDiscountedPrice = (item: IBook) => {
 
 
 export const getTotal = () => {
+    if (!cartStore.state || !cartStore.state.items) {
+        return 0;
+    }
+
     return cartStore.state.items.reduce(
         (sum, item) => sum + calculateDiscountedPrice(item) * item.quantity,
         0
