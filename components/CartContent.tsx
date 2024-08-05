@@ -1,33 +1,35 @@
 // components/CartContent.tsx
-import React, { useEffect } from "react";
+
+import BookDetails from "@/components/BookDetails";
+import InputButtonGroup from "@/components/CartInputGroup";
+import PlaceholderImage from "@/components/PlaceholderImage";
+import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
+import { useSidePanel } from "@/contexts/SidePanelContext";
+import { GoogleBook } from "@/interfaces/GoogleBook";
+import { IBook } from "@/interfaces/IBook";
+import {
+  calculateDiscountedPrice,
+  cartStore,
+  getTotal,
+  removeItem,
+  updateQuantity,
+} from "@/stores/cartStore";
+import { fetchBookDetails } from "@/utils/bookApi";
+import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
 import {
   Button,
   Card,
   CardBody,
   CardFooter,
   CardHeader,
+  Tooltip,
 } from "@nextui-org/react";
+import { useStore } from "@tanstack/react-store";
 import Image from "next/image";
 import Link from "next/link";
-import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
-import { fetchBookDetails } from "@/utils/bookApi";
-import { IBook } from "@/interfaces/IBook";
-import { GoogleBook } from "@/interfaces/GoogleBook";
-import BookDetails from "@/components/BookDetails";
-import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
-import { useSidePanel } from "@/contexts/SidePanelContext";
 import { useRouter } from "next/navigation";
-import PlaceholderImage from "@/components/PlaceholderImage";
-import InputButtonGroup from "@/components/CartInputGroup";
+import React, { useEffect } from "react";
 import { IoMdClose } from "react-icons/io";
-import {
-  cartStore,
-  fetchCart,
-  removeItem,
-  updateQuantity,
-  getTotal,
-} from "@/stores/cartStore";
-import { useStore } from "@tanstack/react-store";
 
 interface CartSidePanelProps {
   currentPath: string;
@@ -49,20 +51,16 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
   const { closeRightPanel } = useSidePanel();
   const router = useRouter();
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
   const handleCheckout = () => {
     closeRightPanel();
     router.push("/cart");
   };
 
-  const handleQuantityChange = (id: string, quantity: number) => {
+  const handleQuantityChange = (book_id: string, quantity: number) => {
     if (quantity > 0) {
-      updateQuantity(id, quantity);
+      updateQuantity(book_id, quantity);
     } else {
-      removeItem(id);
+      removeItem(book_id);
     }
   };
 
@@ -132,7 +130,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                 <>
                   {cartItems.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.book_id}
                       className="flex items-start space-x-4 mb-2 sm:[&:not(:first-child)]:pt-2 [&:not(:first-child)]:border-t  border-gray-300 dark:border-gray-600"
                     >
                       {item.book.small_thumbnail_image_link ? (
@@ -141,16 +139,16 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                           alt={item.book.title}
                           width={50}
                           height={75}
-                          className="object-cover mr-4"
+                          className="object-cover"
                         />
                       ) : (
                         <div className="mr-4">
                           <PlaceholderImage />
                         </div>
                       )}
-                      <div className="flex-grow min-w-0">
+                      <div className="flex-grow min-w-0 mb-0">
                         <Link
-                          className="inline-block mb-2 font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
+                          className="inline-block mb-0 font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
@@ -159,7 +157,12 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                         >
                           {item.book.title}
                         </Link>
-                        <p className="list_price text-lg">
+                        <p className="flex pt-0">
+                          <span className="mr-2">by</span>
+                          {item.book.authors}
+                        </p>
+
+                        <p className="pricing">
                           {item.book.is_promotion &&
                           item.book.discount_percentage ? (
                             <>
@@ -181,24 +184,19 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                       </div>
                       <div className="flex flex-col items-center space-x-1">
                         <InputButtonGroup
-                          value={item.quantity || 1}
-                          onChange={(value) =>
-                            handleQuantityChange(item.id, value)
+                          maxQuantity={item.book.available_quantity}
+                          minQuantity={1}
+                          onChange={(newValue) =>
+                            handleQuantityChange(item.book_id, newValue)
                           }
-                          onDecrement={() =>
-                            handleQuantityChange(item.id, item.quantity - 1)
-                          }
-                          onIncrement={() =>
-                            handleQuantityChange(item.id, item.quantity + 1)
-                          }
-                          min={1}
+                          value={item.quantity}
                         />
                         <Link
                           href="#"
                           className="[&:important]:px-0 hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
                           onClick={(e) => {
                             e.preventDefault();
-                            removeItem(item.id);
+                            removeItem(item.book_id);
                           }}
                         >
                           Remove

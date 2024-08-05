@@ -50,6 +50,7 @@ const CartPage = () => {
       removeItem(id);
     }
   };
+
   const handleBookClick = async (book: IBook) => {
     try {
       // fetch book details from supabase
@@ -114,8 +115,8 @@ const CartPage = () => {
         <div className="md:w-2/3">
           {cartItems.map((item) => (
             <div
-              id={item.id}
-              key={item.id}
+              id={item.book_id}
+              key={item.book_id}
               className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4"
             >
               {item.book.is_promotion ? (
@@ -165,17 +166,12 @@ const CartPage = () => {
               </div>
               <div className="flex items-center mr-4">
                 <InputButtonGroup
-                  value={item.quantity || 1}
-                  onChange={(value) =>
-                    handleQuantityChange(item.id, value as number)
+                  maxQuantity={item.book.available_quantity}
+                  minQuantity={1}
+                  onChange={(newValue) =>
+                    handleQuantityChange(item.book_id, newValue)
                   }
-                  onDecrement={() =>
-                    handleQuantityChange(item.id, item.quantity - 1)
-                  }
-                  onIncrement={() =>
-                    handleQuantityChange(item.id, item.quantity + 1)
-                  }
-                  min={1}
+                  value={item.quantity}
                 />
               </div>
               <p className="mx-4 font-semibold">
@@ -186,7 +182,7 @@ const CartPage = () => {
                 className="[&:important]:px-0 hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
                 onClick={(e) => {
                   e.preventDefault();
-                  removeItem(item.id);
+                  removeItem(item.book_id);
                 }}
               >
                 Remove

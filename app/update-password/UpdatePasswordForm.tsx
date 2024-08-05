@@ -27,7 +27,7 @@ export default function UpdatePasswordForm() {
     if (error) {
       setMessage("Error: " + error.message);
     } else {
-      redirect("/signin");
+      router.push("/");
     }
   };
 
