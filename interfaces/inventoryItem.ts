@@ -1,8 +1,8 @@
-// interfaces/inventoryItem.ts
+// Interface representing an inventory item
 export interface InventoryItem {
-  id: number;
-  title: string;
-  quantity: number;
-  available_quantity: number;
-  price: number;
+  id: string; // Unique identifier for the inventory item
+  book_id: string; // ID of the book
+  quantity: number; // Total quantity of the book in inventory
+  available_quantity: number; // Available quantity of the book for sale
+  price: number; // Price of the book
 }

@@ -12,5 +12,4 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey);
 
 // Client-side Supabase client
-export const createClient = () =>
-  createPagesBrowserClient(supabaseUrl, supabaseAnonKey);
+export const createClient = () => createPagesBrowserClient();
