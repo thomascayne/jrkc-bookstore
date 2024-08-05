@@ -18,7 +18,7 @@ export default async function SignInPage() {
   return (
     <>
       <AuthNavbar initialUser={data.user} />
-      <div className="flex flex-col flex-grow items-center justify-center">
+      <div className="signin-page-wrapper flex flex-col flex-grow items-center justify-center">
         <div className="signin-form-wrapper w-full max-w-md px-8 mt-[-6rem]">
           <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
           <SignInForm />
