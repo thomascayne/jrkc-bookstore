@@ -1,6 +1,5 @@
 // utils/fetchBooksByCategory.ts
 
-import { Book } from '@/interfaces/Book';
 import { BookCategory } from '@/interfaces/BookCategory';
 import { IBook } from '@/interfaces/IBook';
 import { createClient } from '@/utils/supabase/client';
