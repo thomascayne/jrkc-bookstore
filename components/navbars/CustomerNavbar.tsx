@@ -97,8 +97,6 @@ export default function CustomerNavbar({
 
   const handleCategorySelect = async (key: string, label: string) => {
     try {
-      console.log("url: ", url);
-
       const response = await fetch(url);
       const data = await response.json();
       localStorage.setItem("categoryBooks", JSON.stringify(data.items));

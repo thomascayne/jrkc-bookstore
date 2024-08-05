@@ -17,11 +17,12 @@ import {
   updateQuantity,
 } from "@/stores/cartStore";
 import { IBook } from "@/interfaces/IBook";
+import { ICartItem } from "@/interfaces/ICart";
 
 interface CartContextType {
   addItem: (item: IBook) => void;
   calculateDiscountedPrice: (item: IBook) => number;
-  cartItems: IBook[];
+  cartItems: ICartItem[];
   removeItem: (itemId: string) => void;
   totalPrice: number;
   updateItemQuantity: (itemId: string, quantity: number) => void;

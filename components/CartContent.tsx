@@ -1,6 +1,5 @@
 // components/CartContent.tsx
-import React from "react";
-import { useCart } from "@/contexts/CartContext";
+import React, { useEffect } from "react";
 import {
   Button,
   Card,
@@ -21,6 +20,14 @@ import { useRouter } from "next/navigation";
 import PlaceholderImage from "@/components/PlaceholderImage";
 import InputButtonGroup from "@/components/CartInputGroup";
 import { IoMdClose } from "react-icons/io";
+import {
+  cartStore,
+  fetchCart,
+  removeItem,
+  updateQuantity,
+  getTotal,
+} from "@/stores/cartStore";
+import { useStore } from "@tanstack/react-store";
 
 interface CartSidePanelProps {
   currentPath: string;
@@ -35,16 +42,16 @@ interface CartSidePanelProps {
  * @return {JSX.Element} The JSX element representing the cart content.
  */
 const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
-  const {
-    calculateDiscountedPrice,
-    cartItems,
-    removeItem,
-    updateItemQuantity,
-    totalPrice,
-  } = useCart();
+  const cartItems = useStore(cartStore, (state) => state.items);
+  const totalPrice = useStore(cartStore, getTotal);
+
   const { openModal } = useFullScreenModal();
   const { closeRightPanel } = useSidePanel();
   const router = useRouter();
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
   const handleCheckout = () => {
     closeRightPanel();
@@ -53,7 +60,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
 
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity > 0) {
-      updateItemQuantity(id, quantity);
+      updateQuantity(id, quantity);
     } else {
       removeItem(id);
     }
@@ -128,10 +135,10 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                       key={item.id}
                       className="flex items-start space-x-4 mb-2 sm:[&:not(:first-child)]:pt-2 [&:not(:first-child)]:border-t  border-gray-300 dark:border-gray-600"
                     >
-                      {item.small_thumbnail_image_link ? (
+                      {item.book.small_thumbnail_image_link ? (
                         <Image
-                          src={item.small_thumbnail_image_link}
-                          alt={item.title}
+                          src={item.book.small_thumbnail_image_link}
+                          alt={item.book.title}
                           width={50}
                           height={75}
                           className="object-cover mr-4"
@@ -147,26 +154,28 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            handleBookClick(item);
+                            handleBookClick(item.book);
                           }}
                         >
-                          {item.title}
+                          {item.book.title}
                         </Link>
                         <p className="list_price text-lg">
-                          {item.is_promotion && item.discount_percentage ? (
+                          {item.book.is_promotion &&
+                          item.book.discount_percentage ? (
                             <>
                               <span className="text-gray-400 line-through">
-                                ${item.list_price.toFixed(2)}
+                                ${item.book.list_price.toFixed(2)}
                               </span>
                               <span className="ml-2">
-                                ${calculateDiscountedPrice(item).toFixed(2)}
+                                $
+                                {calculateDiscountedPrice(item.book).toFixed(2)}
                               </span>
                               <span className="text-red-500 ml-2">
-                                ({item.discount_percentage}% off)
+                                ({item.book.discount_percentage}% off)
                               </span>
                             </>
                           ) : (
-                            <span>${item.list_price.toFixed(2)}</span>
+                            <span>${item.book.list_price.toFixed(2)}</span>
                           )}
                         </p>
                       </div>
@@ -174,7 +183,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                         <InputButtonGroup
                           value={item.quantity || 1}
                           onChange={(value) =>
-                            handleQuantityChange(item.id, value as number)
+                            handleQuantityChange(item.id, value)
                           }
                           onDecrement={() =>
                             handleQuantityChange(item.id, item.quantity - 1)

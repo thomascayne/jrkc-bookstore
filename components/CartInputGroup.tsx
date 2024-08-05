@@ -34,7 +34,6 @@ export default function InputButtonGroup({
       onChange(newValue);
     }
   };
-  console.log("max: ", max, " min: ", min, " value: ", value);
 
   return (
     <div className="input-button-group flex items-center h-10 !gap-0">

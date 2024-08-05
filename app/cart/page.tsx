@@ -30,11 +30,12 @@ import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
 import InputButtonGroup from "@/components/CartInputGroup";
 import { useRouter } from "next/navigation";
 import CartLoadingSkeleton from "@/components/CartLoadingSkeleton";
+import { ICartItem } from "@/interfaces/ICart";
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
   const { openModal } = useFullScreenModal();
-  const cartItems = useStore(cartStore, (state) => state.items) as IBook[];
+  const cartItems = useStore(cartStore, (state) => state.items) as ICartItem[];
   const router = useRouter();
   const total = useStore(cartStore, getTotal);
 
@@ -113,13 +114,14 @@ const CartPage = () => {
         <div className="md:w-2/3">
           {cartItems.map((item) => (
             <div
+              id={item.id}
               key={item.id}
               className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4"
             >
-              {item.is_promotion ? (
+              {item.book.is_promotion ? (
                 <Image
-                  src={item.small_thumbnail_image_link}
-                  alt={item.title}
+                  src={item.book.small_thumbnail_image_link}
+                  alt={item.book.title}
                   width={50}
                   height={75}
                   className="object-cover mr-4"
@@ -135,27 +137,27 @@ const CartPage = () => {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleBookClick(item);
+                    handleBookClick(item.book);
                   }}
                 >
-                  {item.title}
+                  {item.book.title}
                 </Link>
-                <p className="">by {item.authors}</p>
+                <p className="">by {item.book.authors}</p>
                 <p className="list_price text-lg">
-                  {item.is_promotion && item.discount_percentage ? (
+                  {item.book.is_promotion && item.book.discount_percentage ? (
                     <>
                       <span className="text-gray-400 line-through">
-                        ${item.list_price.toFixed(2)}
+                        ${item.book.list_price.toFixed(2)}
                       </span>
                       <span className="ml-2">
-                        ${calculateDiscountedPrice(item).toFixed(2)}
+                        ${calculateDiscountedPrice(item.book).toFixed(2)}
                       </span>
                       <span className="text-red-500 ml-2">
-                        ({item.discount_percentage}% off)
+                        ({item.book.discount_percentage}% off)
                       </span>
                     </>
                   ) : (
-                    <span>${item.list_price.toFixed(2)}</span>
+                    <span>${item.book.list_price.toFixed(2)}</span>
                   )}
                 </p>
 
@@ -177,7 +179,7 @@ const CartPage = () => {
                 />
               </div>
               <p className="mx-4 font-semibold">
-                ${((item.list_price || 0) * item.quantity).toFixed(2)}
+                ${((item.book.list_price || 0) * item.quantity).toFixed(2)}
               </p>
               <Link
                 href="#"
