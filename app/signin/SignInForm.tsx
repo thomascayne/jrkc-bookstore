@@ -92,6 +92,22 @@ export default function SignInForm() {
 
   return (
     <form className="signin-form flex flex-col w-full justify-center gap-4 text-foreground">
+      {errorMessage && (
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
+          <span className="block sm:inline">{errorMessage}</span>
+        </div>
+      )}
+      {successMessage && (
+        <div
+          className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
+          <span className="block sm:inline">{successMessage}</span>
+        </div>
+      )}
       <div>
         <Input
           aria-label="Email"
@@ -153,22 +169,6 @@ export default function SignInForm() {
           Do not have an account? Sign up
         </Link>
       </div>
-      {errorMessage && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <span className="block sm:inline">{errorMessage}</span>
-        </div>
-      )}
-      {successMessage && (
-        <div
-          className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <span className="block sm:inline">{successMessage}</span>
-        </div>
-      )}
     </form>
   );
 }

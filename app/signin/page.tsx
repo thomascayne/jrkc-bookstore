@@ -1,19 +1,13 @@
 // app/signin/page.tsx
 
 import AuthNavbar from "@/components/AuthNavbar";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 import SignInForm from "@/app/signin/SignInForm";
-import { redirect } from "next/navigation";
 
 export default async function SignInPage() {
   const supabase = createClient();
 
   const { data, error } = await supabase.auth.getUser();
-
-  // if user is already signed in, redirect to home page
-  if (data.user) {
-    redirect("/");
-  }
 
   return (
     <>
