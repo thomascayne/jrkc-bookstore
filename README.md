@@ -1,5 +1,13 @@
 # JRKC Bookstore Management System - CTU
 
+## DEMO
+
+   Vercel: <https://jrkc-bookstore.vercel.app>
+
+### TODO
+
+- Landing page
+
 ## Local Setup and Development
 
 This project is designed for local development and demonstration purposes. Follow these steps to set up and run the JRKC Bookstore Management System locally:

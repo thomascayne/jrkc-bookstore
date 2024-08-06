@@ -58,7 +58,10 @@ export default function CustomerNavbar({
   const signOut = useSignOut();
   const { cartItems } = useCart();
 
-  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  let cartItemCount = 0;
+  if (cartItems && cartItems.length > 0) {
+    cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  }
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
   const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
