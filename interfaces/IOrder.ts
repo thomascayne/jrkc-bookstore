@@ -1,10 +1,11 @@
-import { IBook } from '@/interfaces/IBook';
 // src/interfaces/IOrder.ts
+
+import { IBook } from '@/interfaces/IBook';
 
 export interface IOrder {
     id: string;
     user_id: string;
-    status: 'pending' | 'processing' | 'completed' | 'cancelled';
+    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
     total_amount: number;
     created_at: string;
     updated_at: string;
@@ -20,4 +21,15 @@ export interface IOrderItem {
     order_id: string;
     original_price: number;
     quantity: number;
+}
+
+export interface CardDetails {
+    cardNumber: string;
+    expiryDate: string;
+    cvv: string;
+}
+
+export interface PaymentMethod {
+    method: 'credit_card' | 'paypal';
+    details: CardDetails;
 }
