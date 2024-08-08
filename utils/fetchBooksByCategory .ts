@@ -47,7 +47,7 @@ export async function fetchBooksByCategory(categoryKey: string, booksPerLoad: nu
       displayedBooks: booksWithImages.slice(0, booksPerLoad),
     };
   } catch (error) {
-    console.error('Error fetching books:', error);
+    console.error('fetchBooksByCategory - Error fetching books:', error);
     throw error;
   }
 }

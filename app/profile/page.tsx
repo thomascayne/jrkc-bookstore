@@ -5,11 +5,11 @@ import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
-import Address from "@/app/profile/Address";
-import AdminPanel from "@/app/profile/AdminPanel";
+import ProfileAddress from "@/app/profile/ProfileAddress";
+import ProfileAdminPanel from "@/app/profile/ProfileAdminPanel";
 import AuthNavbar from "@/components/AuthNavbar";
-import PaymentMethods from "@/app/profile/PaymentMethods";
-import PersonalInformation from "@/app/profile/PersonalInformation";
+import ProfilePaymentMethods from "@/app/profile/ProfilePaymentMethods";
+import ProfilePersonalInformation from "@/app/profile/ProfilePersonalInformation";
 
 interface Tab {
   component: React.ComponentType<{ user: User | null }>;
@@ -20,25 +20,25 @@ interface Tab {
 
 const tabs: Tab[] = [
   {
-    component: PersonalInformation,
+    component: ProfilePersonalInformation,
     isVisible: (roles: string[]) => roles.includes("USER"),
     key: "personal-information",
     label: "Personal Information",
   },
   {
-    component: Address,
+    component: ProfileAddress,
     isVisible: (roles: string[]) => roles.includes("USER"), // Always visible
     key: "address",
     label: "Address",
   },
   {
-    component: PaymentMethods,
+    component: ProfilePaymentMethods,
     isVisible: (roles: string[]) => roles.includes("USER"), // Always visible
     key: "payment-methods",
     label: "Payment Methods",
   },
   {
-    component: AdminPanel,
+    component: ProfileAdminPanel,
     isVisible: (roles: string[]) => roles.includes("ADMIN"), // Only visible to admins === "ADMIN",
     key: "admin",
     label: "Admin Panel",

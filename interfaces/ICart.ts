@@ -17,5 +17,5 @@ export interface ICartItem {
     discount_percentage?: number;
     discounted_price?: number;
     quantity: number;
-
+    is_promotion?: boolean;
 }

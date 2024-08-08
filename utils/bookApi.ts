@@ -15,7 +15,7 @@ export async function fetchBookDetails<GoogleBook>(bookId: string) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error("Error fetching book details:", error);
+        console.error("book api - Error fetching book details:", error);
         throw error;
     }
 }

@@ -13,6 +13,8 @@ import {
   validatePassword,
 } from "@/utils/passwordChecker";
 import { PhoneValidationResult } from "@/utils/phoneValidation";
+import { initializeCart } from "@/stores/cartStore";
+import { getRedirectUrl } from '@/utils/getRedirectUrl';  // Import the function
 
 export default function SignInForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -65,11 +67,16 @@ export default function SignInForm() {
       setErrorMessage("Incorrect email or password. Please try again.");
     } else {
       setSuccessMessage("Signed in successfully. Redirecting...");
+
+      // Initialize the cart after successful sign-in
+      await initializeCart();
+
       const params = new URLSearchParams(window.location.search);
+
       /**
        * Redirect to the page specified in the query string or to the home page
        */
-      const redirectUrl = params.get("redirect") || "/";
+      const redirectUrl = getRedirectUrl();
       router.push(redirectUrl);
     }
   };

@@ -13,7 +13,7 @@ interface AddressProps {
   user: User | null;
 }
 
-export default function Address({ user }: AddressProps) {
+export default function ProfileAddress({ user }: AddressProps) {
   const emptyBillingAddress: BillingAddress = {
     street_address1: "",
     street_address2: "",

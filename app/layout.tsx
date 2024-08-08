@@ -4,13 +4,13 @@ import AuthNavbar from "@/components/AuthNavbar";
 import { CartInitializer } from "@/components/CartInitializer";
 import Footer from "@/components/Footer";
 import SidePanel from "@/components/SidePanel";
-import { CartProvider } from "@/contexts/CartContext";
 import { FullScreenModalProvider } from "@/contexts/FullScreenModalContext";
 import { SidePanelProvider } from "@/contexts/SidePanelContext";
 import Providers from "@/providers/Providers";
 import { createClient } from "@/utils/supabase/server";
 import { GeistSans } from "geist/font/sans";
 import { Metadata } from "next";
+import PageTracker from '@/components/PageTracker';
 
 import packageInfo from "../package.json";
 
@@ -56,18 +56,17 @@ export default async function RootLayout({
         <Providers>
           <FullScreenModalProvider>
             <SidePanelProvider>
-              <CartProvider>
                 <AuthNavbar initialUser={user} />
                 <CartInitializer />
                 <div className="flex flex-grow overflow-hidden">
                   <SidePanel side="left" />
                   <main className="main-page-container w-full flex flex-grow overflow-y-auto">
                     {children}
+                    <PageTracker />
                   </main>
                   <SidePanel side="right" />
                 </div>
                 <Footer />
-              </CartProvider>
             </SidePanelProvider>
           </FullScreenModalProvider>
         </Providers>

@@ -1,29 +1,16 @@
 // components/CartContent.tsx
 
 import BookDetails from "@/components/BookDetails";
-import InputButtonGroup from "@/components/CartInputGroup";
+import InputButtonGroup from "@/components/InputButtonGroup";
 import PlaceholderImage from "@/components/PlaceholderImage";
 import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
 import { useSidePanel } from "@/contexts/SidePanelContext";
 import { GoogleBook } from "@/interfaces/GoogleBook";
 import { IBook } from "@/interfaces/IBook";
-import {
-  calculateDiscountedPrice,
-  cartStore,
-  getTotal,
-  removeItem,
-  updateQuantity,
-} from "@/stores/cartStore";
+import { calculateDiscountedPrice, cartStore, getTotal, removeItem, updateQuantity } from "@/stores/cartStore";
 import { fetchBookDetails } from "@/utils/bookApi";
 import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
-  Tooltip,
-} from "@nextui-org/react";
+import { Button, Card, CardBody, CardFooter, CardHeader, Tooltip } from "@nextui-org/react";
 import { useStore } from "@tanstack/react-store";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,7 +25,7 @@ interface CartSidePanelProps {
 /**
  * A functional component that represents the content of the shopping cart.
  * It displays the list of items in the cart, their prices, and allows the user to update the quantity or remove items.
- * It also provides buttons to checkout or continue shopping.
+ * It also provides buttons to [go to cart] or continue shopping.
  *
  * @param {CartSidePanelProps} currentPath - The current path of the application.
  * @return {JSX.Element} The JSX element representing the cart content.
@@ -51,7 +38,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
   const { closeRightPanel } = useSidePanel();
   const router = useRouter();
 
-  const handleCheckout = () => {
+  const handleGoToCart = () => {
     closeRightPanel();
     router.push("/cart");
   };
@@ -228,9 +215,9 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
               <Button
                 radius="none"
                 className="w-full mb-2 bg-blue-500 text-white py-2"
-                onClick={() => handleCheckout()}
+                onClick={() => handleGoToCart()}
               >
-                Checkout
+                Go to cart
               </Button>
             </div>
           </div>

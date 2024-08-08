@@ -2,8 +2,14 @@
 
 import { IBook } from '@/interfaces/IBook';
 import { ICartItem } from '@/interfaces/ICart';
+import { ShippingAddress } from '@/interfaces/ShippingAddress';
+import { fetchBookFromSupabase } from '@/utils/bookFromSupabaseApi';
+import { ApplicationLogError } from '@/utils/errorLogging';
 import { createClient } from '@/utils/supabase/client';
 import { Store } from '@tanstack/react-store';
+
+const LOCAL_STORAGE_KEY = 'cart';
+const isClient = typeof window !== 'undefined';
 
 const supabase = createClient();
 
@@ -12,45 +18,74 @@ export interface CartState {
     isInitialized: boolean;
 }
 
-const LOCAL_STORAGE_KEY = 'cart';
-const isClient = typeof window !== 'undefined';
-
 export const cartStore = new Store<CartState>({ items: [], isInitialized: false });
 
 export const addItem = async (book: IBook, quantity: number = 1) => {
     const { data: { user } } = await supabase.auth.getUser();
-    const newItem: ICartItem = { book_id: book.id, quantity, book };
 
     if (user) {
-        // Add item to database for authenticated users
-        const { error } = await supabase.from('cart_items').upsert({
-            cart_id: (await getUserCart(user.id)).id,
-            book_id: book.id,
-            quantity
-        });
+        // For authenticated users, add item to database
+        // add to use supabase.rpc because role level access was giving me trouble
+        const { data: cartItems, error: cartError } = await supabase
+            .rpc('add_to_cart', {
+                p_book_id: book.id,
+                p_quantity: quantity,
+                p_current_price: book.list_price,
+                p_is_promotion: book.is_promotion,
+                p_discount_percentage: book.discount_percentage || 0,
+            })
 
-        if (error) {
-            console.error('Error adding item to cart:', error);
+        if (cartError) {
+            console.error('Error fetching cart:', cartError);
             return;
         }
-    }
 
-    cartStore.setState((state) => {
-        const existingItem = state.items.find(item => item.book_id === book.id);
-        const updatedItems = existingItem
-            ? state.items.map(item =>
-                item.book_id === book.id
-                    ? { ...item, quantity: item.quantity + quantity }
-                    : item
-            )
-            : [...state.items, newItem];
+        if (cartItems) {
+            const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICartItem) => {
+                const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
+                return {
+                    ...item,
+                    book: bookData,
+                    discount_percentage: bookData.discount_percentage,
+                    discounted_price: bookData.is_promotion ? calculateDiscountedPrice(bookData) : undefined
+                } as ICartItem;
+            }));
 
-        if (!user) {
-            saveLocalCart(updatedItems);
+            cartStore.setState((state) => ({
+                ...state,
+                items: itemsWithBooks
+            }));
         }
+    } else {
+        // For guest users, store in local state and localStorage
+        cartStore.setState((state) => {
+            const existingItem = state.items.find(item => item.book_id === book.id);
 
-        return { items: updatedItems };
-    });
+            let updatedItems;
+
+            if (existingItem) {
+                updatedItems = state.items.map(item =>
+                    item.book_id === book.id
+                        ? { ...item, quantity: item.quantity + quantity }
+                        : item
+                );
+            } else {
+                const newItem: ICartItem = {
+                    id: `local_${Date.now()}`, // Generate a temporary local ID
+                    cart_id: 'local_cart',
+                    book_id: book.id,
+                    quantity,
+                    current_price: book.list_price,
+                    book
+                };
+                updatedItems = [...state.items, newItem];
+            }
+            if (isClient) {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedItems));
+            }
+            return { ...state, items: updatedItems };
+        });
+    }
 };
 
 export const calculateDiscountedPrice = (book: IBook) => {
@@ -68,7 +103,7 @@ const clearLocalCart = () => {
     }
 };
 
-export const createOrder = async () => {
+export const createOrder = async (paymentMethodId: string, shippingAddress: ShippingAddress) => {
     try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -84,6 +119,8 @@ export const createOrder = async () => {
                 user_id: user.id,
                 status: 'pending',
                 total_amount: total,
+                payment_method_id: paymentMethodId,
+                shipping_address: shippingAddress,
             })
             .select()
             .single();
@@ -125,10 +162,7 @@ export const createOrder = async () => {
         }
 
         // Clear the cart
-        await supabase
-            .from('cart_items')
-            .delete()
-            .eq('cart.user_id', user.id);
+        await supabase.rpc('clear_cart');
 
         cartStore.setState((state) => ({ ...state, items: [] }));
         if (isClient) {
@@ -148,36 +182,47 @@ export const fetchCart = async () => {
         const localItems = loadLocalCart();
 
         if (user) {
-            const { data: cart, error } = await supabase
-                .from('carts')
-                .select('*, cart_items(*, books(*))')
-                .eq('user_id', user.id)
-                .single();
+            const { data: cartItems, error } = await supabase.rpc('get_cart_items');
 
             if (error) {
-                console.error('Error fetching cart:', error);
+                console.error('fetchCart - Error fetching cart:', error);
                 return;
             }
 
-            if (localItems.length > 0) {
-                // Merge local cart with database cart
-                await mergeLocalCartWithDatabase(localItems, user.id);
-                if (isClient) {
-                    localStorage.removeItem(LOCAL_STORAGE_KEY);
-                }
-            }
+            if (cartItems) {
+                const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICartItem) => {
+                    const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
+                    return {
+                        ...item,
+                        book: bookData,
+                        discount_percentage: bookData.discount_percentage,
+                        discounted_price: bookData.is_promotion ? calculateDiscountedPrice(bookData) : undefined
+                    } as ICartItem;
+                }));
 
-            cartStore.setState((state) => ({ ...state, items: cart?.cart_items || [] }));
+
+                if (localItems.length > 0) {
+                    // Merge local cart with database cart
+
+                    await mergeLocalCartWithDatabase(localItems, user.id);
+                    if (isClient) {
+                        localStorage.removeItem(LOCAL_STORAGE_KEY);
+                    }
+                }
+
+                cartStore.setState((state) => ({ ...state, items: itemsWithBooks || [] }));
+            }
         } else {
             // Load cart from local storage for guest users
             cartStore.setState((state) => ({ ...state, items: localItems }));
         }
     } catch (error) {
-        console.error('Error in fetchCart:', error);
+        ApplicationLogError("fetchCart", "unexpected error", error);
     }
 };
 
 export const getCartItemCount = () => {
+    
     if (!cartStore.state || !cartStore.state.items) {
         return 0;
     }
@@ -211,6 +256,7 @@ const getUserCart = async (userId: string) => {
             .single();
 
         if (createError) {
+            console.log('Failed to create cart in getUserCat', createError);
             throw new Error('Failed to create cart');
         }
 
@@ -220,40 +266,57 @@ const getUserCart = async (userId: string) => {
     return cart;
 };
 
+export const handleSignOutOfAppCleanupCartLocalStorage = () => {
+    // Clear the local storage
+    if (isClient) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
+
+    // Clear the cart state
+    cartStore.setState((state) => ({ ...state, items: [], isInitialized: false }));
+};
 
 export const initializeCart = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     let items: ICartItem[] = [];
 
+    const localItems = loadLocalCart();
+
     if (user) {
+        // Merge local items with database items if there are any local items
+        if (localItems.length > 0) {
+            await mergeLocalCartWithDatabase(localItems, user.id);
+            clearLocalCart();
+        }
+
         // Fetch cart from database for authenticated users
-        const { data: cart, error } = await supabase
-            .from('carts')
-            .select('*, cart_items(*, books(*))')
-            .eq('user_id', user.id)
-            .single();
+        const { data: cartItems, error } = await supabase.rpc('get_cart_items');
 
         if (error) {
             console.error('Error fetching cart:', error);
-        } else {
-            items = cart?.cart_items || [];
-        }
+        } else if (cartItems && cartItems.length > 0) {
+            items = await Promise.all(cartItems.map(async (item: ICartItem) => {
+                const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
+                return {
+                    ...item,
+                    book: bookData,
+                    discount_percentage: bookData.discount_percentage,
+                    discounted_price: bookData.is_promotion ? calculateDiscountedPrice(bookData) : undefined
+                } as ICartItem;
+            }));
 
-        // Merge with local storage items
-        const localItems = loadLocalCart();
-        if (localItems.length > 0) {
-            await mergeLocalCartWithDatabase(localItems, user.id);
-            items = [...items, ...localItems];
-            clearLocalCart();
+            // Update localStorage with the fetched items
+            if (isClient) {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+            }
         }
     } else {
-        // Load cart from local storage for guest users
-        items = loadLocalCart();
+        // For guest users, use the local storage items
+        items = localItems;
     }
 
     cartStore.setState((state) => ({ ...state, items, isInitialized: true }));
 };
-
 
 const loadLocalCart = (): ICartItem[] => {
     if (isClient) {
@@ -265,12 +328,11 @@ const loadLocalCart = (): ICartItem[] => {
 
 
 const mergeLocalCartWithDatabase = async (localItems: ICartItem[], userId: string) => {
-    const cart = await getUserCart(userId);
     for (const item of localItems) {
-        await supabase.from('cart_items').upsert({
-            cart_id: cart.id,
-            book_id: item.book_id,
-            quantity: item.quantity
+        await supabase.rpc('merge_cart_item', {
+            p_book_id: item.book_id,
+            p_quantity: item.quantity,
+            p_current_price: item.current_price
         });
     }
 };
@@ -281,11 +343,7 @@ export const removeItem = async (bookId: string) => {
 
     if (user) {
         // Remove item from database for authenticated users
-        const { error } = await supabase
-            .from('cart_items')
-            .delete()
-            .eq('cart_id', (await getUserCart(user.id)).id)
-            .eq('book_id', bookId);
+        const { error } = await supabase.rpc('remove_from_cart', { p_book_id: bookId });
 
         if (error) {
             console.error('Error removing item from cart:', error);
@@ -295,9 +353,15 @@ export const removeItem = async (bookId: string) => {
 
     cartStore.setState((state) => {
         const updatedItems = state.items.filter(item => item.book_id !== bookId);
-        if (!user) {
-            saveLocalCart(updatedItems);
+        
+        // Clear localStorage if the cart is now empty
+        if (updatedItems.length === 0 && isClient) {
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+        } else if (isClient) {
+            // Update localStorage with the new cart state
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedItems));
         }
+
         return { ...state, items: updatedItems };
     });
 };
@@ -329,11 +393,10 @@ export const updateQuantity = async (bookId: string, quantity: number) => {
 
     if (user) {
         // Update quantity in database for authenticated users
-        const { error } = await supabase
-            .from('cart_items')
-            .update({ quantity })
-            .eq('cart_id', (await getUserCart(user.id)).id)
-            .eq('book_id', bookId);
+        const { error } = await supabase.rpc('update_cart_item_quantity', {
+            p_book_id: bookId,
+            p_quantity: quantity
+        });
 
         if (error) {
             console.error('Error updating item quantity:', error);
@@ -352,3 +415,5 @@ export const updateQuantity = async (bookId: string, quantity: number) => {
         return { ...state, items: updatedItems };
     });
 };
+
+

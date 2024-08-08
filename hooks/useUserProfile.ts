@@ -19,7 +19,10 @@ export function useUserProfile() {
                 .eq('id', user.id)
                 .single()
 
-            if (error) throw error
+            if (error) {
+                console.log("User profile query error: ", error)
+                throw error
+            }
             return data
         },
         /**
@@ -30,7 +33,10 @@ export function useUserProfile() {
 
     const updateProfile = async (updates: Partial<typeof profile>) => {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('No user logged in')
+        if (!user) {
+            // must put logging here instead of in error handler
+            console.log('No user logged in from update profile')
+            throw new Error('No user logged in')}
 
         const { data, error } = await supabase
             .from('profiles')
@@ -38,7 +44,10 @@ export function useUserProfile() {
             .eq('id', user.id)
             .single()
 
-        if (error) throw error
+        if (error) {
+            console.log("User profile update error: ", error)
+            throw error
+        }
 
         // Update the cache
         queryClient.setQueryData(['userProfile'], data)

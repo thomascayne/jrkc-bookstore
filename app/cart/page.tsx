@@ -27,7 +27,7 @@ import BookDetails from "@/components/BookDetails";
 import { GoogleBook } from "@/interfaces/GoogleBook";
 import { fetchBookDetails } from "@/utils/bookApi";
 import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
-import InputButtonGroup from "@/components/CartInputGroup";
+import InputButtonGroup from "@/components/InputButtonGroup";
 import { useRouter } from "next/navigation";
 import CartLoadingSkeleton from "@/components/CartLoadingSkeleton";
 import { ICartItem } from "@/interfaces/ICart";
@@ -121,11 +121,12 @@ const CartPage = () => {
             >
               {item.book.is_promotion ? (
                 <Image
-                  src={item.book.small_thumbnail_image_link}
                   alt={item.book.title}
-                  width={50}
-                  height={75}
                   className="object-cover mr-4"
+                  height={75}
+                  src={item.book.small_thumbnail_image_link}
+                  title={item.book_id}
+                  width={50}
                 />
               ) : (
                 <div className="mr-4">
@@ -210,7 +211,7 @@ const CartPage = () => {
                 <span>${total.toFixed(2)}</span>
               </div>
               <Button className="w-full my-6" color="primary" radius="none">
-                Proceed to Checkout
+                Proceed to checkout
               </Button>
             </CardBody>
           </Card>

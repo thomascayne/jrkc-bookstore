@@ -35,7 +35,8 @@ import { BookCategory } from "@/interfaces/BookCategory";
 import CartIcon from "@/components/CartIcon";
 import { useSidePanel } from "@/contexts/SidePanelContext";
 import CartContent from "@/components/CartContent";
-import { useCart } from "@/contexts/CartContext";
+import { useStore } from "@tanstack/react-store";
+import { cartStore, getCartItemCount } from "@/stores/cartStore";
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -56,19 +57,14 @@ export default function CustomerNavbar({
   const currentPath = usePathname();
   const router = useRouter();
   const signOut = useSignOut();
-  const { cartItems } = useCart();
-
-  let cartItemCount = 0;
-  if (cartItems && cartItems.length > 0) {
-    cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  }
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
   const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
   const url = `${apiUrl}?q=subject:fiction&orderBy=relevance&maxResults=40&key=${apiKey}`;
 
   const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
-
+  const cartItemCount = useStore(cartStore, getCartItemCount);
+  
   useEffect(() => {
     const fetchCategories = async () => {
       try {

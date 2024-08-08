@@ -23,7 +23,7 @@ interface PersonalInfoProps {
   user: User | null;
 }
 
-export default function PersonalInformation({ user }: PersonalInfoProps) {
+export default function ProfilePersonalInformation({ user }: PersonalInfoProps) {
   const router = useRouter();
   const signOut = useSignOut();
   const supabase = createClient();
