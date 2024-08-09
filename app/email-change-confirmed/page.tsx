@@ -46,7 +46,7 @@ export default function EmailChangeConfirmed() {
         router.push(redirectPath);
       };
 
-      redirect();
+      router.push("/");
     }
   }, [shouldRedirect, redirectPath, router]);
 

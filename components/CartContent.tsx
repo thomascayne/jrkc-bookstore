@@ -1,25 +1,18 @@
 // components/CartContent.tsx
-import React from "react";
-import { useCart } from "@/contexts/CartContext";
-import {
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  CardHeader,
-} from "@nextui-org/react";
-import Image from "next/image";
-import Link from "next/link";
-import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
-import { fetchBookDetails } from "@/utils/bookApi";
-import { IBook } from "@/interfaces/IBook";
-import { GoogleBook } from "@/interfaces/GoogleBook";
+
 import BookDetails from "@/components/BookDetails";
+import InputButtonGroup from "@/components/InputButtonGroup";
+import PlaceholderImage from "@/components/PlaceholderImage";
 import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
 import { useSidePanel } from "@/contexts/SidePanelContext";
+import { IBook } from "@/interfaces/IBook";
+import { calculateDiscountedPrice, cartStore, getTotal, removeItem, updateQuantity } from "@/stores/cartStore";
+import { Button, Card, CardBody, CardFooter, CardHeader } from "@nextui-org/react";
+import { useStore } from "@tanstack/react-store";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import PlaceholderImage from "@/components/PlaceholderImage";
-import InputButtonGroup from "@/components/CartInputGroup";
+import React, { useEffect } from "react";
 import { IoMdClose } from "react-icons/io";
 
 interface CartSidePanelProps {
@@ -29,33 +22,29 @@ interface CartSidePanelProps {
 /**
  * A functional component that represents the content of the shopping cart.
  * It displays the list of items in the cart, their prices, and allows the user to update the quantity or remove items.
- * It also provides buttons to checkout or continue shopping.
+ * It also provides buttons to [go to cart] or continue shopping.
  *
  * @param {CartSidePanelProps} currentPath - The current path of the application.
  * @return {JSX.Element} The JSX element representing the cart content.
  */
 const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
-  const {
-    calculateDiscountedPrice,
-    cartItems,
-    removeItem,
-    updateItemQuantity,
-    totalPrice,
-  } = useCart();
+  const cartItems = useStore(cartStore, (state) => state.items);
+  const totalPrice = useStore(cartStore, getTotal);
+
   const { openModal } = useFullScreenModal();
   const { closeRightPanel } = useSidePanel();
   const router = useRouter();
 
-  const handleCheckout = () => {
+  const handleGoToCart = () => {
     closeRightPanel();
     router.push("/cart");
   };
 
-  const handleQuantityChange = (id: string, quantity: number) => {
+  const handleQuantityChange = (book_id: string, quantity: number) => {
     if (quantity > 0) {
-      updateItemQuantity(id, quantity);
+      updateQuantity(book_id, quantity);
     } else {
-      removeItem(id);
+      removeItem(book_id);
     }
   };
 
@@ -68,12 +57,6 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
 
   const handleBookClick = async (book: IBook) => {
     try {
-      // fetch book details from supabase
-      const supabaseBook = await fetchBookFromSupabase<IBook>(book.id);
-
-      // fetch additional book details from Google Books API
-      const googleBookDetails = await fetchBookDetails<GoogleBook>(book.id);
-
       const bookTitle = `${book.title}`;
 
       openModal(<BookDetails bookId={book.id} />, bookTitle);
@@ -125,71 +108,73 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                 <>
                   {cartItems.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.book_id}
                       className="flex items-start space-x-4 mb-2 sm:[&:not(:first-child)]:pt-2 [&:not(:first-child)]:border-t  border-gray-300 dark:border-gray-600"
                     >
-                      {item.small_thumbnail_image_link ? (
+                      {item.book.small_thumbnail_image_link ? (
                         <Image
-                          src={item.small_thumbnail_image_link}
-                          alt={item.title}
+                          src={item.book.small_thumbnail_image_link}
+                          alt={item.book.title}
                           width={50}
                           height={75}
-                          className="object-cover mr-4"
+                          className="object-cover"
                         />
                       ) : (
                         <div className="mr-4">
                           <PlaceholderImage />
                         </div>
                       )}
-                      <div className="flex-grow min-w-0">
+                      <div className="flex-grow min-w-0 mb-0">
                         <Link
-                          className="inline-block mb-2 font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
+                          className="inline-block mb-0 font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            handleBookClick(item);
+                            handleBookClick(item.book);
                           }}
                         >
-                          {item.title}
+                          {item.book.title}
                         </Link>
-                        <p className="list_price text-lg">
-                          {item.is_promotion && item.discount_percentage ? (
+                        <p className="flex pt-0">
+                          <span className="mr-2">by</span>
+                          {item.book.authors}
+                        </p>
+
+                        <p className="pricing">
+                          {item.book.is_promotion &&
+                          item.book.discount_percentage ? (
                             <>
                               <span className="text-gray-400 line-through">
-                                ${item.list_price.toFixed(2)}
+                                ${item.book.list_price.toFixed(2)}
                               </span>
                               <span className="ml-2">
-                                ${calculateDiscountedPrice(item).toFixed(2)}
+                                $
+                                {calculateDiscountedPrice(item.book).toFixed(2)}
                               </span>
                               <span className="text-red-500 ml-2">
-                                ({item.discount_percentage}% off)
+                                ({item.book.discount_percentage}% off)
                               </span>
                             </>
                           ) : (
-                            <span>${item.list_price.toFixed(2)}</span>
+                            <span>${item.book.list_price.toFixed(2)}</span>
                           )}
                         </p>
                       </div>
                       <div className="flex flex-col items-center space-x-1">
                         <InputButtonGroup
-                          value={item.quantity || 1}
-                          onChange={(value) =>
-                            handleQuantityChange(item.id, value as number)
+                          maxQuantity={item.book.available_quantity}
+                          minQuantity={1}
+                          onChange={(newValue) =>
+                            handleQuantityChange(item.book_id, newValue)
                           }
-                          onDecrement={() =>
-                            handleQuantityChange(item.id, item.quantity - 1)
-                          }
-                          onIncrement={() =>
-                            handleQuantityChange(item.id, item.quantity + 1)
-                          }
-                          min={1}
+                          value={item.quantity}
                         />
                         <Link
                           href="#"
                           className="[&:important]:px-0 hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
                           onClick={(e) => {
                             e.preventDefault();
-                            removeItem(item.id);
+                            removeItem(item.book_id);
                           }}
                         >
                           Remove
@@ -221,9 +206,9 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
               <Button
                 radius="none"
                 className="w-full mb-2 bg-blue-500 text-white py-2"
-                onClick={() => handleCheckout()}
+                onClick={() => handleGoToCart()}
               >
-                Checkout
+                Go to cart
               </Button>
             </div>
           </div>

@@ -12,7 +12,7 @@ export default async function UpdatePasswordPage() {
     <>
       <AuthNavbar initialUser={data.user} />
 
-      <div className="flex min-h-screen flex-col items-center justify-center">
+      <div className="update-password-page-wrapper flex flex-grow flex-col items-center justify-center">
         <div className="update-password-form-wrapper w-full max-w-md px-8 mt-[-6rem]">
           <h1 className="text-2xl font-bold mb-6 text-center">
             Update Your Password

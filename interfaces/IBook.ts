@@ -1,16 +1,18 @@
-// src/IBook.ts
+// src/IBook.ts - for the books table. as a minimal bookstore we don't have a complete inventory db
 
 export interface IBook {
     id: string;
     authors: string;
+    available_quantity: number;
     average_rating: number;
     categoryId: number;
+    createdAt: string;
     description: string;
     discount_percentage: number;
     etag: string;
+    is_promotion: boolean;
     isbn10: string;
     isbn13: string;
-    is_promotion: boolean;
     language: string;
     list_price: number;
     page_count: number;
@@ -26,4 +28,5 @@ export interface IBook {
     subtitle: string;
     thumbnail_image_link: string;
     title: string;
+    updatedAt: string;
 }

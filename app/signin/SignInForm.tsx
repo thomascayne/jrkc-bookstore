@@ -13,6 +13,8 @@ import {
   validatePassword,
 } from "@/utils/passwordChecker";
 import { PhoneValidationResult } from "@/utils/phoneValidation";
+import { initializeCart } from "@/stores/cartStore";
+import { getRedirectUrl } from '@/utils/getRedirectUrl';  // Import the function
 
 export default function SignInForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -65,11 +67,16 @@ export default function SignInForm() {
       setErrorMessage("Incorrect email or password. Please try again.");
     } else {
       setSuccessMessage("Signed in successfully. Redirecting...");
+
+      // Initialize the cart after successful sign-in
+      await initializeCart();
+
       const params = new URLSearchParams(window.location.search);
+
       /**
        * Redirect to the page specified in the query string or to the home page
        */
-      const redirectUrl = params.get("redirect") || "/";
+      const redirectUrl = getRedirectUrl();
       router.push(redirectUrl);
     }
   };
@@ -92,6 +99,22 @@ export default function SignInForm() {
 
   return (
     <form className="signin-form flex flex-col w-full justify-center gap-4 text-foreground">
+      {errorMessage && (
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
+          <span className="block sm:inline">{errorMessage}</span>
+        </div>
+      )}
+      {successMessage && (
+        <div
+          className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+          role="alert"
+        >
+          <span className="block sm:inline">{successMessage}</span>
+        </div>
+      )}
       <div>
         <Input
           aria-label="Email"
@@ -153,22 +176,6 @@ export default function SignInForm() {
           Do not have an account? Sign up
         </Link>
       </div>
-      {errorMessage && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <span className="block sm:inline">{errorMessage}</span>
-        </div>
-      )}
-      {successMessage && (
-        <div
-          className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
-          role="alert"
-        >
-          <span className="block sm:inline">{successMessage}</span>
-        </div>
-      )}
     </form>
   );
 }

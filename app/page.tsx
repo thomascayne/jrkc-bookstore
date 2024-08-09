@@ -1,4 +1,7 @@
-// app/page.tsx
+// app/page.tsx - main page, users will be redirected to this page when they
+// are not logged in or sent to their dashboard page unless they are logged on
+// session timeout or try to log in from a url other than the signup page.
+// they will be sent to that page or dashboard.
 
 import { createClient } from "@/utils/supabase/server";
 

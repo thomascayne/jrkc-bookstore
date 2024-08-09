@@ -13,8 +13,10 @@ interface AddressProps {
   user: User | null;
 }
 
-export default function Address({ user }: AddressProps) {
+export default function ProfileAddress({ user }: AddressProps) {
   const emptyBillingAddress: BillingAddress = {
+    first_name: "",
+    last_name: "",
     street_address1: "",
     street_address2: "",
     city: "",
@@ -55,6 +57,8 @@ export default function Address({ user }: AddressProps) {
     if (type === "billing") {
       const billingAddress = address as BillingAddress;
       setBillingAddress({
+        first_name: billingAddress.first_name || "",
+        last_name: billingAddress.last_name || "",
         street_address1: billingAddress.street_address1 || "",
         street_address2: billingAddress.street_address2 || "",
         city: billingAddress.city || "",

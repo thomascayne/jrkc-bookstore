@@ -62,7 +62,6 @@ export async function updateAfterEmailConfirmation(user: User) {
             console.error("Error updating Users:", usersError);
         }
 
-        console.log("Tables updated successfully for user:", user);
     } catch (error) {
         console.error("Error updating tables:", error);
         // Handle errors appropriately, e.g., return error response
