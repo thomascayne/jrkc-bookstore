@@ -28,7 +28,6 @@ export const userStore = {
           exp_month: paymentMethod.card_exp_month,
           exp_year: paymentMethod.card_exp_year,
           is_default: paymentMethod.is_default,
-          internalId: paymentMethod.internalId
         }
       })
       if (error) throw error
