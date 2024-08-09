@@ -15,13 +15,13 @@ export async function fetchBookCategories(): Promise<BookCategory[]> {
             .order('key', { ascending: true });
 
         if (error) {
-            console.error('Error fetching book categories:', error);
+            console.error('fetch catergories - Error fetching book categories:', error);
             throw error;
         }
 
         return data as BookCategory[];
     } catch (error) {
-        console.error('Error fetching book categories:', error);
+        console.error(' fetch catergories in catch - Error fetching book categories:', error);
         throw error;
     }
 }

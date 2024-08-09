@@ -27,14 +27,15 @@ import BookDetails from "@/components/BookDetails";
 import { GoogleBook } from "@/interfaces/GoogleBook";
 import { fetchBookDetails } from "@/utils/bookApi";
 import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
-import InputButtonGroup from "@/components/CartInputGroup";
+import InputButtonGroup from "@/components/InputButtonGroup";
 import { useRouter } from "next/navigation";
 import CartLoadingSkeleton from "@/components/CartLoadingSkeleton";
+import { ICartItem } from "@/interfaces/ICart";
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
   const { openModal } = useFullScreenModal();
-  const cartItems = useStore(cartStore, (state) => state.items) as IBook[];
+  const cartItems = useStore(cartStore, (state) => state.items) as ICartItem[];
   const router = useRouter();
   const total = useStore(cartStore, getTotal);
 
@@ -49,6 +50,7 @@ const CartPage = () => {
       removeItem(id);
     }
   };
+
   const handleBookClick = async (book: IBook) => {
     try {
       // fetch book details from supabase
@@ -106,23 +108,29 @@ const CartPage = () => {
     // window.history.pushState({}, "", "/");
   };
 
+  const handleProceedToCheckout = () => {
+    router.push("/checkout");
+  };
+
   return (
     <section className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Your Shopping Cart</h1>
       <div className="flex flex-col md:flex-row gap-8">
-        <div className="md:w-2/3">
+        <div className="md:w-2/3 shadow-medium rounded-large py-2 outline-none transition-transform-background bg-content1 text-background box-border">
           {cartItems.map((item) => (
             <div
-              key={item.id}
-              className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4"
+              id={item.book_id}
+              key={item.book_id}
+              className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4 px-4"
             >
-              {item.is_promotion ? (
+              {item.book.is_promotion ? (
                 <Image
-                  src={item.small_thumbnail_image_link}
-                  alt={item.title}
-                  width={50}
-                  height={75}
+                  alt={item.book.title}
                   className="object-cover mr-4"
+                  height={75}
+                  src={item.book.small_thumbnail_image_link}
+                  title={item.book_id}
+                  width={50}
                 />
               ) : (
                 <div className="mr-4">
@@ -131,31 +139,31 @@ const CartPage = () => {
               )}
               <div className="flex-grow min-w-0 max-w-[560px]">
                 <Link
-                  className="font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
+                  className="inline-block font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    handleBookClick(item);
+                    handleBookClick(item.book);
                   }}
                 >
-                  {item.title}
+                  {item.book.title}
                 </Link>
-                <p className="">by {item.authors}</p>
+                <p className="">by {item.book.authors}</p>
                 <p className="list_price text-lg">
-                  {item.is_promotion && item.discount_percentage ? (
+                  {item.book.is_promotion && item.book.discount_percentage ? (
                     <>
                       <span className="text-gray-400 line-through">
-                        ${item.list_price.toFixed(2)}
+                        ${item.book.list_price.toFixed(2)}
                       </span>
                       <span className="ml-2">
-                        ${calculateDiscountedPrice(item).toFixed(2)}
+                        ${calculateDiscountedPrice(item.book).toFixed(2)}
                       </span>
                       <span className="text-red-500 ml-2">
-                        ({item.discount_percentage}% off)
+                        ({item.book.discount_percentage}% off)
                       </span>
                     </>
                   ) : (
-                    <span>${item.list_price.toFixed(2)}</span>
+                    <span>${item.book.list_price.toFixed(2)}</span>
                   )}
                 </p>
 
@@ -163,28 +171,23 @@ const CartPage = () => {
               </div>
               <div className="flex items-center mr-4">
                 <InputButtonGroup
-                  value={item.quantity || 1}
-                  onChange={(value) =>
-                    handleQuantityChange(item.id, value as number)
+                  maxQuantity={item.book.available_quantity}
+                  minQuantity={1}
+                  onChange={(newValue) =>
+                    handleQuantityChange(item.book_id, newValue)
                   }
-                  onDecrement={() =>
-                    handleQuantityChange(item.id, item.quantity - 1)
-                  }
-                  onIncrement={() =>
-                    handleQuantityChange(item.id, item.quantity + 1)
-                  }
-                  min={1}
+                  value={item.quantity}
                 />
               </div>
               <p className="mx-4 font-semibold">
-                ${((item.list_price || 0) * item.quantity).toFixed(2)}
+                ${calculateDiscountedPrice(item.book).toFixed(2)}
               </p>
               <Link
                 href="#"
                 className="[&:important]:px-0 hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
                 onClick={(e) => {
                   e.preventDefault();
-                  removeItem(item.id);
+                  removeItem(item.book_id);
                 }}
               >
                 Remove
@@ -195,34 +198,43 @@ const CartPage = () => {
         <div className="md:w-1/3">
           <Card shadow="md" className="mb-4">
             <CardHeader>
-              <h2 className="text-xl font-semibold py-2">Order Summary</h2>
+              <h2 className="text-xl font-semibold py-2 px-4">Order Summary</h2>
             </CardHeader>
             <Divider />
             <CardBody>
-              <div className="flex justify-between my-2">
-                <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+              <div className="px-4">
+                <div className="flex justify-between my-2">
+                  <span>Subtotal</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span>Shipping</span>
+                  <span>Calculated at checkout</span>
+                </div>
+                <div className="flex justify-between font-semibold text-lg mt-4">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
               </div>
-              <div className="flex justify-between mb-2">
-                <span>Shipping</span>
-                <span>Calculated at checkout</span>
+              <Divider className="mt-4" />
+              <div className="flex px-4 my-4 justify-center">
+                <input
+                  type="button"
+                  className="inline-block transition-all duration-200 ease-in-out py-2 px-10 rounded cursor-pointer w-full bg-primary-500 hover:bg-primary-300 text-white text-center"
+                  id="proceed-to-checkout"
+                  onClick={handleProceedToCheckout}
+                  value="Proceed to checkout"
+                />
               </div>
-              <div className="flex justify-between font-semibold text-lg mt-4">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-              <Button className="w-full my-6" color="primary" radius="none">
-                Proceed to Checkout
-              </Button>
             </CardBody>
           </Card>
           <Card shadow="md">
             <CardHeader>
-              <h3 className="font-semibold">Have a promo code?</h3>
+              <h3 className="font-semibold px-4 mt-4">Have a promo code?</h3>
             </CardHeader>
             <Divider className="my-4" />
             <CardBody>
-              <div className="flex">
+              <div className="flex px-4 mb-4">
                 <Input
                   placeholder="Enter code"
                   className="flex-grow"

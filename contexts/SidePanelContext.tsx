@@ -99,7 +99,9 @@ export const SidePanelProvider: React.FC<{ children: ReactNode }> = ({
 export function useSidePanel(): SidePanelContextType {
   const context = useContext(SidePanelContext);
   if (context === undefined) {
+    // must put logging here instead of throwing error
     throw new Error("useSidePanel must be used within a SidePanelProvider");
+  } else {
+    return context;
   }
-  return context;
 }

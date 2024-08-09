@@ -19,7 +19,7 @@ interface AdminPanelProps {
   user: User | null;
 }
 
-export default function AdminPanel({ user }: AdminPanelProps) {
+export default function ProfileAdminPanel({ user }: AdminPanelProps) {
   const [userCount, setUserCount] = useState<number>(0);
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const supabase = createClient();

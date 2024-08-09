@@ -22,13 +22,13 @@ export default function ResetPasswordForm() {
       setMessage("Error: " + error.message);
     } else {
       setMessage(
-        "If your email is in our system, you will receive an email. Check your inbox."
+        "If your email is in our system, you will receive an email. Please check your inbox."
       );
     }
   };
 
   return (
-    <form className="flex flex-col gap-4">
+    <form className="flex flex-col gap-4 w-full">
       {message && (
         <div
           className={`p-4 rounded ${

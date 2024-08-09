@@ -1,6 +1,6 @@
 {
   "name": "jrkc-bookstore",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "private": true,
   "title": "JRKC Bookstore",
   "appName": "JRKC Bookstore Management System",
@@ -30,6 +30,8 @@
   },
   "dependencies": {
     "@nextui-org/react": "^2.4.6",
+    "@stripe/react-stripe-js": "^2.7.3",
+    "@stripe/stripe-js": "^4.1.0",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@tailwindcss/aspect-ratio": "^0.4.2",

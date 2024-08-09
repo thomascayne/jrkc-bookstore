@@ -12,7 +12,7 @@ export default async function ResetPasswordPage() {
     <>
       <AuthNavbar initialUser={data.user} />
 
-      <div className="flex min-h-screen flex-col items-center justify-center">
+      <div className="reset-password-form-page-wrapper flex flex-col flex-grow items-center justify-center">
         <div className="reset-password-form-wrapper w-full max-w-md px-8 mt-[-6rem]">
           <h1 className="text-2xl font-bold mb-6 text-center">
             Reset Your Password
