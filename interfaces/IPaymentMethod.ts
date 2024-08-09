@@ -12,4 +12,5 @@ export interface IPaymentMethod {
     payment_processor: string;
     payment_token: string;
     user_id: string;
+    internalId?: number;
 }

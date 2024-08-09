@@ -108,16 +108,20 @@ const CartPage = () => {
     // window.history.pushState({}, "", "/");
   };
 
+  const handleProceedToCheckout = () => {
+    router.push("/checkout");
+  };
+
   return (
     <section className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Your Shopping Cart</h1>
       <div className="flex flex-col md:flex-row gap-8">
-        <div className="md:w-2/3">
+        <div className="md:w-2/3 shadow-medium rounded-large py-2 outline-none transition-transform-background bg-content1 text-background box-border">
           {cartItems.map((item) => (
             <div
               id={item.book_id}
               key={item.book_id}
-              className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4"
+              className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4 px-4"
             >
               {item.book.is_promotion ? (
                 <Image
@@ -135,7 +139,7 @@ const CartPage = () => {
               )}
               <div className="flex-grow min-w-0 max-w-[560px]">
                 <Link
-                  className="font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
+                  className="inline-block font-semibold text-sm cursor-pointer text-blue-500 hover:underline line-clamp-2"
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
@@ -176,7 +180,7 @@ const CartPage = () => {
                 />
               </div>
               <p className="mx-4 font-semibold">
-                ${((item.book.list_price || 0) * item.quantity).toFixed(2)}
+                ${calculateDiscountedPrice(item.book).toFixed(2)}
               </p>
               <Link
                 href="#"
@@ -194,34 +198,43 @@ const CartPage = () => {
         <div className="md:w-1/3">
           <Card shadow="md" className="mb-4">
             <CardHeader>
-              <h2 className="text-xl font-semibold py-2">Order Summary</h2>
+              <h2 className="text-xl font-semibold py-2 px-4">Order Summary</h2>
             </CardHeader>
             <Divider />
             <CardBody>
-              <div className="flex justify-between my-2">
-                <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+              <div className="px-4">
+                <div className="flex justify-between my-2">
+                  <span>Subtotal</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span>Shipping</span>
+                  <span>Calculated at checkout</span>
+                </div>
+                <div className="flex justify-between font-semibold text-lg mt-4">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
               </div>
-              <div className="flex justify-between mb-2">
-                <span>Shipping</span>
-                <span>Calculated at checkout</span>
+              <Divider className="mt-4" />
+              <div className="flex px-4 my-4 justify-center">
+                <input
+                  type="button"
+                  className="inline-block transition-all duration-200 ease-in-out py-2 px-10 rounded cursor-pointer w-full bg-primary-500 hover:bg-primary-300 text-white text-center"
+                  id="proceed-to-checkout"
+                  onClick={handleProceedToCheckout}
+                  value="Proceed to checkout"
+                />
               </div>
-              <div className="flex justify-between font-semibold text-lg mt-4">
-                <span>Total</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-              <Button className="w-full my-6" color="primary" radius="none">
-                Proceed to checkout
-              </Button>
             </CardBody>
           </Card>
           <Card shadow="md">
             <CardHeader>
-              <h3 className="font-semibold">Have a promo code?</h3>
+              <h3 className="font-semibold px-4 mt-4">Have a promo code?</h3>
             </CardHeader>
             <Divider className="my-4" />
             <CardBody>
-              <div className="flex">
+              <div className="flex px-4 mb-4">
                 <Input
                   placeholder="Enter code"
                   className="flex-grow"

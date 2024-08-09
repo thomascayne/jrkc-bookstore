@@ -11,4 +11,5 @@ export interface IStripTestCardNumber {
     last4: string
     country: string
     token: string
+    internalId: number
 }

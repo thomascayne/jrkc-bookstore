@@ -8,7 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ProfileAddress from "@/app/profile/ProfileAddress";
 import ProfileAdminPanel from "@/app/profile/ProfileAdminPanel";
 import AuthNavbar from "@/components/AuthNavbar";
-import ProfilePaymentMethods from "@/app/profile/ProfilePaymentMethods";
 import ProfilePersonalInformation from "@/app/profile/ProfilePersonalInformation";
 
 interface Tab {
@@ -30,12 +29,6 @@ const tabs: Tab[] = [
     isVisible: (roles: string[]) => roles.includes("USER"), // Always visible
     key: "address",
     label: "Address",
-  },
-  {
-    component: ProfilePaymentMethods,
-    isVisible: (roles: string[]) => roles.includes("USER"), // Always visible
-    key: "payment-methods",
-    label: "Payment Methods",
   },
   {
     component: ProfileAdminPanel,

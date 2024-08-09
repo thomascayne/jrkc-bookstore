@@ -5,12 +5,9 @@ import InputButtonGroup from "@/components/InputButtonGroup";
 import PlaceholderImage from "@/components/PlaceholderImage";
 import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
 import { useSidePanel } from "@/contexts/SidePanelContext";
-import { GoogleBook } from "@/interfaces/GoogleBook";
 import { IBook } from "@/interfaces/IBook";
 import { calculateDiscountedPrice, cartStore, getTotal, removeItem, updateQuantity } from "@/stores/cartStore";
-import { fetchBookDetails } from "@/utils/bookApi";
-import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
-import { Button, Card, CardBody, CardFooter, CardHeader, Tooltip } from "@nextui-org/react";
+import { Button, Card, CardBody, CardFooter, CardHeader } from "@nextui-org/react";
 import { useStore } from "@tanstack/react-store";
 import Image from "next/image";
 import Link from "next/link";
@@ -60,12 +57,6 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
 
   const handleBookClick = async (book: IBook) => {
     try {
-      // fetch book details from supabase
-      const supabaseBook = await fetchBookFromSupabase<IBook>(book.id);
-
-      // fetch additional book details from Google Books API
-      const googleBookDetails = await fetchBookDetails<GoogleBook>(book.id);
-
       const bookTitle = `${book.title}`;
 
       openModal(<BookDetails bookId={book.id} />, bookTitle);
