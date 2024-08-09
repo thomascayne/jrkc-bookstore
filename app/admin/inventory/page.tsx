@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { fetchInventory, addBookToInventory, updateInventoryQuantity, updateBookPrice } from '../../../utils/supabase/inventoryApi';
-import { InventoryItem } from '../../../interfaces/InventoryItem';
-
 // Inventory management page component
+
+import { InventoryItem } from '@/interfaces/inventoryItem';
+import { addBookToInventory, fetchInventory, updateBookPrice, updateInventoryQuantity } from '@/utils/supabase/inventoryApi';
+import React, { useEffect, useState } from 'react';
+
 const InventoryPage = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [newBook, setNewBook] = useState({ book_id: '', quantity: 0, price: 0 });
