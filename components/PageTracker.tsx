@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 export default function PageTracker() {
-  const pathname = usePathname();
+  const pathname = usePathname() as string;
 
   useEffect(() => {
     if (pathname !== '/signin' && pathname !== '/signup') {

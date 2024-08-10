@@ -44,7 +44,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
 
-  const activeTab = searchParams.get("tab") || tabs[0].key;
+  const activeTab = searchParams?.get("tab") || tabs[0].key;
   const router = useRouter();
   const supabase = createClient();
 

@@ -1,8 +1,5 @@
-// update-version.mjs
-
 import fs from 'fs';
 import path from 'path';
-import semver from 'semver';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,13 +17,32 @@ if (!['major', 'minor', 'patch'].includes(releaseType)) {
 }
 
 const currentVersion = packageJson.version;
-const newVersion = semver.inc(currentVersion, releaseType);
+console.log('Current version:', currentVersion);
 
-if (newVersion) {
+function incrementVersion(version, releaseType) {
+    const [major, minor, patch] = version.split('.').map(Number);
+    
+    switch (releaseType) {
+        case 'major':
+            return `${major + 1}.0.00`;
+        case 'minor':
+            return `${major}.${minor + 1}.00`;
+        case 'patch':
+            const newPatch = (patch + 1).toString().padStart(2, '0');
+            return `${major}.${minor}.${newPatch}`;
+        default:
+            throw new Error('Invalid release type');
+    }
+}
+
+try {
+    const newVersion = incrementVersion(currentVersion, releaseType);
+    console.log('New version:', newVersion);
+
     packageJson.version = newVersion;
     fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
     console.log(`Updated version to ${newVersion}`);
-} else {
-    console.error('Failed to increment version');
+} catch (error) {
+    console.error('Error updating version:', error.message);
     process.exit(1);
 }

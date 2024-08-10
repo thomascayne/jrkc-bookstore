@@ -61,7 +61,7 @@ export default function InventoryManagerNavbar({
   };
 
   const menuItems = [
-    { item: "Inventory", icon: <FaBoxes />, href: "/inventory" },
+    { item: "Inventory", icon: <FaBoxes />, href: "/admin/inventory" },
     {
       item: "Purchase Orders",
       icon: <FaFileInvoice />,
