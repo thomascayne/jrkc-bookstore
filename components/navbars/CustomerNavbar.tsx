@@ -138,7 +138,7 @@ export default function CustomerNavbar({
     if (cartItemCount === 0) {
       router.push("/cart");
     } else {
-      if (currentPath !== "/cart") {
+      if (currentPath && currentPath !== "/cart") {
         openRightPanel(
           <CartContent currentPath={currentPath} />,
           "w-full sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[640px]",
