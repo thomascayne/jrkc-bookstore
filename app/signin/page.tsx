@@ -1,6 +1,6 @@
 // app/signin/page.tsx
 
-import AuthNavbar from "@/components/AuthNavbar";
+import AuthNavbar from "@/components/navbars/AuthNavbar";
 import { createClient } from "@/utils/supabase/client";
 import SignInForm from "@/app/signin/SignInForm";
 

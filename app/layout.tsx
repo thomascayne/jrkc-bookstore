@@ -1,6 +1,6 @@
 // app/layout.tsx
 
-import AuthNavbar from "@/components/AuthNavbar";
+import AuthNavbar from "@/components/navbars/AuthNavbar";
 import { CartInitializer } from "@/components/CartInitializer";
 import Footer from "@/components/Footer";
 import SidePanel from "@/components/SidePanel";

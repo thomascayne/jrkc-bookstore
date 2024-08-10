@@ -1,7 +1,7 @@
 // components/SalesAssociateNavbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -35,7 +35,7 @@ interface SalesAssociateNavbarProps {
   user: User | null;
 }
 
-export default function SalesAssociateNavbar({
+function SalesAssociateNavbar({
   emulatedRole,
   isAdmin,
   onRoleChange,
@@ -57,9 +57,9 @@ export default function SalesAssociateNavbar({
     }
   }, []);
 
-  const handleThemeChange = (newTheme: Theme) => {
+  const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
-  };
+  }, []);
 
   const menuItems = [
     { item: "POS", icon: <FaCashRegister />, href: "/pos" },
@@ -69,11 +69,11 @@ export default function SalesAssociateNavbar({
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
   ];
 
-  const navbarStyle = {
+  const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
     color: "black",
     transition: "background-color 0.3s ease",
-  };
+  }), [emulatedRole]);
 
   return (
     <Navbar
@@ -165,3 +165,5 @@ export default function SalesAssociateNavbar({
     </Navbar>
   );
 }
+
+export default React.memo(SalesAssociateNavbar);

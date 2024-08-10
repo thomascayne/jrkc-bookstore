@@ -1,7 +1,7 @@
 // components/CustomerNavbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -45,7 +45,7 @@ interface CustomerNavbarProps {
   user: User | null;
 }
 
-export default function CustomerNavbar({
+function CustomerNavbar({
   emulatedRole,
   isAdmin,
   onRoleChange,
@@ -90,9 +90,9 @@ export default function CustomerNavbar({
     }
   }, []);
 
-  const handleThemeChange = (newTheme: Theme) => {
+  const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
-  };
+  }, []);
 
   const handleCategorySelect = async (key: string, label: string) => {
     try {
@@ -109,7 +109,7 @@ export default function CustomerNavbar({
     }
   };
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     { item: "Categories", icon: <BiCategory /> },
     { item: "Cart", icon: <RiShoppingCart2Line />, special: true },
     { item: user ? "Profile" : "", icon: user ? <FaRegUser /> : "" },
@@ -117,13 +117,13 @@ export default function CustomerNavbar({
       item: user ? "Sign Out" : "Sign In",
       icon: user ? <VscSignOut /> : <VscSignIn />,
     },
-  ];
+  ], [user]);
 
-  const navbarStyle = {
+  const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
     color: "black",
     transition: "background-color 0.3s ease",
-  };
+  }), [emulatedRole]);
 
   /**
    * Handles the click event on the cart button.
@@ -399,3 +399,6 @@ export default function CustomerNavbar({
     </Navbar>
   );
 }
+
+
+export default React.memo(CustomerNavbar);
