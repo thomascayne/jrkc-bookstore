@@ -3,14 +3,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { IOrder } from "@/interfaces/IOrder";
+import {useSearchParams } from "next/navigation";
 
 const supabase = createClient();
 
 export default function OrderConfirmationPage() {
-  const { id } = useParams();
+  const searchParams = useSearchParams();
+
+  const id = searchParams?.get("id") as string;
+
   const [order, setOrder] = useState<IOrder>();
 
   useEffect(() => {
