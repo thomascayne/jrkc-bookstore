@@ -1,3 +1,5 @@
+// app/profile/ProfilePersonalInformation.tsx
+
 "use client";
 
 import { FaEye, FaEyeSlash } from "react-icons/fa";

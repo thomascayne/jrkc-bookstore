@@ -1,5 +1,7 @@
+// utils\supabase\inventoryApi.ts
+
+import { InventoryItem } from '@/interfaces/inventoryItem';
 import { supabase } from './client';
-import { InventoryItem } from '../../interfaces/InventoryItem';
 
 // Fetch all inventory items from the database
 export const fetchInventory = async (): Promise<InventoryItem[]> => {

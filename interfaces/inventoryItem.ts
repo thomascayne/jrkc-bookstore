@@ -5,4 +5,5 @@ export interface InventoryItem {
   quantity: number; // Total quantity of the book in inventory
   available_quantity: number; // Available quantity of the book for sale
   price: number; // Price of the book
+  title: string; // Title of the book
 }

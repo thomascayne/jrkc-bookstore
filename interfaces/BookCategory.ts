@@ -5,4 +5,5 @@ export interface BookCategory {
     key: string;
     label: string;
     show: boolean;
+    show_on_landing_page ?: boolean;
 }
