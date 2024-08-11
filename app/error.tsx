@@ -32,10 +32,10 @@ export default function Error({
               Something went wrong on our end. Our librarians are working hard
               to fix it.
             </p>
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-24 bg-red-500 rounded transform -rotate-6 mr-2"></div>
-              <div className="w-16 h-24 bg-yellow-500 rounded transform rotate-6 mr-2"></div>
-              <div className="w-16 h-24 bg-orange-500 rounded transform -rotate-3"></div>
+            <div className="stacked-books flex justify-center mt-auto mb-[0.125rem] items-end">
+              <div className="w-9 h-24 bg-blue-500 rounded transform -rotate-[-12deg] mr-2"></div>
+              <div className="w-9 h-32 bg-green-500 rounded transform rotate-5 mr-2 mt-[-5px]"></div>
+              <div className="w-9 h-24 bg-red-500 rounded transform -rotate-[12deg]"></div>
             </div>
             <div className="flex flex-col space-y-4">
               <button

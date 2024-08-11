@@ -5,20 +5,19 @@
 import { Card, CardBody, CardHeader } from "@nextui-org/react";
 import Link from "next/link";
 
-export default function NotFound() {
+export default function Unauthorized() {
   return (
     <div className="404-page-wrapper container flex flex-col flex-grow justify-center items-center px-4 mx-auto">
       <div className="max-w-md w-full">
         <Card className="p-4 sm:p-6 md:p-8" shadow="lg">
           <CardHeader className="flex flex-col items-center justify-center">
-            <h1 className="text-4xl font-bold mb-2">404</h1>
-            <h2 className="text-2xl font-semibold mb-4">Page Not Found</h2>
+            <h1 className="text-4xl font-bold mb-2">401</h1>
+            <h2 className="text-2xl font-semibold mb-4">UNAUTHORIZED</h2>
           </CardHeader>
           <CardBody>
             <p className="text-2xl font-bold mb-6 text-center">OOPS!</p>
             <p className="mb-6 text-center">
-              It seems this page has been lost between the shelves. Let us get
-              you back to our main collection.
+              You want your way to the wrong place.
             </p>
             <div className="stacked-books flex justify-center mt-auto mb-[0.125rem] items-end">
               <div className="w-9 h-24 bg-blue-500 rounded transform -rotate-[-12deg] mr-2"></div>
