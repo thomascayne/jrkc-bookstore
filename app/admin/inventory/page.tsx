@@ -358,6 +358,3 @@ const InventoryPage = () => {
 
 export default InventoryPage;
 
-function fetchBookById(book_id: string) {
-  throw new Error('Function not implemented.');
-}
