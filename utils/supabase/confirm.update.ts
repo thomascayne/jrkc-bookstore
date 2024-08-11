@@ -46,6 +46,22 @@ export async function updateAfterEmailConfirmation(user: User) {
             console.error("Error updating Profiles:", profileError);
         }
 
+        // Update the user's metadata to add the "USER" role
+        const { data: userData, error: userUpdateError } = await supabase.auth.admin.updateUserById(
+            user.id,
+            {
+                user_metadata: {
+                    roles: ['USER']
+                }
+            }
+        );
+
+        if (userUpdateError) {
+            console.error("Error updating user metadata:", userUpdateError);
+        } else {
+            console.log("User metadata updated successfully:", userData);
+        }
+
         // Add a default 'USER' role for the new record to the UserRoles table
         const { error: rolesError } = await supabase
             .from("UserRoles")
