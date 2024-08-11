@@ -27,6 +27,7 @@ import AppLogo from "@/components/AppLogo";
 import { getRoleColor, Role, ROLES } from "@/utils/roles";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import useSignOut from "@/hooks/useSignOut";
+import { MdDashboard } from "react-icons/md";
 
 interface SalesAssociateNavbarProps {
   emulatedRole: Role | null;
@@ -62,10 +63,11 @@ function SalesAssociateNavbar({
   }, []);
 
   const menuItems = [
-    { item: "POS", icon: <FaCashRegister />, href: "/pos" },
-    { item: "Customer Info", icon: <FaAddressBook />, href: "/customers" },
-    { item: "Inventory Search", icon: <FaSearch />, href: "/inventory-search" },
-    { item: "Top Sellers", icon: <FaChartLine />, href: "/top-sellers" },
+    { item: "Dashboard", icon: <MdDashboard />, href: "/sales/dashboard" },
+    { item: "POS", icon: <FaCashRegister />, href: "#" },
+    { item: "Customer Info", icon: <FaAddressBook />, href: "#" },
+    { item: "Inventory Search", icon: <FaSearch />, href: "#" },
+    { item: "Top Sellers", icon: <FaChartLine />, href: "#" },
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
   ];
 
