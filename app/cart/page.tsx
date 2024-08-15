@@ -34,7 +34,7 @@ import { ICartItem } from "@/interfaces/ICart";
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
-  const { openModal } = useFullScreenModal();
+  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
   const cartItems = useStore(cartStore, (state) => state.items) as ICartItem[];
   const router = useRouter();
   const total = useStore(cartStore, getTotal);
@@ -66,7 +66,7 @@ const CartPage = () => {
 
       const bookTitle = `${book.title}`;
 
-      openModal(<BookDetails bookId={book.id} />, bookTitle);
+      openFullScreenModal(<BookDetails bookId={book.id} />, bookTitle);
     } catch (error) {
       console.error("Error fetching book details:", error);
     }
@@ -79,7 +79,7 @@ const CartPage = () => {
   if (cartItems.length === 0) {
     return (
       <section className="container flex flex-col items-center w-full mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">Your Cart is Empty</h1>
+        <h1 className="text-2xl font-bold mb-4">Your Bookstore Cart is Empty</h1>
         <p className="mb-4">
           Looks like you have not added any items to your cart yet.
         </p>

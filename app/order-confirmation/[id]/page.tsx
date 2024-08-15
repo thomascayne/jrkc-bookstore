@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { IOrder } from "@/interfaces/IOrder";
+import { IOrder } from "@/interfaces/Order";
 import {useSearchParams } from "next/navigation";
 
 const supabase = createClient();

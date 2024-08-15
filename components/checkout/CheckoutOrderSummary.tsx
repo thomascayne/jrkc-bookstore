@@ -12,7 +12,7 @@ import {
 } from "@nextui-org/react";
 import { ICartItem } from "@/interfaces/ICart";
 import { ShippingAddress } from "@/interfaces/ShippingAddress";
-import { PaymentMethod } from "@/interfaces/IOrder";
+import { PaymentMethod } from "@/interfaces/Order";
 import { BillingAddress } from "@/interfaces/BillingAddress";
 import { UserProfile } from "@/interfaces/UserProfile";
 import { CardHeader } from "@nextui-org/react";

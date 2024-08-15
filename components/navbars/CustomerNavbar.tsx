@@ -183,7 +183,7 @@ function CustomerNavbar({
                 endContent={<FaChevronDown />}
               >
                 <BiCategory className="mr-1" />
-                <span>Catergories</span>
+                <span>Categories</span>
               </Button>
             </DropdownTrigger>
           </NavbarItem>

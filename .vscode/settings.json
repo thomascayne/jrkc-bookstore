@@ -1,11 +1,14 @@
 {
     "cSpell.words": [
+        "JRKC",
         "libphonenumber",
         "nextui",
         "signin",
         "signup",
         "supabase",
         "tailwindcss",
+        "tanstack",
+        "uuidv",
         "zipcode"
     ]
 }

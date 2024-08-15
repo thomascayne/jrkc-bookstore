@@ -27,7 +27,7 @@ export default function CategoryContent({
   );
   const [displayedBooks, setDisplayedBooks] = useState<IBook[]>([]);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const { openModal } = useFullScreenModal();
+  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
 
   useEffect(() => {
     if (data) {
@@ -60,7 +60,7 @@ export default function CategoryContent({
   };
 
   const handleBookClick = (book: IBook) => {
-    openModal(
+    openFullScreenModal(
       <BookDetails bookId={book.id} />,
       `${data?.category} - ${book.title}`
     );
