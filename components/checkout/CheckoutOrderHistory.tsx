@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { IOrder } from "@/interfaces/IOrder";
+import { ICartOrder } from "@/interfaces/ICartOrder";
 
 const supabase = createClient();
 
 export default function CheckoutOrderHistory() {
-  const [orders, setOrders] = useState<IOrder[]>([]);
+  const [orders, setOrders] = useState<ICartOrder[]>([]);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -22,7 +22,7 @@ export default function CheckoutOrderHistory() {
         if (error) {
           console.error("Error fetching orders:", error);
         } else {
-          setOrders(data as IOrder[]);
+          setOrders(data as ICartOrder[]);
         }
       }
     };

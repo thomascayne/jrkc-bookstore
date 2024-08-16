@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { IOrder } from "@/interfaces/IOrder";
 import {useSearchParams } from "next/navigation";
+import { ICartOrder } from "@/interfaces/ICartOrder";
 
 const supabase = createClient();
 
@@ -14,7 +14,7 @@ export default function OrderConfirmationPage() {
 
   const id = searchParams?.get("id") as string;
 
-  const [order, setOrder] = useState<IOrder>();
+  const [order, setOrder] = useState<ICartOrder>();
 
   useEffect(() => {
     const fetchOrder = async () => {
