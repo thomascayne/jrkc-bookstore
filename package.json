@@ -27,7 +27,6 @@
     "major-update": "node update-version.mjs majo",
     "minor-update": "node update-version.mjs minor",
     "patch-update": "node update-version.mjs patch",
-    "proxy": "local-ssl-proxy --key localhost-key.pem --cert localhost.pem --source 3001 --target 3000",
     "start": "next start"
   },
   "dependencies": {
