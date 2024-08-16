@@ -1,4 +1,4 @@
-// src/interfaces/Order.ts
+// src/interfaces/IOrder.ts
 
 export interface IOrder {
     id?: string;

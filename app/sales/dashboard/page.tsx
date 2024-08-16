@@ -45,7 +45,7 @@ const SalesDashboardPage = ({}: DashboardProps) => {
     };
 
     checkUser();
-  }, [router]);
+  }, [router, supabase.auth]);
 
   return (
     <div className="container mx-auto p-4">

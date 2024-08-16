@@ -34,7 +34,8 @@ import PointOfSaleRegisterCheckoutModal from '@/components/point-of-sale/PointOf
 import PointOfSaleRegisterPaymentProcessingModal from '@/components/point-of-sale/PointOfSaleRegisterPaymentProcessingModal';
 import { Elements } from '@stripe/react-stripe-js';
 import { Appearance, loadStripe } from '@stripe/stripe-js';
-import { useUserProfile } from '@/hooks/useUserProfile'; 
+import { useUserProfile } from '@/hooks/useUserProfile';
+import Image from 'next/image';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -108,7 +109,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       fetchInitialBooks(access_token);
     }
   }, [access_token]);
-  
+
   const fetchInitialBooks = async (token: string) => {
     setIsInitialLoading(true);
     try {
@@ -255,7 +256,8 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       handleOpenCalculateCheckoutModal();
       setReturningFromPayment(false);
     }
-  }, [returningFromPayment]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleProceedToPayment = async (amount: number) => {
     if (!stripePromise) {
@@ -286,12 +288,12 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       const appearance: Appearance = {
         theme: 'stripe',
       };
-  
+
       const options = {
         clientSecret: await response.json(),
         appearance: appearance,
-        paymentMethodOrder: ['card']
-      }
+        paymentMethodOrder: ['card'],
+      };
 
       openFullScreenModal(
         <Elements stripe={stripePromise} options={options}>
@@ -419,9 +421,10 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                       addToRegister(book, e);
                     }}
                   >
-                    <img
+                    <Image
                       src={book.thumbnail}
                       alt={book.title}
+                      title={book.id}
                       className="w-full h-24 object-cover mb-2 rounded-tl-lg rounded-tr-lg"
                     />
                     <h3 className="font-bold text-sm truncate">{book.title}</h3>
@@ -517,9 +520,10 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                   >
                     <div className="flex items-center">
                       {book && (
-                        <img
+                        <Image
                           src={book.thumbnail}
                           alt={book.title}
+                          title={book.id}
                           className="w-10 h-10 object-cover mr-2 rounded-md"
                         />
                       )}

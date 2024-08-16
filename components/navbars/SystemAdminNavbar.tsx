@@ -119,7 +119,7 @@ function SystemAdminNavbar({
 
     // Profile (common for all)
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
-  ], [user]);
+  ], []);
 
   const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
