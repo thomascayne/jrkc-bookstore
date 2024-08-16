@@ -2,9 +2,9 @@
 
 import { IOrder } from '@/interfaces/IOrder';
 import { IOrderItem } from '@/interfaces/IOrderItem';
+import { createClient } from '@/utils/supabase/client';
 import { Store } from '@tanstack/react-store';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@/utils/supabase/client';
 
 // Interfaces
 interface PointOfSaleState {
@@ -12,10 +12,6 @@ interface PointOfSaleState {
     orderItems: IOrderItem[];
     isInitialized: boolean;
 }
-
-// Constants
-const LOCAL_STORAGE_KEY = 'pos_transaction';
-const isClient = typeof window !== 'undefined';
 
 const supabase = createClient();
 
@@ -25,21 +21,6 @@ export const pointOfSaleStore = new Store<PointOfSaleState>({
     orderItems: [],
     isInitialized: false
 });
-
-const loadLocalTransaction = (): PointOfSaleState | null => {
-    if (isClient) {
-        const storedTransaction = localStorage.getItem(LOCAL_STORAGE_KEY);
-        return storedTransaction ? JSON.parse(storedTransaction) : null;
-    }
-    return null;
-};
-
-// Helper functions
-const saveLocalTransaction = (state: PointOfSaleState) => {
-    if (isClient) {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
-    }
-};
 
 // Store functions
 
@@ -52,95 +33,104 @@ export const addItem = async (book: {
     discount?: number;
     discount_percentage?: number;
 }, quantity: number = 1) => {
-
-    console.log("addItem book", book);
     const { data: { user }, error } = await supabase.auth.getUser();
 
-    pointOfSaleStore.setState((state) => {
-        if (!state.currentOrder) {
-            console.error('No current order initialized');
-            const newOrder: IOrder = {
-                customer_email: '',
-                customer_phone: '',
-                order_date: new Date().toISOString(),
-                sales_person_id: user!.id,
-                status: 'pending',
-                total_amount: 0,
-                transaction_id: uuidv4(),
-            };
+    if (!user) {
+        console.error('No authenticated user found');
+        return;
+    }
 
-            state = { ...state, currentOrder: newOrder, orderItems: [] };
+    let currentState = pointOfSaleStore.state;
 
-            return state;
-        }
+    if (!currentState.currentOrder || !currentState.currentOrder.id) {
+        const newOrder: IOrder = {
+            id: uuidv4(),
+            customer_email: '',
+            customer_phone: '',
+            order_date: new Date().toISOString(),
+            sales_person_id: user.id,
+            status: 'pending',
+            total_amount: 0,
+            transaction_id: uuidv4(),
+        };
+        currentState = { ...currentState, currentOrder: newOrder, orderItems: [] };
+    }
 
-        const existingItem = state.orderItems.find(item => item.book_id === book.id);
-        let updatedItems: IOrderItem[];
+    const existingItem = currentState.orderItems.find(item => item.book_id === book.id);
+    let updatedItems: IOrderItem[];
 
-        if (existingItem) {
-            updatedItems = state.orderItems.map(item =>
-                item.book_id === book.id
-                    ? { ...item, quantity: item.quantity + quantity }
-                    : item
-            );
-        } else {
-            const calculatePrice = (price: number, quantity: number, isPromotion: boolean, discount: number) => {
-                if (isPromotion) {
-                    return price * quantity * (1 - discount);
-                }
-                return price * quantity;
-            };
-
-            const newItem: IOrderItem = {
-                id: uuidv4(),
-                book_id: book.id,
-                category_id: book.category_id,
-                discount_percentage: book.discount_percentage,
-                isbn13: book.isbn13,
-                is_promotion: book.is_promotion || false,
-                price_per_unit: book.price,
-                price: calculatePrice(book.price, quantity, book.is_promotion || false, book.discount || 0),
-                quantity,
-                status: 'pending',
-
-            };
-            updatedItems = [...state.orderItems, newItem];
-        }
-
-        const totalAmount = updatedItems.reduce((sum, item) => sum + item.price, 0);
-        const updatedOrder: IOrder = {
-            ...state.currentOrder,
-            total_amount: totalAmount
+    if (existingItem) {
+        updatedItems = currentState.orderItems.map(item =>
+            item.book_id === book.id
+                ? { ...item, quantity: item.quantity + quantity }
+                : item
+        );
+    } else {
+        const calculatePrice = (price: number, quantity: number, isPromotion: boolean, discount: number) => {
+            if (isPromotion) {
+                return price * quantity * (1 - discount);
+            }
+            return price * quantity;
         };
 
-        const newState = { ...state, currentOrder: updatedOrder, orderItems: updatedItems };
-        saveLocalTransaction(newState);
-        return newState;
-    });
+        const newItem: IOrderItem = {
+            book_id: book.id,
+            category_id: book.category_id,
+            discount_percentage: book.discount_percentage,
+            id: uuidv4(),
+            is_promotion: book.is_promotion || false,
+            isbn13: book.isbn13,
+            price_per_unit: book.price,
+            price: calculatePrice(book.price, quantity, book.is_promotion || false, book.discount || 0),
+            quantity,
+            status: 'pending'
+        };
+        updatedItems = [...currentState.orderItems, newItem];
+    }
 
-    // Sync with database
-    if (pointOfSaleStore.state.orderItems.length === 1) {
-        // This is the first item, so create the order in the database
-        console.log("pointOfSaleStore.state.currentOrder", pointOfSaleStore.state.currentOrder);
-        console.log("pointOfSaleStore.state.orderItems", pointOfSaleStore.state.orderItems);
+    const totalAmount = updatedItems.reduce((sum, item) => sum + item.price, 0);
+    const updatedOrder: IOrder = {
+        ...currentState.currentOrder!,
+        total_amount: totalAmount
+    };
 
-        await supabase.rpc('initialize_transaction', {
-            p_sales_person_id: pointOfSaleStore.state.currentOrder?.sales_person_id,
-            p_local_transaction: {
-                order: pointOfSaleStore.state.currentOrder,
-                order_items: pointOfSaleStore.state.orderItems
-            }
-        });
-    } else {
-        // Update existing order
-        console.log("Updating order...", pointOfSaleStore.state.currentOrder);
-        console.log("Updating order items...", pointOfSaleStore.state.orderItems);
+    const newState = { ...currentState, currentOrder: updatedOrder, orderItems: updatedItems };
 
-        await supabase.rpc('update_point_of_sale_order', {
-            p_order: pointOfSaleStore.state.currentOrder,
-            p_items: pointOfSaleStore.state.orderItems
-        });
-        console.log("got here")
+    try {
+        let data;
+        let dbError;
+
+        if (currentState.orderItems.length > 0) {
+            // Update existing order
+            const { data: updatedData, error: updateError } = await supabase.rpc('update_point_of_sale_order', {
+                p_order: newState.currentOrder,
+                p_items: newState.orderItems
+            });
+            data = updatedData;
+            dbError = updateError;
+        } else {
+            // Create a new order
+            const { data: createdData, error: createError } = await supabase.rpc('create_initial_order', {
+                p_order: newState.currentOrder,
+                p_items: newState.orderItems
+            });
+            data = createdData;
+            dbError = createError;
+        }
+
+        if (dbError) {
+            console.error("Updating Erroring order:", dbError);
+            return;
+        }
+
+        pointOfSaleStore.setState((state) => ({
+            ...state,
+            currentOrder: data.order,
+            orderItems: data.order_items,
+            isInitialized: true
+        }));
+    } catch (error) {
+        console.error("Exception during database update:", error);
     }
 };
 
@@ -151,20 +141,21 @@ export const clearTransaction = () => {
         orderItems: [],
         isInitialized: true
     }));
-    if (isClient) {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-    }
 };
+
 
 export const completeTransaction = async () => {
     // Here you would typically send the transaction to a backend API
     const completedTransaction = { ...pointOfSaleStore.state };
-    clearTransaction();
     return completedTransaction;
 };
 
+export const getCurrentTransactionId = () => {
+    return pointOfSaleStore.state.currentOrder?.transaction_id || null;
+  };
+  
 export const getItemCount = () => {
-    return pointOfSaleStore.state.orderItems.reduce((sum, item) => sum + item.quantity, 0);
+    return pointOfSaleStore.state.orderItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 };
 
 export const getTotal = () => {
@@ -181,99 +172,89 @@ export const initializeTransaction = async () => {
         return;
     }
 
-    const localTransaction = loadLocalTransaction();
-
-    if (localTransaction && localTransaction.currentOrder) {
-        // Check if the local transaction exists in the database
-        const { data, error } = await supabase
-            .rpc('get_pending_order', {
-                p_transaction_id: localTransaction.currentOrder.transaction_id,
-                p_sales_person_id: salesPersonId
-            });
-
-        if (error) {
-            console.error('Error fetching pending order:', error);
-            return;
-        }
-
-        if (data) {
-            // If the order exists in the database, use it
-            pointOfSaleStore.setState((state) => ({
-                ...state,
-                currentOrder: data.order,
-                orderItems: data.order_items,
-                isInitialized: true
-            }));
-        } else {
-            // If the order doesn't exist in the database, use the local data
-            pointOfSaleStore.setState((state) => ({
-                ...state,
-                currentOrder: localTransaction.currentOrder,
-                orderItems: localTransaction.orderItems,
-                isInitialized: true
-            }));
-        }
-    } else {
-        // Create a new order in local state only
-        const newOrder: IOrder = {
-            customer_email: '',
-            customer_phone: '',
-            order_date: new Date().toISOString(),
-            sales_person_id: salesPersonId,
-            status: 'pending',
-            total_amount: 0,
-            transaction_id: uuidv4(),
-        };
-
-        pointOfSaleStore.setState((state) => ({
-            ...state,
-            currentOrder: newOrder,
-            orderItems: [],
-            isInitialized: true
-        }));
-    }
-
-    saveLocalTransaction(pointOfSaleStore.state);
-};
-
-const syncOrderWithDatabase = async (localTransaction: PointOfSaleState) => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-        .rpc('sync_point_of_sales_order', {
-            order: localTransaction.currentOrder,
-            items: localTransaction.orderItems
-        });
-
-    if (error) {
-        console.error('Error syncing order with database:', error);
-        return;
-    }
+    // Create a new order in local state only
+    const transactionId = uuidv4();
+    const newOrder: IOrder = {
+        customer_email: '',
+        customer_phone: '',
+        order_date: new Date().toISOString(),
+        sales_person_id: salesPersonId,
+        status: 'pending',
+        total_amount: 0,
+        transaction_id: transactionId,
+    };
 
     pointOfSaleStore.setState((state) => ({
         ...state,
-        currentOrder: data.order,
-        orderItems: data.order_items,
-        isInitialized: true
+        currentOrder: newOrder,
+        orderItems: [],
+        isInitialized: true,
+        currentTransactionId: transactionId
     }));
 
-    saveLocalTransaction(pointOfSaleStore.state);
+
 };
 
-export const removeItem = (bookId: string) => {
-    pointOfSaleStore.setState((state) => {
-        if (!state.currentOrder) return state;
+// export const removeItemit = (bookId: string) => {
+//     pointOfSaleStore.setState((state) => {
+//         if (!state.currentOrder) return state;
 
-        const updatedItems = state.orderItems.filter(item => item.book_id !== bookId);
-        const totalAmount = updatedItems.reduce((sum, item) => sum + item.price, 0);
-        const updatedOrder: IOrder = {
-            ...state.currentOrder,
-            total_amount: totalAmount
-        };
+//         const updatedItems = state.orderItems.filter(item => item.book_id !== bookId);
+//         const totalAmount = updatedItems.reduce((sum, item) => sum + item.price, 0);
+//         const updatedOrder: IOrder = {
+//             ...state.currentOrder,
+//             total_amount: totalAmount
+//         };
 
-        const newState = { ...state, currentOrder: updatedOrder, orderItems: updatedItems };
-        saveLocalTransaction(newState);
-        return newState;
+//         const newState = { ...state, currentOrder: updatedOrder, orderItems: updatedItems };
+//         return newState;
+//     });
+// };
+
+export const removeItem = async (id: string) => {
+    const { data, error } = await supabase.rpc('remove_order_item_marked_as_removed', {
+        p_id: id,
+        p_transaction_id: getCurrentTransactionId()
     });
+
+    if (error) {
+        console.error('Error removing item:', error);
+        return;
+    }
+
+    if (data && data.success) {
+        pointOfSaleStore.setState((state) => {
+            if (!state.currentOrder) return state;
+    
+            const updatedItems = state.orderItems.filter(item => item.id !== id);
+            const totalAmount = updatedItems.reduce((sum, item) => sum + item.price, 0);
+            const updatedOrder: IOrder = {
+                ...state.currentOrder,
+                total_amount: totalAmount
+            };
+    
+            const newState = { ...state, currentOrder: updatedOrder, orderItems: updatedItems };
+            return newState;
+        });
+    
+        // Check if the order has been removed (no items left)
+        if (data.order_items.length === 0) {
+            startNewTransaction();
+        }
+    } else {
+        console.error('Error removing item:', data ? data.error : 'Unknown error');
+    }
+};
+
+// Function to start a new transaction (to be implemented based on your app's logic)
+const startNewTransaction = () => {
+    pointOfSaleStore.setState((state) => ({
+        ...state,
+        currentOrder: null,
+        orderItems: []
+    }));
+
+    // Additional logic for starting a new transaction...
 };
 
 // Separate function to handle database update
@@ -298,10 +279,10 @@ export const updateOrderDetails = (details: Partial<IOrder>) => {
         };
 
         const newState = { ...state, currentOrder: updatedOrder };
-        saveLocalTransaction(newState);
         return newState;
     });
 };
+
 export const updateQuantity = (bookId: string, quantity: number) => {
     pointOfSaleStore.setState((state) => {
         if (!state.currentOrder) return state;
@@ -318,8 +299,7 @@ export const updateQuantity = (bookId: string, quantity: number) => {
         const newState = { ...state, currentOrder: updatedOrder, orderItems: updatedItems };
 
         updateDatabase(newState);
-        
-        saveLocalTransaction(newState);
+
         return newState;
     });
 };

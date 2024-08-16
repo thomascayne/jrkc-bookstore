@@ -32,9 +32,9 @@ import { usePointOfSaleStore } from '@/hooks/usePointOfSaleStore';
 import AppLogo from '../AppLogo';
 import PointOfSaleRegisterCheckoutModal from '@/components/point-of-sale/PointOfSaleRegisterCheckoutModal';
 import PointOfSaleRegisterPaymentProcessingModal from '@/components/point-of-sale/PointOfSaleRegisterPaymentProcessingModal';
-import { useUserProfileContext } from '@/contexts/UserProfileContext';
 import { Elements } from '@stripe/react-stripe-js';
-import { Appearance, loadStripe, Stripe } from '@stripe/stripe-js';
+import { Appearance, loadStripe } from '@stripe/stripe-js';
+import { useUserProfile } from '@/hooks/useUserProfile'; 
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -76,7 +76,8 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   } = usePointOfSaleStore();
   const { openFullScreenModal, closeFullScreenModal } = useFullScreenModal();
   const [returningFromPayment, setReturningFromPayment] = useState(false);
-  const { profile, isLoading } = useUserProfileContext();
+  const [token, setToken] = useState('');
+  const { profile, access_token } = useUserProfile();
 
   useEffect(() => {
     if (!currentOrder) {
@@ -102,18 +103,16 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   }, []);
 
   useEffect(() => {
-    fetchInitialBooks();
-  }, []);
-
-  useEffect(() => {
-    // Fetch initial books on component mount
-    fetchBooks();
-  }, []);
-
-  const fetchInitialBooks = async () => {
+    if (access_token) {
+      setToken(access_token);
+      fetchInitialBooks(access_token);
+    }
+  }, [access_token]);
+  
+  const fetchInitialBooks = async (token: string) => {
     setIsInitialLoading(true);
     try {
-      const fetchedBooks = await fetchPointOfSaleBooks('', 60);
+      const fetchedBooks = await fetchPointOfSaleBooks('', 60, token);
       setBooks(fetchedBooks);
     } catch (error) {
       console.error('Error fetching initial books:', error);
@@ -125,7 +124,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   const fetchBooks = async (search?: string) => {
     setIsSearching(true);
     try {
-      const fetchedBooks = await fetchPointOfSaleBooks(search, 60);
+      const fetchedBooks = await fetchPointOfSaleBooks(search, 60, token);
       setBooks(fetchedBooks);
     } catch (error) {
       console.error('Error fetching books:', error);
@@ -147,8 +146,6 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       initializeTransaction();
     }
 
-    console.log("book", book);
-    
     addItem(
       {
         id: book.id,
@@ -290,8 +287,6 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
         theme: 'stripe',
       };
   
-      console.log("Payment intent created: ", response);
-
       const options = {
         clientSecret: await response.json(),
         appearance: appearance,
@@ -585,7 +580,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                         isIconOnly
                         className="w-[2rem!important] h-[2rem!important] bg-transparent min-w-[2rem!important] min-h-[2rem!important] p-[0px!important"
                         color="danger"
-                        onClick={() => removeFromRegister(item.book_id)}
+                        onClick={() => removeFromRegister(item.id as string)}
                       >
                         <FaTrash className="text-red-500 text-lg" />
                       </Button>

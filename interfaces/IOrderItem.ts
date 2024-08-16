@@ -13,6 +13,5 @@ export interface IOrderItem {
     price_per_unit: number;
     price: number;
     quantity: number;
-    transaction_id?: string;
     status: 'cancelled' | 'damaged' | 'delivered' | 'pending' | 'processing' | 'refunded' | 'removed' | 'shipped';
 }

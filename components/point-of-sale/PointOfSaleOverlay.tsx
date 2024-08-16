@@ -1,10 +1,10 @@
+import PointOfSaleRegister from '@/components/point-of-sale/PointOfSaleRegister';
+import { usePointOfSaleStore } from '@/hooks/usePointOfSaleStore';
+import { Button, Input, Modal, ModalBody, ModalFooter } from '@nextui-org/react';
 // components/point-of-sale/PointOfSaleOverlay.tsx
 
 import React, { useState } from 'react';
-import { Modal, Button, Input, ModalBody, ModalFooter } from '@nextui-org/react';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import PointOfSaleRegister from '@/components/point-of-sale/PointOfSaleRegister';
-import { usePointOfSaleStore } from '@/hooks/usePointOfSaleStore';
 
 interface PointOfSaleOverlayProps {
   isOpen: boolean;
@@ -15,18 +15,19 @@ const PointOfSaleOverlay: React.FC<PointOfSaleOverlayProps> = ({ isOpen, onClose
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [password, setPassword] = useState('');
   const {
-    currentOrder,
-    orderItems,
-    isInitialized,
-    initializeTransaction,
     addItem,
-    removeItem,
-    updateQuantity,
-    getTotal,
-    getItemCount,
     clearTransaction,
     completeTransaction,
-    updateOrderDetails
+    currentOrder,
+    getCurrentTransactionId,
+    getItemCount,
+    getTotal,
+    initializeTransaction,
+    isInitialized,
+    orderItems,
+    removeItem,
+    updateOrderDetails,
+    updateQuantity,
   } = usePointOfSaleStore();
 
   const handleExitClick = () => {

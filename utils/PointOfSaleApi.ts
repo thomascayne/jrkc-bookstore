@@ -15,37 +15,51 @@ interface Order {
   transactionId: string;
 }
 
-export async function fetchPointOfSaleBooks(searchTerm: string = '', limit: number = 12): Promise<BookWithThumbnail[]> {
+export async function fetchPointOfSaleBooks(searchTerm: string = '', limit: number = 12, session_token: string): Promise<BookWithThumbnail[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/inventory`);
+
+  // Add query parameters
+  url.searchParams.append('select', '*');
+  url.searchParams.append('limit', limit.toString());
+  
   try {
-
-    // const { data: inventoryBooks, error: inventoryBooksError } = await supabase
-    // .from('inventory')
-    // .select('*')
-    // .limit(limit)
-    // .order('title', { ascending: true });
-
-    // console.log('inventoryBooks', inventoryBooks);
-
-    const { data, error } = await supabase
+      const { data, error } = await supabase
       .rpc('fetch_point_of_sale_books', {
         search_term: searchTerm,
         limit_count: limit
       })
       .limit(limit);
 
+
+    // const response = await fetch(url, {
+    //   method: 'GET',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${session_token}`,
+    //     'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    //   }
+    // });
+    
     if (error) {
       console.error('Error fetching books:', error);
       return [];
     }
 
-    return data || [];
+    // const text = await response.text();
+    // console.log('Response text:', text);
+
+    // const inventoryBooks: BookWithThumbnail[] = text ? JSON.parse(text) : [];
+    
+    // console.log('inventoryBooks', inventoryBooks);
+
+    return data;
   } catch (error) {
     console.error('Error fetching books:', error);
     return [];
   }
 }
 
-export async function createOrder(order: Order) {
+export async function createPointOfSaleOrder(order: Order) {
   try {
     const { data, error } = await supabase
       .rpc('create_pos_order', {

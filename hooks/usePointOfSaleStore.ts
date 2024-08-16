@@ -1,18 +1,7 @@
+import { addItem, clearTransaction, completeTransaction, getCurrentTransactionId, getItemCount, getTotal, initializeTransaction, pointOfSaleStore, removeItem, updateOrderDetails, updateQuantity } from '@/stores/pointOfSaleStore';
 // hooks/usePointOfSaleStore.ts
 
 import { useStore } from '@tanstack/react-store';
-import {
-  addItem,
-  clearTransaction,
-  completeTransaction,
-  getItemCount,
-  getTotal,
-  initializeTransaction,
-  pointOfSaleStore,
-  removeItem,
-  updateOrderDetails,
-  updateQuantity,
-} from '@/stores/pointOfSaleStore';
 
 export const usePointOfSaleStore = () => {
   const state = useStore(pointOfSaleStore);
@@ -22,6 +11,7 @@ export const usePointOfSaleStore = () => {
     addItem,
     clearTransaction,
     completeTransaction,
+    getCurrentTransactionId,
     getItemCount,
     getTotal,
     initializeTransaction,
