@@ -1,6 +1,6 @@
 // app/category/[key]/page.tsx
 
-import AuthNavbar from "@/components/AuthNavbar";
+import AuthNavbar from "@/components/navbars/AuthNavbar";
 import { createClient } from "@/utils/supabase/server";
 import { Suspense } from "react";
 

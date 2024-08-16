@@ -31,7 +31,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
   const cartItems = useStore(cartStore, (state) => state.items);
   const totalPrice = useStore(cartStore, getTotal);
 
-  const { openModal } = useFullScreenModal();
+  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
   const { closeRightPanel } = useSidePanel();
   const router = useRouter();
 
@@ -59,7 +59,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
     try {
       const bookTitle = `${book.title}`;
 
-      openModal(<BookDetails bookId={book.id} />, bookTitle);
+      openFullScreenModal(<BookDetails bookId={book.id} />, bookTitle);
     } catch (error) {
       console.error("Error fetching book details:", error);
     }
@@ -80,7 +80,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
         {cartItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-3xl font-bold mb-6 text-center">
-              Your cart is empty.
+              Your Bookstore Cart is empty.
             </h1>
             <Button
               className="text-center bg-primary-500 text-white font-bold px-4"

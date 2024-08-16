@@ -1,7 +1,7 @@
 // components/SalesAssociateNavbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -27,6 +27,7 @@ import AppLogo from "@/components/AppLogo";
 import { getRoleColor, Role, ROLES } from "@/utils/roles";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import useSignOut from "@/hooks/useSignOut";
+import { MdDashboard } from "react-icons/md";
 
 interface SalesAssociateNavbarProps {
   emulatedRole: Role | null;
@@ -35,7 +36,7 @@ interface SalesAssociateNavbarProps {
   user: User | null;
 }
 
-export default function SalesAssociateNavbar({
+function SalesAssociateNavbar({
   emulatedRole,
   isAdmin,
   onRoleChange,
@@ -57,23 +58,24 @@ export default function SalesAssociateNavbar({
     }
   }, []);
 
-  const handleThemeChange = (newTheme: Theme) => {
+  const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
-  };
+  }, []);
 
   const menuItems = [
-    { item: "POS", icon: <FaCashRegister />, href: "/pos" },
-    { item: "Customer Info", icon: <FaAddressBook />, href: "/customers" },
-    { item: "Inventory Search", icon: <FaSearch />, href: "/inventory-search" },
-    { item: "Top Sellers", icon: <FaChartLine />, href: "/top-sellers" },
+    { item: "Dashboard", icon: <MdDashboard />, href: "/sales/dashboard" },
+    { item: "POS", icon: <FaCashRegister />, href: "/sales/point-of-sale" },
+    { item: "Customer Info", icon: <FaAddressBook />, href: "#" },
+    { item: "Inventory Search", icon: <FaSearch />, href: "#" },
+    { item: "Top Sellers", icon: <FaChartLine />, href: "#" },
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
   ];
 
-  const navbarStyle = {
+  const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
     color: "black",
     transition: "background-color 0.3s ease",
-  };
+  }), [emulatedRole]);
 
   return (
     <Navbar
@@ -165,3 +167,5 @@ export default function SalesAssociateNavbar({
     </Navbar>
   );
 }
+
+export default React.memo(SalesAssociateNavbar);

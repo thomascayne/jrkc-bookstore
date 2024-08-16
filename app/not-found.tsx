@@ -20,10 +20,10 @@ export default function NotFound() {
               It seems this page has been lost between the shelves. Let us get
               you back to our main collection.
             </p>
-            <div className="flex justify-center mb-6">
-              <div className="w-12 h-24 bg-blue-500 rounded transform -rotate-6 mr-2"></div>
-              <div className="w-12 h-32 bg-green-500 rounded transform rotate-6 mr-2"></div>
-              <div className="w-12 h-24 bg-red-500 rounded transform -rotate-3"></div>
+            <div className="stacked-books flex justify-center mt-auto mb-[0.125rem] items-end">
+              <div className="w-9 h-24 bg-blue-500 rounded transform -rotate-[-12deg] mr-2"></div>
+              <div className="w-9 h-32 bg-green-500 rounded transform rotate-5 mr-2 mt-[-5px]"></div>
+              <div className="w-9 h-24 bg-red-500 rounded transform -rotate-[12deg]"></div>
             </div>
             <Link
               href="/"

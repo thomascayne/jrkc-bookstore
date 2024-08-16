@@ -60,7 +60,7 @@ const InventoryPage = () => {
   const [page, setPage] = useState(1);
   const [selectedBook, setSelectedBook] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { openModal } = useFullScreenModal();
+  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
   const [editedValues, setEditedValues] = useState<EditedValues>({});
   const [editedQuantities, setEditedQuantities] = useState<EditedValues>(
     {},
@@ -107,7 +107,7 @@ const InventoryPage = () => {
 
   const handleRowClick = async (book: IBookInventory, e: React.MouseEvent) => {
     e.preventDefault();
-    openModal(
+    openFullScreenModal(
       <BookDetails bookId={book.id} />,
       `${book?.categoryId} - ${book.title}`,
     );
@@ -358,6 +358,3 @@ const InventoryPage = () => {
 
 export default InventoryPage;
 
-function fetchBookById(book_id: string) {
-  throw new Error('Function not implemented.');
-}
