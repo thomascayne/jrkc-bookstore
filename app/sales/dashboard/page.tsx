@@ -85,7 +85,7 @@ const SalesDashboardPage = ({}: DashboardProps) => {
 
 export default SalesDashboardPage;
 
-export const dashboardItems = [
+const dashboardItems = [
   {
     bgColor: 'bg-blue-500',
     description: "Today's sales performance at a glance",
