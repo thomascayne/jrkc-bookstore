@@ -1,5 +1,5 @@
 // components/point-of-sale/PointOfSaleRegisterCheckoutModal.tsx
-"use client";
+'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Divider } from '@nextui-org/react';
@@ -15,6 +15,7 @@ interface PointOfSaleRegisterCheckoutModalProps {
   getTotal: () => number;
   onProceedToPayment: (totalToPay: number) => void;
   onReturnToRegister: () => void;
+  isLoading?: boolean;
 }
 
 const PointOfSaleRegisterCheckoutModal: React.FC<
@@ -26,6 +27,7 @@ const PointOfSaleRegisterCheckoutModal: React.FC<
   getTotal,
   onReturnToRegister,
   onProceedToPayment,
+  isLoading = false,
 }) => {
   const [discount, setDiscount] = useState(0);
   const [listPriceTotal, setListPriceTotal] = useState(0);
@@ -50,7 +52,6 @@ const PointOfSaleRegisterCheckoutModal: React.FC<
     setTaxes(calculatedTaxes);
     setTotalToPay(calculatedTotalToPay);
   }, [currentOrder, getTotal, orderItems, books]);
-
 
   const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
 
@@ -85,7 +86,10 @@ const PointOfSaleRegisterCheckoutModal: React.FC<
               </tr>
             </thead>
           </table>
-          <div className="flex-grow overflow-y-auto relative" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div
+            className="flex-grow overflow-y-auto relative"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             <table className="w-full table-fixed">
               <tbody>
                 {orderItems.map((item, index) => {
@@ -95,15 +99,15 @@ const PointOfSaleRegisterCheckoutModal: React.FC<
                       <td className="w-1/12 px-2 align-top">{index + 1}</td>
                       <td className="w-6/12 px-2">
                         <div className="flex flex-col">
-                          <span className="line-clamp-2">
-                            {book?.title}
-                          </span>
+                          <span className="line-clamp-2">{book?.title}</span>
                           <span className="text-sm text-gray-600">
                             ${(item.price_per_unit ?? 0).toFixed(2)}
                           </span>
                         </div>
                       </td>
-                      <td className="w-2/12 px-2 text-right">{item.quantity}</td>
+                      <td className="w-2/12 px-2 text-right">
+                        {item.quantity}
+                      </td>
                       <td className="w-3/12 px-2 text-right">
                         ${(item.price ?? 0).toFixed(2)}
                       </td>
@@ -142,13 +146,19 @@ const PointOfSaleRegisterCheckoutModal: React.FC<
       </div>
       <div className="flex justify-center mt-4">
         <Button
-          className="uppercase font-semibold drop-shadow-xl"
+          className={`uppercase font-semibold drop-shadow-xl ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           color="warning"
           onClick={() => onProceedToPayment(totalToPay)}
+          disabled={isLoading}
         >
-          {`Confirm > Proceed to payment`}
+          {isLoading ? 'Processing...' : 'Confirm > Proceed to payment'}
         </Button>
-        <Button className="ml-4" color="primary" onClick={onReturnToRegister}>
+        <Button
+          className={`ml-4 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          color="primary"
+          disabled={isLoading}
+          onClick={onReturnToRegister}
+        >
           Return to register
         </Button>
       </div>

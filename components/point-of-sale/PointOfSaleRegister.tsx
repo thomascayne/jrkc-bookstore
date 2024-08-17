@@ -36,6 +36,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { Appearance, loadStripe } from '@stripe/stripe-js';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import Image from 'next/image';
+import { CardType } from '@/utils/creditCardUtils';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -80,6 +81,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   const [returningFromPayment, setReturningFromPayment] = useState(false);
   const [token, setToken] = useState('');
   const { profile, access_token } = useUserProfile();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!currentOrder) {
@@ -114,7 +116,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   const fetchInitialBooks = async (token: string) => {
     setIsInitialLoading(true);
     try {
-      const fetchedBooks = await fetchPointOfSaleBooks('', 60, token);
+      const fetchedBooks = await fetchPointOfSaleBooks('', 100, token);
       setBooks(fetchedBooks);
     } catch (error) {
       console.error('Error fetching initial books:', error);
@@ -240,6 +242,35 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
     }
   };
 
+  const handleOnReturnToRegister = async (
+    type: string,
+    paymentMethod: CardType,
+  ) => {
+    if (
+      type === 'success' &&
+      paymentMethod &&
+      currentOrder &&
+      currentOrder.id
+    ) {
+      setReturningFromPayment(true);
+      const { success, error } = await closeOutRegisterWithPayment(
+        currentOrder.id,
+        currentOrder.transaction_id,
+        paymentMethod,
+      );
+
+      if (success) {
+        clearTransaction();
+      } else {
+        console.error('Error closing out register:', error);
+      }
+    } else {
+      setReturningFromPayment(false);
+    }
+
+    closeFullScreenModal();
+  };
+
   const handlePaymentSuccess = () => {
     // Handle successful payment (e.g., clear cart, show confirmation)
     closeFullScreenModal();
@@ -267,6 +298,8 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
     }
 
     try {
+      setIsLoading(true);
+      
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -290,8 +323,9 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
         theme: 'stripe',
       };
 
+      const { clientSecret } = await response.json();
       const options = {
-        clientSecret: await response.json(),
+        clientSecret,
         appearance: appearance,
         paymentMethodOrder: ['card'],
       };
@@ -301,9 +335,9 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
           <PointOfSaleRegisterPaymentProcessingModal
             currentOrder={currentOrder}
             cardHolderName={`${profile?.first_name || ''} ${profile?.last_name || ''}`.trim()}
-            onPaymentFailure={handlePaymentFailure}
-            onPaymentSuccess={handlePaymentSuccess}
-            onReturnToRegister={closeFullScreenModal}
+            onReturnToRegister={(value, paymentMethod) =>
+              handleOnReturnToRegister(value, paymentMethod)
+            }
             totalAmount={amount}
           />
         </Elements>,
@@ -321,7 +355,10 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       // Handle payment failure (e.g., show error message)
       alert(error);
       // You might want to keep the modal open here to allow retrying
+    } finally {
+      setIsLoading(false);
     }
+
   };
 
   const handleOpenCalculateCheckoutModal = () => {
@@ -331,6 +368,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
         orderItems={orderItems}
         books={books}
         getTotal={getTotal}
+        isLoading={isLoading}
         onProceedToPayment={(amount) => {
           handleProceedToPayment(amount);
         }}
