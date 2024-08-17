@@ -38,10 +38,6 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import Image from 'next/image';
 import { CardType } from '@/utils/creditCardUtils';
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-);
-
 interface TooltipState {
   minus: string;
   plus: string;
@@ -292,7 +288,9 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   }, []);
 
   const handleProceedToPayment = async (amount: number) => {
-    if (!stripePromise) {
+    const stripe = await loadStripe(`${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`);
+    
+    if (!stripe) {
       console.error('Stripe Promise not initialized');
       return;
     }
@@ -331,7 +329,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       };
 
       openFullScreenModal(
-        <Elements stripe={stripePromise} options={options}>
+        <Elements stripe={stripe} options={options}>
           <PointOfSaleRegisterPaymentProcessingModal
             currentOrder={currentOrder}
             cardHolderName={`${profile?.first_name || ''} ${profile?.last_name || ''}`.trim()}
