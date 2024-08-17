@@ -31,10 +31,6 @@ import {
 } from "@stripe/react-stripe-js";
 import { IStripePaymentMethod } from "@/interfaces/IStripePaymentMethod";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
-);
-
 interface PaymentFormProps {
   user: User | null;
   onPaymentMethodSelect: (paymentMethod: IPaymentMethod) => void;
@@ -104,6 +100,8 @@ export default function CheckoutPaymentForm({
     e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
+
+    const stripeKey = await loadStripe(`${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`);
 
     if (!user) return;
 
