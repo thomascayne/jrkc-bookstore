@@ -1,58 +1,55 @@
+// components/point-of-sale/PointOfSaleRegisterPaymentProcessingModal.tsx
+
 import CreditCardIcons from '@/components/CreditCardIcons';
 import { IOrder } from '@/interfaces/IOrder';
-import {
-  CardType,
-  generateMockCreditCard,
-} from '@/utils/creditCardUtils';
+import { IStripTestCardNumber } from '@/interfaces/IStripTestCardNumber';
+import { CardType } from '@/utils/creditCardUtils';
+import { generateRandomTestCardFromStripe } from '@/utils/getRandomTestCardsFromStripe';
 import { createStripePaymentIntent } from '@/utils/stripe-payment-helper';
-import { Button, Card, Input } from '@nextui-org/react';
+import { Button, Card, Input, Tooltip } from '@nextui-org/react';
 import {
   PaymentElement,
   useElements,
   useStripe,
 } from '@stripe/react-stripe-js';
 import { StripePaymentElementOptions } from '@stripe/stripe-js';
-// components/point-of-sale/PointOfSaleRegisterPaymentProcessingModal.tsx
-
 import React, { useEffect, useState } from 'react';
 import { FaClipboard } from 'react-icons/fa';
+
+import Loading from '@/components/Loading';
+
+interface StripeCreditCardData {
+  cardHolderName: string;
+  card: IStripTestCardNumber;
+}
 
 interface PointOfSaleRegisterPaymentProcessingProps {
   cardHolderName: string;
   currentOrder: IOrder | null;
   totalAmount: number;
-  onPaymentSuccess: () => void;
-  onPaymentFailure: (error: string) => void;
-  onReturnToRegister: (returnValue: boolean) => void;
+  onReturnToRegister: (value: string, paymentMethod: CardType) => void;
 }
-type PaymentStatus = 'idle' | 'success' | 'failure';
 
 const PointOfSaleRegisterPaymentProcessingModal: React.FC<
   PointOfSaleRegisterPaymentProcessingProps
-> = ({
-  cardHolderName,
-  currentOrder,
-  totalAmount,
-  onPaymentSuccess,
-  onPaymentFailure,
-  onReturnToRegister,
-}) => {
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardType, setCardType] = useState<CardType>('');
-  const [clientSecret, setClientSecret] = useState('');
-  const [expirationMonth, setExpirationMonth] = useState('');
-  const [expirationYear, setExpirationYear] = useState('');
-  const [isCardGenerated, setIsCardGenerated] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [nameOnCard, setNameOnCard] = useState('');
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
-  const [isMockSuccess, setIsMockSuccess] = useState(false);
+> = ({ cardHolderName, currentOrder, totalAmount, onReturnToRegister }) => {
+  const [cardType, setCardType] = useState<CardType>(null);
+  const [clientSecret, setClientSecret] = useState<string>();
+  const [internalIds, setInternalIds] = useState<number[]>([]);
+  const [nameOnCard, setNameOnCard] = useState<string>();
+  const [paymentCardData, setPaymentCardData] =
+    useState<StripeCreditCardData>();
+  const [paymentState, setPaymentState] = useState({
+    isProcessing: false,
+    isSuccess: false,
+    isFailure: false,
+    isCardGenerated: false,
+  });
+  const [showCopyToClipboardTooltip, setShowCopyToClipboardTooltip] =
+    useState<boolean>(false);
 
   const elements = useElements();
   const stripe = useStripe();
-
-  const isSuccessStatus = (status: PaymentStatus): status is 'success' =>
-    status === 'success';
 
   useEffect(() => {
     async function initializePaymentIntent() {
@@ -60,156 +57,220 @@ const PointOfSaleRegisterPaymentProcessingModal: React.FC<
       if (result.success) {
         setClientSecret(result?.clientSecret ?? '');
       } else {
-        onPaymentFailure(result.error ?? 'An unknown error occurred');
+        onReturnToRegister('An unknown error occurred', '');
       }
     }
 
     initializePaymentIntent();
-  }, [totalAmount, currentOrder, onPaymentFailure]);
-
+  }, [totalAmount, currentOrder, onReturnToRegister]);
 
   const paymentElementOptions: StripePaymentElementOptions = {
-    layout: "tabs",
+    layout: 'tabs',
     paymentMethodOrder: ['card'] as const,
     defaultValues: {
       billingDetails: {
         name: cardHolderName,
-      }
-    }
+      },
+    },
+    wallets: {
+      applePay: 'never',
+      googlePay: 'never',
+    },
   };
-    const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
 
-    console.log('process...');
-    console.log('client secret', clientSecret);
+  const copyCardToClipboard = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    const card = `${paymentCardData?.card.number}\n${nameOnCard}\n${paymentCardData?.card.expMonth}/${paymentCardData?.card.expYear}`;
+    navigator.clipboard.writeText(card).then(() => {
+      setShowCopyToClipboardTooltip(true);
+      setTimeout(() => setShowCopyToClipboardTooltip(false), 9000);
+    });
+  };
+
+  const handleSubmit = async (event: React.MouseEvent) => {
+    event.preventDefault();
 
     if (!stripe || !elements || !clientSecret) {
       return;
     }
 
-    setIsProcessing(true);
+    setPaymentState((prev) => ({ ...prev, isProcessing: true }));
 
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/payment-confirmation`,
-      },
-    });
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          payment_method_data: {
+            billing_details: {
+              name: nameOnCard || cardHolderName,
+            },
+          },
+        },
+        redirect: 'if_required',
+      });
 
-    if (error) {
-      setPaymentStatus('failure');
-      setIsMockSuccess(true);
-      onPaymentFailure(error.message ?? 'An unknown error occurred');
-    } else {
-      setPaymentStatus('success');
-      onPaymentSuccess();
+      if (error && error.message) {
+        setPaymentState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          isFailure: true,
+        }));
+        console.error('Payment failed:', error.message);
+      } else {
+        setPaymentState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          isSuccess: true,
+        }));
+      }
+    } catch (error: any) {
+      console.error('Error:', error);
+      setPaymentState((prev) => ({
+        ...prev,
+        isProcessing: false,
+        isFailure: true,
+      }));
     }
-
-    setIsProcessing(false);
   };
 
   const generateNewCard = () => {
-    const mockCard = generateMockCreditCard();
-    setIsCardGenerated(true);
-    setCardNumber(mockCard.cardNumber);
-    cardHolderName ? setNameOnCard(cardHolderName) : setNameOnCard('John Doe'); // You can randomize this if needed
-    console.log('name on card', nameOnCard);
-    setExpirationMonth(mockCard.expirationMonth);
-    setExpirationYear(mockCard.expirationYear);
-    setCardType(mockCard.cardType as CardType);
-  };
+    // pass in internalIds to prevent the same card from being generated twice
+    const newMockCard = generateRandomTestCardFromStripe(internalIds);
 
-  const copyCardToClipboard = () => {
-    const cardInfo = `${cardNumber}\n${nameOnCard}\n${expirationMonth}/${expirationYear}`;
-    navigator.clipboard.writeText(cardInfo).then(() => {
-      alert('Card information copied to clipboard!');
+    const ids = Array.from(new Set([...internalIds, newMockCard.internalId]));
+
+    // filter out duplicate ids and update internalIds state
+    setInternalIds(ids);
+    cardHolderName ? setNameOnCard(cardHolderName) : setNameOnCard('John Doe');
+
+    setPaymentCardData({
+      cardHolderName,
+      card: {
+        brand: newMockCard.brand,
+        cvc: newMockCard.cvc,
+        expMonth: newMockCard.expMonth,
+        expYear: newMockCard.expYear,
+        last4: newMockCard.last4,
+        number: newMockCard.number,
+        token: newMockCard.token,
+        internalId: newMockCard.internalId,
+        country: 'US',
+        funding: 'credit',
+      },
     });
+
+    setPaymentState((prev) => ({ ...prev, isCardGenerated: true }));
+    setCardType(newMockCard.brand as CardType);
   };
 
   const renderPaymentStatus = () => {
-    if (paymentStatus === 'success') {
-      setPaymentStatus('success')
+    if (paymentState.isSuccess) {
       return (
-        <Card className="bg-green-100 p-4 mb-4">
-          <p className="text-green-700 font-bold">Payment Successful!</p>
-        </Card>
+        <p className="text-green-700 font-bold my-4 text-center">
+          Payment Successful!
+        </p>
       );
-    } else if (paymentStatus === 'failure') {
-      setIsMockSuccess(true);
+    } else if (paymentState.isFailure) {
       return (
-        <p className="text-red-700 font-bold my-4">
-          Payment Failed. Please try again.
+        <p className="text-red-700 font-bold my-4 text-center">
+          {"Payment Failed. Calm down. It's just a test."}
         </p>
       );
     }
     return null;
   };
 
-  const onReturnToRegisterWithValue = (returnValue: boolean) => {
-    console.log('return value', returnValue);
-  }
+  const onReturnToRegisterWithValue = (returnValue: string) => {
+    onReturnToRegister(returnValue, cardType);
+  };
 
   return (
-    <div className="flex flex-col items-center px-6 pb-2 py-0 h-full">
-      <h2 className="text-2xl flex gap-3 font-bold py-0 m-0">
+    <div className="payment-container flex flex-col items-center px-6 pb-2 py-0 h-full">
+      <h2 className="text-2xl flex gap-3 font-bold py-0 my-0 mb-6">
         <span> Process Payment:</span>
-        <span className='text-green-600'>{`$${totalAmount.toFixed(2)}`}</span>
+        <span className="text-green-600">{`$${totalAmount.toFixed(2)}`}</span>
       </h2>
+
       {renderPaymentStatus()}
 
       {
-        <>
-          {!isCardGenerated && (
+        <div className={'w-full flex flex-col flex-grow'}>
+          {!paymentState.isCardGenerated && (
             <div className="flex items-center justify-center text-green-600 font-bold">
-            Get a mock test credit card to test your payment.
-          </div>)}
+              Get a mock test credit card to test your payment.
+            </div>
+          )}
 
-          {clientSecret && isCardGenerated && (
-            <Card className="w-full max-w-md p-4">
+          {clientSecret && paymentState.isCardGenerated && (
+            <Card className="w-full max-w-md p-4 mt-6">
               <PaymentElement options={paymentElementOptions} />
             </Card>
           )}
-        </>
+        </div>
       }
+
+      {paymentState.isProcessing && (
+        <Loading position="absolute" containerClass="inset-0" />
+      )}
 
       <div className="mt-auto flex flex-col justify-end items-end w-full">
         <div className={`flex gap-4`}>
           <Button
-            className={`flex gap-2 ${isMockSuccess ? 'opacity-50' : ''}`}
+            className={`flex gap-2 ${paymentState.isSuccess || paymentState.isProcessing ? 'opacity-50' : ''}`}
             color="primary"
-            disabled={isMockSuccess}
+            disabled={paymentState.isSuccess || paymentState.isProcessing}
             onClick={generateNewCard}
+            size="md"
           >
             <span>Get Mock Credit Card</span>
             <CreditCardIcons cardType={cardType as string} />
           </Button>
-          <Button
-            className="bg-yellow-500"
-            disabled={!isCardGenerated || isMockSuccess}
-            onClick={copyCardToClipboard}
-          >
-            <FaClipboard className="mr-2" />
-            <span>Copy Card Info</span>
-          </Button>
+          <div className="relative">
+            <Tooltip
+              className="p-6 text-white font-bold"
+              color="success"
+              content={`Card information copied to clipboard: ${paymentCardData?.cardHolderName} ${paymentCardData?.card.number.substring(12)}`}
+              isOpen={showCopyToClipboardTooltip}
+              placement="top"
+            >
+              <Button
+                size="md"
+                key={`copy-to-clipboard-0${paymentCardData?.card.internalId}`}
+                className={`bg-yellow-500 text-black font-semibold ${!paymentState.isCardGenerated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!paymentState.isCardGenerated}
+                onClick={(e) => copyCardToClipboard(e)}
+              >
+                <FaClipboard className="mr-2" />
+                <span>Copy Card Info</span>
+              </Button>
+            </Tooltip>
+          </div>
         </div>
 
-        <div className="flex gap-4 items-baseline">
+        <div className="flex gap-4 mt-4 items-baseline">
           <Button
-            className={`bg-primary-500 ${!isProcessing || !isCardGenerated ? 'opacity-50' : ''}`}
+            className={`bg-primary-500 text-white ${paymentState.isProcessing || !paymentState.isCardGenerated || paymentState.isSuccess ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={
-              isProcessing || !isCardGenerated
+              paymentState.isProcessing ||
+              !paymentState.isCardGenerated ||
+              paymentState.isSuccess
             }
-            size="lg"
+            size="md"
             onClick={handleSubmit}
           >
-            {isProcessing ? 'Processing...' : 'Process Payment'}
+            {paymentState.isProcessing ? 'Processing...' : 'Process Payment'}
           </Button>
           <Button
-            className={`mt-4 ${!isProcessing ? 'opacity-50' : ''}`}
+            className={`${paymentState.isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
             color="primary"
-            disabled={isProcessing}
-            onClick={() => onReturnToRegisterWithValue(isMockSuccess)}
-            size="lg"
+            disabled={paymentState.isProcessing}
+            onClick={() =>
+              onReturnToRegisterWithValue(
+                paymentState.isSuccess ? 'success' : 'return',
+              )
+            }
+            size="md"
           >
             Return to register
           </Button>

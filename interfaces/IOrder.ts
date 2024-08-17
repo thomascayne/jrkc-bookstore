@@ -1,4 +1,5 @@
 // src/interfaces/IOrder.ts
+export type orderStatus =  'cancelled' | 'damaged' | 'delivered' | 'paid' |'pending' | 'paid' |'processing' | 'refunded' | 'removed' | 'shipped';
 
 export interface IOrder {
     id?: string;
@@ -9,7 +10,7 @@ export interface IOrder {
     order_discount_percentage?: number;
     payment_method?: string;
     sales_person_id: string;
-    status: 'cancelled' | 'damaged' | 'delivered' | 'pending' | 'processing' | 'refunded' | 'removed' | 'shipped';
+    status: orderStatus;
     total_amount: number;
     transaction_id: string;
 }

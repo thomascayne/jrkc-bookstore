@@ -124,14 +124,14 @@ const CartPage = () => {
               className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4 px-4"
             >
               {item.book.is_promotion ? (
+                <div className="relative h-[75px] w-[50px] mr-4">
                 <Image
                   alt={item.book.title}
                   className="object-cover mr-4"
-                  height={75}
+                  fill
                   src={item.book.small_thumbnail_image_link}
-                  title={item.book_id}
-                  width={50}
                 />
+              </div>
               ) : (
                 <div className="mr-4">
                   <PlaceholderImage />

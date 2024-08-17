@@ -36,6 +36,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { Appearance, loadStripe } from '@stripe/stripe-js';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import Image from 'next/image';
+import { CardType } from '@/utils/creditCardUtils';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -67,6 +68,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   const {
     addItem,
     clearTransaction,
+    closeOutRegisterWithPayment,
     currentOrder,
     getItemCount,
     getTotal,
@@ -79,6 +81,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   const [returningFromPayment, setReturningFromPayment] = useState(false);
   const [token, setToken] = useState('');
   const { profile, access_token } = useUserProfile();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!currentOrder) {
@@ -113,7 +116,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   const fetchInitialBooks = async (token: string) => {
     setIsInitialLoading(true);
     try {
-      const fetchedBooks = await fetchPointOfSaleBooks('', 60, token);
+      const fetchedBooks = await fetchPointOfSaleBooks('', 100, token);
       setBooks(fetchedBooks);
     } catch (error) {
       console.error('Error fetching initial books:', error);
@@ -239,6 +242,35 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
     }
   };
 
+  const handleOnReturnToRegister = async (
+    type: string,
+    paymentMethod: CardType,
+  ) => {
+    if (
+      type === 'success' &&
+      paymentMethod &&
+      currentOrder &&
+      currentOrder.id
+    ) {
+      setReturningFromPayment(true);
+      const { success, error } = await closeOutRegisterWithPayment(
+        currentOrder.id,
+        currentOrder.transaction_id,
+        paymentMethod,
+      );
+
+      if (success) {
+        clearTransaction();
+      } else {
+        console.error('Error closing out register:', error);
+      }
+    } else {
+      setReturningFromPayment(false);
+    }
+
+    closeFullScreenModal();
+  };
+
   const handlePaymentSuccess = () => {
     // Handle successful payment (e.g., clear cart, show confirmation)
     closeFullScreenModal();
@@ -266,6 +298,8 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
     }
 
     try {
+      setIsLoading(true);
+      
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -289,8 +323,9 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
         theme: 'stripe',
       };
 
+      const { clientSecret } = await response.json();
       const options = {
-        clientSecret: await response.json(),
+        clientSecret,
         appearance: appearance,
         paymentMethodOrder: ['card'],
       };
@@ -300,9 +335,9 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
           <PointOfSaleRegisterPaymentProcessingModal
             currentOrder={currentOrder}
             cardHolderName={`${profile?.first_name || ''} ${profile?.last_name || ''}`.trim()}
-            onPaymentFailure={handlePaymentFailure}
-            onPaymentSuccess={handlePaymentSuccess}
-            onReturnToRegister={closeFullScreenModal}
+            onReturnToRegister={(value, paymentMethod) =>
+              handleOnReturnToRegister(value, paymentMethod)
+            }
             totalAmount={amount}
           />
         </Elements>,
@@ -320,7 +355,10 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       // Handle payment failure (e.g., show error message)
       alert(error);
       // You might want to keep the modal open here to allow retrying
+    } finally {
+      setIsLoading(false);
     }
+
   };
 
   const handleOpenCalculateCheckoutModal = () => {
@@ -330,6 +368,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
         orderItems={orderItems}
         books={books}
         getTotal={getTotal}
+        isLoading={isLoading}
         onProceedToPayment={(amount) => {
           handleProceedToPayment(amount);
         }}
@@ -421,12 +460,15 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                       addToRegister(book, e);
                     }}
                   >
-                    <Image
-                      src={book.thumbnail}
-                      alt={book.title}
-                      title={book.id}
-                      className="w-full h-24 object-cover mb-2 rounded-tl-lg rounded-tr-lg"
-                    />
+                    <div className="relative w-full h-36">
+                      <Image
+                        fill
+                        src={book.thumbnail}
+                        alt={book.title}
+                        title={book.id}
+                        className="object-cover mb-2 rounded-tl-lg rounded-tr-lg"
+                      />
+                    </div>
                     <h3 className="font-bold text-sm truncate">{book.title}</h3>
                     <div className="relative w-full flex mt-auto">
                       {book.is_promotion && book.discount_percentage && (
@@ -520,12 +562,16 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                   >
                     <div className="flex items-center">
                       {book && (
-                        <Image
-                          src={book.thumbnail}
-                          alt={book.title}
-                          title={book.id}
-                          className="w-10 h-10 object-cover mr-2 rounded-md"
-                        />
+                        <div className="relative w-10 h-10 mr-2">
+                          <Image
+                            fill
+                            src={book.thumbnail}
+                            alt={book.title}
+                            title={book.id}
+                            objectFit="cover"
+                            className="rounded-md"
+                          />
+                        </div>
                       )}
                       <div className="flex-1 text-xs mr-1">
                         <p className="line-clamp-1">{book?.title}</p>

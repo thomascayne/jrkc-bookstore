@@ -32,7 +32,7 @@ import {
 import { IStripePaymentMethod } from "@/interfaces/IStripePaymentMethod";
 
 const stripePromise = loadStripe(
-  "pk_test_51PkhSnRxhlSxkavi1mWf7Wal8NUjh6ztO4mRC8BOlZAKUh9SoGaqtIVneJxqVL2jabRwkef7bPxiVvPUElFBcaiX00zzyx1ZYx"
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
 );
 
 interface PaymentFormProps {

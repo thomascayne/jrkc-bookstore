@@ -14,7 +14,7 @@ interface GetCardIconProps {
 
 export default function GetCardIcon({ cardType }: GetCardIconProps) {
   const getCardIcon = (cardType: string) => {
-    switch (cardType.toLowerCase()) {
+    switch (cardType && cardType.toLowerCase()) {
       case "visa":
         return <PaymentIcon type="Visa" />;
       case "mastercard":
