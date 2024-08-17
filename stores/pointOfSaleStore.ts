@@ -143,6 +143,25 @@ export const clearTransaction = () => {
     }));
 };
 
+export const closeOutRegisterWithPayment = async (
+    orderId: string,
+    transactionId: string,
+    paymentMethod: string
+) => {
+    try {
+        const { data, error } = await supabase.rpc('close_out_register_with_payment', {
+            p_id: orderId,
+            p_transaction_id: transactionId,
+            p_payment_method: paymentMethod
+        });
+
+        if (error) return { success: false, error: error.message };
+        return data;
+    } catch (error: any) {
+        console.error('Error closing out register:', error);
+        return { success: false, error: error.message };
+    }
+};
 
 export const completeTransaction = async () => {
     // Here you would typically send the transaction to a backend API
@@ -152,8 +171,8 @@ export const completeTransaction = async () => {
 
 export const getCurrentTransactionId = () => {
     return pointOfSaleStore.state.currentOrder?.transaction_id || null;
-  };
-  
+};
+
 export const getItemCount = () => {
     return pointOfSaleStore.state.orderItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 };
@@ -225,18 +244,18 @@ export const removeItem = async (id: string) => {
     if (data && data.success) {
         pointOfSaleStore.setState((state) => {
             if (!state.currentOrder) return state;
-    
+
             const updatedItems = state.orderItems.filter(item => item.id !== id);
             const totalAmount = updatedItems.reduce((sum, item) => sum + item.price, 0);
             const updatedOrder: IOrder = {
                 ...state.currentOrder,
                 total_amount: totalAmount
             };
-    
+
             const newState = { ...state, currentOrder: updatedOrder, orderItems: updatedItems };
             return newState;
         });
-    
+
         // Check if the order has been removed (no items left)
         if (data.order_items.length === 0) {
             startNewTransaction();

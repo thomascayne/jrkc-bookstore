@@ -67,6 +67,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   const {
     addItem,
     clearTransaction,
+    closeOutRegisterWithPayment,
     currentOrder,
     getItemCount,
     getTotal,
