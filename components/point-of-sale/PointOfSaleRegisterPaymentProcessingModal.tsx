@@ -174,7 +174,7 @@ const PointOfSaleRegisterPaymentProcessingModal: React.FC<
     } else if (paymentState.isFailure) {
       return (
         <p className="text-red-700 font-bold my-4 text-center">
-          Payment Failed. Calm down. It's just a test.
+          {"Payment Failed. Calm down. It's just a test."}
         </p>
       );
     }
