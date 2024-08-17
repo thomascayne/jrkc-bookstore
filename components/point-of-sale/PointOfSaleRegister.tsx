@@ -421,12 +421,15 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                       addToRegister(book, e);
                     }}
                   >
-                    <Image
-                      src={book.thumbnail}
-                      alt={book.title}
-                      title={book.id}
-                      className="w-full h-24 object-cover mb-2 rounded-tl-lg rounded-tr-lg"
-                    />
+                    <div className="relative w-full h-36">
+                      <Image
+                        fill
+                        src={book.thumbnail}
+                        alt={book.title}
+                        title={book.id}
+                        className="object-cover mb-2 rounded-tl-lg rounded-tr-lg"
+                      />
+                    </div>
                     <h3 className="font-bold text-sm truncate">{book.title}</h3>
                     <div className="relative w-full flex mt-auto">
                       {book.is_promotion && book.discount_percentage && (
@@ -520,12 +523,16 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                   >
                     <div className="flex items-center">
                       {book && (
-                        <Image
-                          src={book.thumbnail}
-                          alt={book.title}
-                          title={book.id}
-                          className="w-10 h-10 object-cover mr-2 rounded-md"
-                        />
+                        <div className="relative w-10 h-10 mr-2">
+                          <Image
+                            fill
+                            src={book.thumbnail}
+                            alt={book.title}
+                            title={book.id}
+                            objectFit="cover"
+                            className="rounded-md"
+                          />
+                        </div>
                       )}
                       <div className="flex-1 text-xs mr-1">
                         <p className="line-clamp-1">{book?.title}</p>
