@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 
 const useSignOut = () => {
+    console.log("useSignOut")
     const router = useRouter();
     const supabase = createClient();
 

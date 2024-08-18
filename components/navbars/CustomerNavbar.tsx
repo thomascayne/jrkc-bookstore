@@ -110,14 +110,20 @@ function CustomerNavbar({
   };
 
   const menuItems = useMemo(() => [
-    { item: "Categories", icon: <BiCategory /> },
     { item: "Cart", icon: <RiShoppingCart2Line />, special: true },
-    { item: user ? "Profile" : "", icon: user ? <FaRegUser /> : "" },
-    {
-      item: user ? "Sign Out" : "Sign In",
-      icon: user ? <VscSignOut /> : <VscSignIn />,
-    },
-  ], [user]);
+  ], []);
+
+  const userMenuItems = useMemo(
+    () => [
+      { item: user ? "Profile" : "", icon: user ? <FaRegUser /> : "", href: user ? '/profile' : '#' },
+      {
+        item: user ? "Sign Out" : "Sign In",
+        icon: user ? <VscSignOut /> : <VscSignIn />,
+        onClick: user ? signOut : () => router.push('/signin'),
+      },
+    ],
+    [signOut, user],
+  );
 
   const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
