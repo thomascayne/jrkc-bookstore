@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { useStore } from "@tanstack/react-store";
 import { cartStore, getTotal, getCartItemCount } from "@/stores/cartStore";
-import { ICartItem } from "@/interfaces/ICart";
+import { ICustomerCartItem } from "@/interfaces/ICustomerCart";
 import {
   Card,
   CardBody,
@@ -490,7 +490,7 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
           <Divider />
           <CardBody>
             <div className="flex flex-col w-full">
-              {cartItems.map((item: ICartItem) => (
+              {cartItems.map((item: ICustomerCartItem) => (
                 <div
                   key={item.book_id}
                   className="mb-2 px-3 flex justify-between"

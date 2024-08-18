@@ -30,12 +30,12 @@ import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
 import InputButtonGroup from "@/components/InputButtonGroup";
 import { useRouter } from "next/navigation";
 import CartLoadingSkeleton from "@/components/CartLoadingSkeleton";
-import { ICartItem } from "@/interfaces/ICart";
+import { ICustomerCartItem } from "@/interfaces/ICustomerCart";
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
   const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
-  const cartItems = useStore(cartStore, (state) => state.items) as ICartItem[];
+  const cartItems = useStore(cartStore, (state) => state.items) as ICustomerCartItem[];
   const router = useRouter();
   const total = useStore(cartStore, getTotal);
 

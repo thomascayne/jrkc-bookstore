@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { ICartOrder } from "@/interfaces/ICartOrder";
+import { ICartOrder } from "@/interfaces/ICustomerCartOrder";
 
 const supabase = createClient();
 

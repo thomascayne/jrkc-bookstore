@@ -1,9 +1,10 @@
 import { IBook } from '@/interfaces/IBook';
+import { OrderStatus } from './IOrder';
 
 export interface ICartOrder {
     id: string;
     user_id: string;
-    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    status: OrderStatus
     total_amount: number;
     created_at: string;
     updated_at: string;

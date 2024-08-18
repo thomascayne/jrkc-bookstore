@@ -1,5 +1,5 @@
 import { BillingAddress } from "@/interfaces/BillingAddress";
-import { ICartItem } from "@/interfaces/ICart";
+import { ICustomerCartItem } from "@/interfaces/ICustomerCart";
 import { IPaymentMethod } from "@/interfaces/IPaymentMethod";
 import { ShippingAddress } from "@/interfaces/ShippingAddress";
 import { UserProfile } from "@/interfaces/UserProfile";
@@ -8,7 +8,7 @@ import { CardHeader } from "@nextui-org/react";
 import React from "react";
 
 interface OrderSummaryProps {
-  cartItems: ICartItem[];
+  cartItems: ICustomerCartItem[];
   total: number;
   paymentMethod: IPaymentMethod;
   userProfile: UserProfile;

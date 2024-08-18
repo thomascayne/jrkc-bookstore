@@ -1,7 +1,7 @@
 // stores/cartStore.ts
 
 import { IBook } from '@/interfaces/IBook';
-import { ICartItem } from '@/interfaces/ICart';
+import { ICustomerCartItem } from '@/interfaces/ICustomerCart';
 import { ShippingAddress } from '@/interfaces/ShippingAddress';
 import { fetchBookFromSupabase } from '@/utils/bookFromSupabaseApi';
 import { ApplicationLogError } from '@/utils/errorLogging';
@@ -14,7 +14,7 @@ const isClient = typeof window !== 'undefined';
 const supabase = createClient();
 
 export interface CartState {
-    items: ICartItem[];
+    items: ICustomerCartItem[];
     isInitialized: boolean;
 }
 
@@ -41,14 +41,14 @@ export const addCartItem = async (book: IBook, quantity: number = 1) => {
         }
 
         if (cartItems) {
-            const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICartItem) => {
+            const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICustomerCartItem) => {
                 const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
                 return {
                     ...item,
                     book: bookData,
                     discount_percentage: bookData.discount_percentage,
                     discounted_price: bookData.is_promotion ? calculateDiscountedPrice(bookData) : undefined
-                } as ICartItem;
+                } as ICustomerCartItem;
             }));
 
             cartStore.setState((state) => ({
@@ -70,7 +70,7 @@ export const addCartItem = async (book: IBook, quantity: number = 1) => {
                         : item
                 );
             } else {
-                const newItem: ICartItem = {
+                const newItem: ICustomerCartItem = {
                     id: `local_${Date.now()}`, // Generate a temporary local ID
                     cart_id: 'local_cart',
                     book_id: book.id,
@@ -190,14 +190,14 @@ export const fetchCart = async () => {
             }
 
             if (cartItems) {
-                const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICartItem) => {
+                const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICustomerCartItem) => {
                     const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
                     return {
                         ...item,
                         book: bookData,
                         discount_percentage: bookData.discount_percentage,
                         discounted_price: bookData.is_promotion ? calculateDiscountedPrice(bookData) : undefined
-                    } as ICartItem;
+                    } as ICustomerCartItem;
                 }));
 
 
@@ -278,7 +278,7 @@ export const handleSignOutOfAppCleanupCartLocalStorage = () => {
 
 export const initializeCart = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    let items: ICartItem[] = [];
+    let items: ICustomerCartItem[] = [];
 
     const localItems = loadLocalCart();
 
@@ -295,14 +295,14 @@ export const initializeCart = async () => {
         if (error) {
             console.error('Error fetching cart:', error);
         } else if (cartItems && cartItems.length > 0) {
-            items = await Promise.all(cartItems.map(async (item: ICartItem) => {
+            items = await Promise.all(cartItems.map(async (item: ICustomerCartItem) => {
                 const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
                 return {
                     ...item,
                     book: bookData,
                     discount_percentage: bookData.discount_percentage,
                     discounted_price: bookData.is_promotion ? calculateDiscountedPrice(bookData) : undefined
-                } as ICartItem;
+                } as ICustomerCartItem;
             }));
 
             // Update localStorage with the fetched items
@@ -318,7 +318,7 @@ export const initializeCart = async () => {
     cartStore.setState((state) => ({ ...state, items, isInitialized: true }));
 };
 
-const loadLocalCart = (): ICartItem[] => {
+const loadLocalCart = (): ICustomerCartItem[] => {
     if (isClient) {
         const storedCart = localStorage.getItem(LOCAL_STORAGE_KEY);
         return storedCart ? JSON.parse(storedCart) : [];
@@ -327,7 +327,7 @@ const loadLocalCart = (): ICartItem[] => {
 };
 
 
-const mergeLocalCartWithDatabase = async (localItems: ICartItem[], userId: string) => {
+const mergeLocalCartWithDatabase = async (localItems: ICustomerCartItem[], userId: string) => {
     for (const item of localItems) {
         await supabase.rpc('merge_cart_item', {
             p_book_id: item.book_id,
@@ -366,7 +366,7 @@ export const removeItem = async (bookId: string) => {
     });
 };
 
-const saveLocalCart = (items: ICartItem[]) => {
+const saveLocalCart = (items: ICustomerCartItem[]) => {
     if (isClient) {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
     }
