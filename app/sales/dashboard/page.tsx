@@ -89,7 +89,7 @@ const dashboardItems = [
   {
     bgColor: 'bg-blue-500',
     description: "Today's sales performance at a glance",
-    href: '#',
+    href: '/sales/today-summary',
     icon: <FaChartBar />,
     iconColor: 'text-red-300',
     title: "Today's Sales Summary",
