@@ -1,46 +1,51 @@
 // app/sales/customer-info/Recommendations.tsx
-import { useEffect, useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 
+interface RecommendationsProps {
+    customerId: string;
+}
+
 interface Recommendation {
-  id: string;
-  product_name: string;
+    id: string;
+    product_name: string;
 }
 
-export default function Recommendations({ customerId }: { customerId: string }) {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+const Recommendations = ({ customerId }: RecommendationsProps) => {
+    const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      const { data, error } = await supabase
-        .from('recommendations')
-        .select('*')
-        .eq('customer_id', customerId);
+    useEffect(() => {
+        const fetchRecommendations = async () => {
+            const { data, error } = await supabase
+                .from('recommendations')
+                .select('*')
+                .eq('customer_id', customerId);
 
-      if (error) {
-        console.error('Error fetching recommendations:', error);
-      } else {
-        setRecommendations(data);
-      }
-    };
+            if (error) {
+                console.error('Error fetching recommendations:', error);
+            } else {
+                setRecommendations(data || []);
+            }
+        };
 
-    fetchRecommendations();
-  }, [customerId]);
+        fetchRecommendations();
+    }, [customerId]);
 
-  return (
-    <div>
-      <h3>Recommended Products</h3>
-      {recommendations.length > 0 ? (
-        <ul>
-          {recommendations.map((recommendation) => (
-            <li key={recommendation.id}>
-              {recommendation.product_name}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No recommendations available.</p>
-      )}
-    </div>
-  );
-}
+    if (recommendations.length === 0) {
+        return <p>No recommendations found for this customer</p>;
+    }
+
+    return (
+        <div>
+            <h2>Recommended Products</h2>
+            <ul>
+                {recommendations.map((recommendation) => (
+                    <li key={recommendation.id}>{recommendation.product_name}</li>
+                ))}
+            </ul>
+        </div>
+    );
+};
+
+export default Recommendations;

@@ -2,98 +2,66 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Pagination } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
-import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
-import { UserProfile } from '@/interfaces/UserProfile';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Import useRouter
+import { supabase } from '@/utils/supabase/client';
+import { fetchCustomers } from '@/utils/supabase/customerApi'; // Adjust the path to customerApi.ts accordingly
+import CustomerList from './CustomerList';
 import CustomerDetails from './CustomerDetails';
+import PurchaseHistory from './PurchaseHistory';
+import Recommendations from './Recommendations';
+import { UserProfile } from '@/interfaces/UserProfile'; // Import the UserProfile interface
 
 const CustomerInfoPage = () => {
-  const router = useRouter();
-  const supabase = createClient();
-  const [customers, setCustomers] = useState<UserProfile[]>([]);
-  const [page, setPage] = useState(1);
-  const rowsPerPage = 10;
+    const [selectedCustomer, setSelectedCustomer] = useState<UserProfile | null>(null);
 
-  const { openFullScreenModal } = useFullScreenModal();
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.push('/signin');
-        return;
-      }
-
-      if (!session.user.app_metadata.roles.includes('SALES_ASSOCIATE')) {
-        router.push('/unauthorized');
-      }
+    const handleCustomerSelect = (customer: UserProfile) => {
+        setSelectedCustomer(customer);
     };
 
-    const loadCustomers = async () => {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*');
+    const router = useRouter(); // Instantiate router
 
-      if (error) {
-        console.error('Error fetching customers:', error);
-      } else {
-        setCustomers(data || []);
-      }
-    };
+    const checkUserRole = async () => {
+        const { data: { session }, error } = await supabase.auth.getSession();
+      
+        if (session) {
+          console.log("User's roles:", session.user.app_metadata.roles);
+          return session.user;
+        } else {
+          console.error("No user signed in", error);
+          return null;
+        }
+      };
+      
+      useEffect(() => {
+        const loadUser = async () => {
+          const user = await checkUserRole();
+          if (!user) {
+            // If no user is signed in, redirect to login page
+            router.push('/signin');
+          } else {
+            // Proceed with fetching customer data
+            fetchCustomers();
+          }
+        };
+      
+        loadUser();
+      }, []);
+    
+    return (
+        <div className="container mx-auto">
+            <h1 className="text-2xl font-bold mb-6">Customer Information</h1>
+            <CustomerList onSelectCustomer={handleCustomerSelect} />
 
-    checkUser();
-    loadCustomers();
-  }, [router, supabase.auth]);
-
-  const handleRowClick = (customer: UserProfile, e: React.MouseEvent) => {
-    e.preventDefault();
-    openFullScreenModal(
-      <CustomerDetails customerId={customer.id} />,  // Pass only customerId
-      `${customer.first_name} ${customer.last_name}`
+            {selectedCustomer && (
+                <div>
+                    <CustomerDetails customer={selectedCustomer} />
+                    <PurchaseHistory customerId={selectedCustomer.id} />
+                    <Recommendations customerId={selectedCustomer.id} />
+                </div>
+            )}
+        </div>
     );
-  };
-
-  const pages = Math.ceil(customers.length / rowsPerPage);
-  const items = customers.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Customer Information</h1>
-
-      <Table aria-label="Customer Info Table">
-        <TableHeader>
-          <TableColumn>Customer ID</TableColumn>
-          <TableColumn>First Name</TableColumn>
-          <TableColumn>Last Name</TableColumn>
-          <TableColumn>Email</TableColumn>
-        </TableHeader>
-        <TableBody>
-          {items.map((customer, index) => (
-            <TableRow
-              key={`${customer.id}-${customer.first_name}-${index}`}
-              onClick={(e) => handleRowClick(customer, e)}
-              className="cursor-pointer hover:bg-gray-200 transition-colors duration-250"
-            >
-              <TableCell>{customer.id}</TableCell>
-              <TableCell>{customer.first_name}</TableCell>
-              <TableCell>{customer.last_name}</TableCell>
-              <TableCell>{customer.email}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <div className="flex justify-center mt-4">
-        <Pagination total={pages} page={page} onChange={setPage} />
-      </div>
-    </div>
-  );
 };
 
 export default CustomerInfoPage;
