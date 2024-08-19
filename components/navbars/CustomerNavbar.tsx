@@ -1,7 +1,7 @@
 // components/CustomerNavbar.tsx
-"use client";
+'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Navbar,
   NavbarBrand,
@@ -17,26 +17,27 @@ import {
   DropdownMenu,
   DropdownItem,
   Badge,
-} from "@nextui-org/react";
-import { BiCategory } from "react-icons/bi";
-import { FaRegUser } from "react-icons/fa";
-import { User } from "@supabase/supabase-js";
-import { usePathname, useRouter } from "next/navigation";
-import { RiShoppingCart2Line } from "react-icons/ri";
-import { VscSignIn, VscSignOut } from "react-icons/vsc";
-import AppLogo from "@/components/AppLogo";
-import ThemeSwitch, { Theme } from "@/components/ThemeSwitcher";
-import { Role, ROLES, getRoleColor } from "@/utils/roles";
-import RoleSwitcher from "@/components/RoleSwitcher";
-import { FaChevronDown } from "react-icons/fa";
-import useSignOut from "@/hooks/useSignOut";
-import { fetchBookCategories } from "@/utils/bookCategoriesApi";
-import { BookCategory } from "@/interfaces/BookCategory";
-import CartIcon from "@/components/CartIcon";
-import { useSidePanel } from "@/contexts/SidePanelContext";
-import CartContent from "@/components/CartContent";
-import { useStore } from "@tanstack/react-store";
-import { cartStore, getCartItemCount } from "@/stores/cartStore";
+} from '@nextui-org/react';
+import { BiCategory } from 'react-icons/bi';
+import { FaRegUser } from 'react-icons/fa';
+import { User } from '@supabase/supabase-js';
+import { usePathname, useRouter } from 'next/navigation';
+import { RiShoppingCart2Line } from 'react-icons/ri';
+import { VscSignIn, VscSignOut } from 'react-icons/vsc';
+import AppLogo from '@/components/AppLogo';
+import ThemeSwitch, { Theme } from '@/components/ThemeSwitcher';
+import { Role, ROLES, getRoleColor } from '@/utils/roles';
+import RoleSwitcher from '@/components/RoleSwitcher';
+import { FaChevronDown } from 'react-icons/fa';
+import useSignOut from '@/hooks/useSignOut';
+import { fetchBookCategories } from '@/utils/bookCategoriesApi';
+import { BookCategory } from '@/interfaces/BookCategory';
+import CartIcon from '@/components/CartIcon';
+import { useSidePanel } from '@/contexts/SidePanelContext';
+import CartContent from '@/components/CartContent';
+import { useStore } from '@tanstack/react-store';
+import { cartStore, getCartItemCount } from '@/stores/cartStore';
+import SearchBar from '@/components/Searchbar';
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -52,7 +53,7 @@ function CustomerNavbar({
   user,
 }: CustomerNavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>('light');
   const { openRightPanel } = useSidePanel();
   const currentPath = usePathname();
   const router = useRouter();
@@ -64,14 +65,14 @@ function CustomerNavbar({
 
   const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
   const cartItemCount = useStore(cartStore, getCartItemCount);
-  
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const categories = await fetchBookCategories();
         setBookCategories(categories);
       } catch (error) {
-        console.error("Error fetching book categories:", error);
+        console.error('Error fetching book categories:', error);
       }
     };
 
@@ -79,14 +80,14 @@ function CustomerNavbar({
   }, []);
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") as Theme | null;
+    const storedTheme = localStorage.getItem('theme') as Theme | null;
     if (storedTheme) {
       setTheme(storedTheme);
     } else if (
       window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
+      window.matchMedia('(prefers-color-scheme: dark)').matches
     ) {
-      setTheme("dark");
+      setTheme('dark');
     }
   }, []);
 
@@ -98,26 +99,31 @@ function CustomerNavbar({
     try {
       const response = await fetch(url);
       const data = await response.json();
-      localStorage.setItem("categoryBooks", JSON.stringify(data.items));
+      localStorage.setItem('categoryBooks', JSON.stringify(data.items));
       router.push(
         `/category/${encodeURIComponent(key)}?label=${encodeURIComponent(
-          label
-        )}`
+          label,
+        )}`,
       );
     } catch (error) {
-      console.error("Error fetching books:", error);
+      console.error('Error fetching books:', error);
     }
   };
 
-  const menuItems = useMemo(() => [
-    { item: "Cart", icon: <RiShoppingCart2Line />, special: true },
-  ], []);
+  const menuItems = useMemo(
+    () => [{ item: 'Cart', icon: <RiShoppingCart2Line />, special: true }],
+    [],
+  );
 
   const userMenuItems = useMemo(
     () => [
-      { item: user ? "Profile" : "", icon: user ? <FaRegUser /> : "", href: user ? '/profile' : '#' },
       {
-        item: user ? "Sign Out" : "Sign In",
+        item: user ? 'Profile' : '',
+        icon: user ? <FaRegUser /> : '',
+        href: user ? '/profile' : '#',
+      },
+      {
+        item: user ? 'Sign Out' : 'Sign In',
         icon: user ? <VscSignOut /> : <VscSignIn />,
         onClick: user ? signOut : () => router.push('/signin'),
       },
@@ -125,11 +131,14 @@ function CustomerNavbar({
     [signOut, user],
   );
 
-  const navbarStyle = useMemo(() => ({
-    backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
-    color: "black",
-    transition: "background-color 0.3s ease",
-  }), [emulatedRole]);
+  const navbarStyle = useMemo(
+    () => ({
+      backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
+      color: 'black',
+      transition: 'background-color 0.3s ease',
+    }),
+    [emulatedRole],
+  );
 
   /**
    * Handles the click event on the cart button.
@@ -142,16 +151,20 @@ function CustomerNavbar({
     e.preventDefault();
 
     if (cartItemCount === 0) {
-      router.push("/cart");
+      router.push('/cart');
     } else {
-      if (currentPath && currentPath !== "/cart") {
+      if (currentPath && currentPath !== '/cart') {
         openRightPanel(
           <CartContent currentPath={currentPath} />,
-          "w-full sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[640px]",
-          false
+          'w-full sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[640px]',
+          false,
         );
       }
     }
+  };
+
+  const handleSearch = (query: string) => {
+    router.push(`/search?q=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -164,74 +177,80 @@ function CustomerNavbar({
       position="static"
       style={isAdmin && emulatedRole ? navbarStyle : {}}
     >
-      <NavbarContent>
-        <NavbarBrand>
-          <Link
-            href="/"
-            className="border-transparent hover:border-current border-1 rounded-md p-1"
-          >
-            <AppLogo />
-          </Link>
-        </NavbarBrand>
-      </NavbarContent>
-      <NavbarContent
-        justify="center"
-        className="this-is-for-when-menu-is-close-on-md-and-up ml-auto"
-      >
-        <Dropdown backdrop="blur" radius="none">
-          <NavbarItem className="hidden sm:flex">
-            <DropdownTrigger>
-              <Button
-                disableRipple
-                className="flex border-transparent hover:border-current border-1 rounded-md p-1 items-center"
-                radius="sm"
-                variant="light"
-                endContent={<FaChevronDown />}
-              >
-                <BiCategory className="mr-1" />
-                <span>Categories</span>
-              </Button>
-            </DropdownTrigger>
-          </NavbarItem>
-          <DropdownMenu
-            aria-label="Book Categories"
-            className="p-0"
-            itemClasses={{
-              base: [
-                "data-[hover=true]:bg-default-100",
-                "min-w-[120px]",
-                "whitespace-nowrap",
-              ],
-            }}
-            items={bookCategories}
-            classNames={{
-              list: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-[280px] sm:w-[560px] lg:w-[840px] xl:w-[1120px]",
-            }}
-            onAction={(key) => {
-              const category = bookCategories.find((cat) => cat.key === key);
-
-              if (category) {
-                handleCategorySelect(category.key, category.label);
-              }
-            }}
-          >
-            {(category) => (
-              <DropdownItem
-                key={category.key}
-                className="rounded-none"
-                variant="faded"
-              >
-                <Link
-                  href={`/category/${encodeURIComponent(category.key)}`}
-                  className="flex items-center p-0 w-full"
+      <div className="w-full flex gap-2 max-w-60">
+        <NavbarContent className="flex !flex-none !flex-shrink-0">
+          <NavbarBrand>
+            <Link
+              href="/"
+              className="border-transparent hover:border-current border-1 rounded-md p-1"
+            >
+              <AppLogo />
+            </Link>
+          </NavbarBrand>
+        </NavbarContent>
+        <NavbarContent className="this-is-for-when-menu-is-close-on-md-and-up basis-0 flex-grow-0">
+          <Dropdown backdrop="blur" radius="none">
+            <NavbarItem className="hidden sm:flex">
+              <DropdownTrigger>
+                <Button
+                  disableRipple
+                  className="flex border-transparent hover:border-current border-1 rounded-md p-1 items-center"
+                  radius="sm"
+                  variant="light"
+                  endContent={<FaChevronDown />}
                 >
-                  <span>{category.label}</span>
-                </Link>
-              </DropdownItem>
-            )}
-          </DropdownMenu>
-        </Dropdown>
-        <NavbarItem className="hidden sm:flex">
+                  <BiCategory className="mr-1" />
+                  <span>Categories</span>
+                </Button>
+              </DropdownTrigger>
+            </NavbarItem>
+            <DropdownMenu
+              aria-label="Book Categories"
+              className="p-0"
+              itemClasses={{
+                base: [
+                  'data-[hover=true]:bg-default-100',
+                  'min-w-[120px]',
+                  'whitespace-nowrap',
+                ],
+              }}
+              items={bookCategories}
+              classNames={{
+                list: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-[280px] sm:w-[560px] lg:w-[840px] xl:w-[1120px]',
+              }}
+              onAction={(key) => {
+                const category = bookCategories.find((cat) => cat.key === key);
+
+                if (category) {
+                  handleCategorySelect(category.key, category.label);
+                }
+              }}
+            >
+              {(category) => (
+                <DropdownItem
+                  key={category.key}
+                  className="rounded-none"
+                  variant="faded"
+                >
+                  <Link
+                    href={`/category/${encodeURIComponent(category.key)}`}
+                    className="flex items-center p-0 w-full"
+                  >
+                    <span>{category.label}</span>
+                  </Link>
+                </DropdownItem>
+              )}
+            </DropdownMenu>
+          </Dropdown>
+        </NavbarContent>
+      </div>
+      
+      <NavbarContent className="hidden sm:flex flex-grow basis-0 justify-center" justify="center">
+        <SearchBar onSearch={handleSearch} className="w-full flex flex-grow max-w-xl" />
+      </NavbarContent>
+
+      <NavbarContent className="flex-grow basis-0 gap-1" justify="end">
+        <NavbarItem>
           <Link
             color="foreground"
             href="#"
@@ -251,8 +270,7 @@ function CustomerNavbar({
             </Badge>
           </Link>
         </NavbarItem>
-      </NavbarContent>
-      <NavbarContent justify="end">
+
         <NavbarItem>
           {isAdmin && (
             <RoleSwitcher
@@ -262,6 +280,10 @@ function CustomerNavbar({
             />
           )}
         </NavbarItem>
+        <NavbarItem className="p-0">
+          <ThemeSwitch onThemeChange={handleThemeChange} initialTheme={theme} />
+        </NavbarItem>
+
         <NavbarItem className="hidden sm:flex">
           {user ? (
             <div className="flex">
@@ -290,21 +312,19 @@ function CustomerNavbar({
             </Link>
           )}
         </NavbarItem>
-        <NavbarItem>
-          <ThemeSwitch onThemeChange={handleThemeChange} initialTheme={theme} />
-        </NavbarItem>
         <NavbarMenuToggle
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
           className="lg:hidden"
         />
       </NavbarContent>
+
       <NavbarMenu className="this-is-for-when-the-menu-is-open sm:flex">
         {menuItems.map(({ item, icon, special }, index) => (
           <NavbarMenuItem
             key={`${item}-${index}`}
             className="hover:bg-default-300 text-blue-500 dark:hover:bg-gray-200 dark:hover:text-black py-2"
           >
-            {special && item === "Cart" ? (
+            {special && item === 'Cart' ? (
               <Link
                 color="foreground"
                 className="w-full flex items-center"
@@ -321,7 +341,7 @@ function CustomerNavbar({
                 </Badge>
                 <span className="ml-2">Cart</span>
               </Link>
-            ) : item === "Sign Out" ? (
+            ) : item === 'Sign Out' ? (
               <button
                 className="w-full flex text-danger text-lg items-center"
                 onClick={signOut}
@@ -329,11 +349,11 @@ function CustomerNavbar({
                 {icon && <span className="mr-2">{icon}</span>}
                 {item}
               </button>
-            ) : item === "Categories" ? (
+            ) : item === 'Categories' ? (
               <Dropdown>
                 <DropdownTrigger>
                   <Link
-                    color={index === 2 ? "primary" : "foreground"}
+                    color={index === 2 ? 'primary' : 'foreground'}
                     className="w-full cursor-pointer"
                     size="lg"
                   >
@@ -346,18 +366,18 @@ function CustomerNavbar({
                   className="p-0 w-full max-h-[calc(100vh-100px)] overflow-auto"
                   itemClasses={{
                     base: [
-                      "data-[hover=true]:bg-default-100",
-                      "min-w-[120px]",
-                      "whitespace-nowrap",
+                      'data-[hover=true]:bg-default-100',
+                      'min-w-[120px]',
+                      'whitespace-nowrap',
                     ],
                   }}
                   items={bookCategories}
                   classNames={{
-                    list: "grid grid-cols-2 sm:grid-cols-2 gap-2 py-2 px-4",
+                    list: 'grid grid-cols-2 sm:grid-cols-2 gap-2 py-2 px-4',
                   }}
                   onAction={(key) => {
                     const category = bookCategories.find(
-                      (cat) => cat.key === key
+                      (cat) => cat.key === key,
                     );
                     if (category) {
                       handleCategorySelect(category.key, category.label);
@@ -380,18 +400,18 @@ function CustomerNavbar({
               <Link
                 color={
                   index === 2
-                    ? "primary"
+                    ? 'primary'
                     : index === menuItems.length - 1
-                    ? "foreground"
-                    : "foreground"
+                      ? 'foreground'
+                      : 'foreground'
                 }
                 className="w-full"
                 href={
-                  item === "Sign In"
-                    ? "/signin"
-                    : item === "Profile"
-                    ? "/profile"
-                    : "#"
+                  item === 'Sign In'
+                    ? '/signin'
+                    : item === 'Profile'
+                      ? '/profile'
+                      : '#'
                 }
                 size="lg"
               >
@@ -401,10 +421,9 @@ function CustomerNavbar({
             )}
           </NavbarMenuItem>
         ))}
-      </NavbarMenu>{" "}
+      </NavbarMenu>
     </Navbar>
   );
 }
-
 
 export default React.memo(CustomerNavbar);
