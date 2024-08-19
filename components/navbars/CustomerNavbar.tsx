@@ -37,7 +37,7 @@ import { useSidePanel } from '@/contexts/SidePanelContext';
 import CartContent from '@/components/CartContent';
 import { useStore } from '@tanstack/react-store';
 import { cartStore, getCartItemCount } from '@/stores/cartStore';
-import SearchBar from '@/components/Searchbar';
+import SearchBar from '@/components/SearchBar';
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
