@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+// app/sales/customer-info/PurchaseHistory.tsx
+import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 
 interface Purchase {
@@ -8,10 +9,10 @@ interface Purchase {
 }
 
 export default function PurchaseHistory({ customerId }: { customerId: string }) {
-  const [purchases, setPurchases] = useState<Purchase[]>([]); // Explicitly typing the state
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
 
   useEffect(() => {
-    const fetchPurchases = async () => {
+    const fetchPurchaseHistory = async () => {
       const { data, error } = await supabase
         .from('purchase_history')
         .select('*')
@@ -20,21 +21,27 @@ export default function PurchaseHistory({ customerId }: { customerId: string }) 
       if (error) {
         console.error('Error fetching purchase history:', error);
       } else {
-        setPurchases(data || []); // TypeScript now knows this is an array of Purchase
+        setPurchases(data);
       }
     };
 
-    fetchPurchases();
+    fetchPurchaseHistory();
   }, [customerId]);
 
   return (
     <div>
-      <h4>Purchase History</h4>
-      {purchases.map((purchase) => (
-        <div key={purchase.id}>
-          {purchase.product_name} - {purchase.purchase_date}
-        </div>
-      ))}
+      <h3>Purchase History</h3>
+      {purchases.length > 0 ? (
+        <ul>
+          {purchases.map((purchase) => (
+            <li key={purchase.id}>
+              {purchase.product_name} - {purchase.purchase_date}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No purchase history available.</p>
+      )}
     </div>
   );
 }

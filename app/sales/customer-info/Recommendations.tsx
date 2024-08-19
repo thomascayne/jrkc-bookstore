@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+// app/sales/customer-info/Recommendations.tsx
+import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 
 interface Recommendation {
@@ -7,7 +8,7 @@ interface Recommendation {
 }
 
 export default function Recommendations({ customerId }: { customerId: string }) {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]); // Explicitly typing the state
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -19,7 +20,7 @@ export default function Recommendations({ customerId }: { customerId: string }) 
       if (error) {
         console.error('Error fetching recommendations:', error);
       } else {
-        setRecommendations(data || []); // TypeScript now knows this is an array of Recommendation
+        setRecommendations(data);
       }
     };
 
@@ -28,12 +29,18 @@ export default function Recommendations({ customerId }: { customerId: string }) 
 
   return (
     <div>
-      <h4>Personalized Recommendations</h4>
-      {recommendations.map((recommendation) => (
-        <div key={recommendation.id}>
-          {recommendation.product_name}
-        </div>
-      ))}
+      <h3>Recommended Products</h3>
+      {recommendations.length > 0 ? (
+        <ul>
+          {recommendations.map((recommendation) => (
+            <li key={recommendation.id}>
+              {recommendation.product_name}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No recommendations available.</p>
+      )}
     </div>
   );
 }

@@ -10,6 +10,9 @@ const nextConfig = {
             },
         ],
     },
+    reactStrictMode: true,
+    swcMinify: true,
+    trailingSlash: false, // Keep as needed for your routing
 }
 
 export default nextConfig;
