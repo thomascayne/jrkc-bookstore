@@ -44,7 +44,7 @@ export default function ThemeSwitch({
 
   return (
     <div>
-      <button className="m-5" onClick={toggleTheme}>
+      <button className="m-2" onClick={toggleTheme}>
         {theme === "light" ? <FaMoon /> : <FaSun />}
       </button>
     </div>
