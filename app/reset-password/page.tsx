@@ -1,7 +1,7 @@
 // app/reset-password/page.tsx
 
 import ResetPasswordForm from "@/app/reset-password/ResetPasswordForm";
-import AuthNavbar from "@/components/AuthNavbar";
+import AuthNavbar from "@/components/navbars/AuthNavbar";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function ResetPasswordPage() {

@@ -1,7 +1,7 @@
 // components/InventoryManagerNavbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -34,7 +34,7 @@ interface InventoryManagerNavbarProps {
   user: User | null;
 }
 
-export default function InventoryManagerNavbar({
+function InventoryManagerNavbar({
   emulatedRole,
   isAdmin,
   onRoleChange,
@@ -56,12 +56,12 @@ export default function InventoryManagerNavbar({
     }
   }, []);
 
-  const handleThemeChange = (newTheme: Theme) => {
+  const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
-  };
+  }, []);
 
   const menuItems = [
-    { item: "Inventory", icon: <FaBoxes />, href: "/inventory" },
+    { item: "Inventory", icon: <FaBoxes />, href: "/admin/inventory" },
     {
       item: "Purchase Orders",
       icon: <FaFileInvoice />,
@@ -76,11 +76,11 @@ export default function InventoryManagerNavbar({
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
   ];
 
-  const navbarStyle = {
+  const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
     color: "black",
     transition: "background-color 0.3s ease",
-  };
+  }), [emulatedRole]);
 
   return (
     <Navbar
@@ -173,3 +173,5 @@ export default function InventoryManagerNavbar({
     </Navbar>
   );
 }
+
+export default React.memo(InventoryManagerNavbar);

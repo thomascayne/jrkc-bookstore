@@ -47,7 +47,7 @@ This project is designed for local development and demonstration purposes. Follo
 - Supabase - <https://supabase.com>
 - Mookoon - <https://mockoon.com/mock-samples/category/payment/>
 
-The application should now be running on <http://localhost:3000>
+The application should now be running on <https://localhost:3000>
 
 ## FOR CONTRIBUTORS LISTED BELOW
 

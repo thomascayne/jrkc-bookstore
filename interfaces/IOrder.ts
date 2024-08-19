@@ -1,35 +1,16 @@
 // src/interfaces/IOrder.ts
-
-import { IBook } from '@/interfaces/IBook';
+export type orderStatus =  'cancelled' | 'damaged' | 'delivered' | 'paid' |'pending' | 'paid' |'processing' | 'refunded' | 'removed' | 'shipped';
 
 export interface IOrder {
-    id: string;
-    user_id: string;
-    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    id?: string;
+    customer_email?: string;
+    customer_phone?: string;
+    notes?: string;
+    order_date?: string;
+    order_discount_percentage?: number;
+    payment_method?: string;
+    sales_person_id: string;
+    status: orderStatus;
     total_amount: number;
-    created_at: string;
-    updated_at: string;
-    items: IOrderItem[];
-}
-
-export interface IOrderItem {
-    id: string;
-    book_id: string;
-    book: IBook;
-    discount_percentage?: number;
-    final_price: number;
-    order_id: string;
-    original_price: number;
-    quantity: number;
-}
-
-export interface CardDetails {
-    cardNumber: string;
-    expiryDate: string;
-    cvv: string;
-}
-
-export interface PaymentMethod {
-    method: 'credit_card' | 'paypal';
-    details: CardDetails;
+    transaction_id: string;
 }

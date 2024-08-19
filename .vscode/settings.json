@@ -1,6 +1,5 @@
 {
     "cSpell.words": [
-        "Catergories",
         "JRKC",
         "libphonenumber",
         "nextui",
@@ -9,6 +8,7 @@
         "supabase",
         "tailwindcss",
         "tanstack",
+        "uuidv",
         "zipcode"
     ]
 }

@@ -20,7 +20,7 @@ export interface CartState {
 
 export const cartStore = new Store<CartState>({ items: [], isInitialized: false });
 
-export const addItem = async (book: IBook, quantity: number = 1) => {
+export const addCartItem = async (book: IBook, quantity: number = 1) => {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {

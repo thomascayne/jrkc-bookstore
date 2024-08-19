@@ -1,7 +1,7 @@
 // components/SystemAdminNavbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Navbar,
   NavbarBrand,
@@ -17,7 +17,6 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@nextui-org/react";
-import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 import { MdDashboard, MdSettings, MdSecurity } from "react-icons/md";
 import {
@@ -49,7 +48,7 @@ interface SystemAdminNavbarProps {
   user: User | null;
 }
 
-export default function SystemAdminNavbar({
+function SystemAdminNavbar({
   emulatedRole,
   isAdmin,
   onRoleChange,
@@ -71,11 +70,11 @@ export default function SystemAdminNavbar({
     }
   }, []);
 
-  const handleThemeChange = (newTheme: Theme) => {
+  const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
-  };
+  }, []);
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     // Store Manager items
     { item: "Dashboard", icon: <MdDashboard />, href: "/dashboard" },
     { item: "User Management", icon: <FaUsers />, href: "/users" },
@@ -120,14 +119,14 @@ export default function SystemAdminNavbar({
 
     // Profile (common for all)
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
-  ];
+  ], []);
 
-  const navbarStyle = {
+  const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),
     color: "black",
     gap: "0rem",
     transition: "background-color 0.3s ease",
-  };
+  }), [emulatedRole]);
 
   return (
     <Navbar
@@ -347,3 +346,5 @@ export default function SystemAdminNavbar({
     </Navbar>
   );
 }
+
+export default React.memo(SystemAdminNavbar);

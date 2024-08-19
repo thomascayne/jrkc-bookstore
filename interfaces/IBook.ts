@@ -15,6 +15,7 @@ export interface IBook {
     isbn13: string;
     language: string;
     list_price: number;
+    price: number;
     page_count: number;
     published_date: string;
     publisher: string;

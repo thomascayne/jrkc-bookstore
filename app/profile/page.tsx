@@ -7,7 +7,7 @@ import { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProfileAddress from "@/app/profile/ProfileAddress";
 import ProfileAdminPanel from "@/app/profile/ProfileAdminPanel";
-import AuthNavbar from "@/components/AuthNavbar";
+import AuthNavbar from "@/components/navbars/AuthNavbar";
 import ProfilePersonalInformation from "@/app/profile/ProfilePersonalInformation";
 
 interface Tab {
@@ -44,7 +44,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [userRoles, setUserRoles] = useState<string[]>([]);
 
-  const activeTab = searchParams.get("tab") || tabs[0].key;
+  const activeTab = searchParams?.get("tab") || tabs[0].key;
   const router = useRouter();
   const supabase = createClient();
 

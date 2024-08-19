@@ -58,11 +58,11 @@ export default function SignInForm() {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: {user }, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
+    
     if (error) {
       setErrorMessage("Incorrect email or password. Please try again.");
     } else {
@@ -77,6 +77,51 @@ export default function SignInForm() {
        * Redirect to the page specified in the query string or to the home page
        */
       const redirectUrl = getRedirectUrl();
+
+      /**
+       * Direct according to role[]. The basic role is 'USER'. it 'USER' is the only role then the user is a 'customer'
+       * 
+       * So far the roles are:
+       * - ADMIN
+       * - INVENTORY_MANAGER
+       * - SALES_ASSOCIATE
+       * - USER
+       * 
+       * If there is no role, direct to redirectUrl
+       * 
+       * user is already authenticated here
+       * now write to redirect according to role in user metadata
+       */
+
+    // Get the roles from user metadata
+    const roles = user?.app_metadata?.roles || [];
+
+    // Determine where to redirect based on roles
+    let redirectPath;
+
+    if (roles.length === 0 || (roles.length === 1 && roles[0] === 'USER')) {
+      // If no roles or only USER role, use the default redirect URL
+      redirectPath = getRedirectUrl();
+    } else {
+      // If there are additional roles, redirect to the appropriate dashboard
+      // Prioritize roles in this order: ADMIN, INVENTORY_MANAGER, SALES_ASSOCIATE
+      
+      // if (roles.includes('ADMIN')) {
+      //   redirectPath = '/admin/dashboard';
+      // } else if (roles.includes('INVENTORY_MANAGER')) {
+      //   redirectPath = '/inventory/dashboard';
+      // } else 
+      if (roles.includes('SALES_ASSOCIATE')) {
+        redirectPath = '/sales/dashboard';
+      } else {
+        // If none of the above roles are present, use the default redirect URL
+        redirectPath = getRedirectUrl();
+      }
+    }
+      
+      
+      
+
       router.push(redirectUrl);
     }
   };

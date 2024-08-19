@@ -1,7 +1,7 @@
 // app/update-password/page.tsx
 
 import UpdatePasswordForm from "@/app/update-password/UpdatePasswordForm";
-import AuthNavbar from "@/components/AuthNavbar";
+import AuthNavbar from "@/components/navbars/AuthNavbar";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function UpdatePasswordPage() {

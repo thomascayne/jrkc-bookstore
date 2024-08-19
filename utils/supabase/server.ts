@@ -3,7 +3,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export const createClient = () => {
+export const createClient = (authToken?: string) => {
   const cookieStore = cookies();
 
   return createServerClient(
@@ -26,6 +26,9 @@ export const createClient = () => {
           }
         },
       },
+      global: {
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+      }
     },
   );
 };

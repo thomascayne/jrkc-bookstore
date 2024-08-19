@@ -10,7 +10,7 @@ import { Button } from "@nextui-org/react";
 import Image from "next/image";
 import StarRating from "@/components/StarRating";
 import EmptyBookshelf from "@/components/EmptyBookshelf";
-import { addItem } from "@/stores/cartStore";
+import { addCartItem } from "@/stores/cartStore";
 import BookDetails from "@/components/BookDetails";
 import CategoryLoadingSkeleton from "@/components/CategoryLoadingSkeleton";
 import { IBook } from "@/interfaces/IBook";
@@ -27,7 +27,7 @@ export default function CategoryContent({
   );
   const [displayedBooks, setDisplayedBooks] = useState<IBook[]>([]);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const { openModal } = useFullScreenModal();
+  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
 
   useEffect(() => {
     if (data) {
@@ -60,14 +60,14 @@ export default function CategoryContent({
   };
 
   const handleBookClick = (book: IBook) => {
-    openModal(
+    openFullScreenModal(
       <BookDetails bookId={book.id} />,
       `${data?.category} - ${book.title}`
     );
   };
 
   const handleAddToCart = (book: IBook) => {
-    addItem(book);
+    addCartItem(book);
   };
 
   if (isLoading) return <CategoryLoadingSkeleton />;

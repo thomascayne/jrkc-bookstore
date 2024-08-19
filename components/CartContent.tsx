@@ -1,19 +1,31 @@
 // components/CartContent.tsx
 
-import BookDetails from "@/components/BookDetails";
-import InputButtonGroup from "@/components/InputButtonGroup";
-import PlaceholderImage from "@/components/PlaceholderImage";
-import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
-import { useSidePanel } from "@/contexts/SidePanelContext";
-import { IBook } from "@/interfaces/IBook";
-import { calculateDiscountedPrice, cartStore, getTotal, removeItem, updateQuantity } from "@/stores/cartStore";
-import { Button, Card, CardBody, CardFooter, CardHeader } from "@nextui-org/react";
-import { useStore } from "@tanstack/react-store";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
-import { IoMdClose } from "react-icons/io";
+import BookDetails from '@/components/BookDetails';
+import InputButtonGroup from '@/components/InputButtonGroup';
+import PlaceholderImage from '@/components/PlaceholderImage';
+import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
+import { useSidePanel } from '@/contexts/SidePanelContext';
+import { IBook } from '@/interfaces/IBook';
+import {
+  calculateDiscountedPrice,
+  cartStore,
+  getTotal,
+  removeItem,
+  updateQuantity,
+} from '@/stores/cartStore';
+import {
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+} from '@nextui-org/react';
+import { useStore } from '@tanstack/react-store';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { IoMdClose } from 'react-icons/io';
 
 interface CartSidePanelProps {
   currentPath: string;
@@ -31,13 +43,13 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
   const cartItems = useStore(cartStore, (state) => state.items);
   const totalPrice = useStore(cartStore, getTotal);
 
-  const { openModal } = useFullScreenModal();
+  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
   const { closeRightPanel } = useSidePanel();
   const router = useRouter();
 
   const handleGoToCart = () => {
     closeRightPanel();
-    router.push("/cart");
+    router.push('/cart');
   };
 
   const handleQuantityChange = (book_id: string, quantity: number) => {
@@ -50,7 +62,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
 
   const handleContinueShopping = () => {
     closeRightPanel();
-    if (currentPath !== "/cart") {
+    if (currentPath !== '/cart') {
       router.push(currentPath);
     }
   };
@@ -59,9 +71,9 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
     try {
       const bookTitle = `${book.title}`;
 
-      openModal(<BookDetails bookId={book.id} />, bookTitle);
+      openFullScreenModal(<BookDetails bookId={book.id} />, bookTitle);
     } catch (error) {
-      console.error("Error fetching book details:", error);
+      console.error('Error fetching book details:', error);
     }
   };
 
@@ -80,7 +92,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
         {cartItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-3xl font-bold mb-6 text-center">
-              Your cart is empty.
+              Your Bookstore Cart is empty.
             </h1>
             <Button
               className="text-center bg-primary-500 text-white font-bold px-4"
@@ -112,13 +124,14 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
                       className="flex items-start space-x-4 mb-2 sm:[&:not(:first-child)]:pt-2 [&:not(:first-child)]:border-t  border-gray-300 dark:border-gray-600"
                     >
                       {item.book.small_thumbnail_image_link ? (
-                        <Image
-                          src={item.book.small_thumbnail_image_link}
-                          alt={item.book.title}
-                          width={50}
-                          height={75}
-                          className="object-cover"
-                        />
+                        <div className="relative h-[75px] w-[50px] mr-4">
+                          <Image
+                            src={item.book.small_thumbnail_image_link}
+                            alt={item.book.title}
+                            fill
+                            objectFit="cover"
+                          />
+                        </div>
                       ) : (
                         <div className="mr-4">
                           <PlaceholderImage />

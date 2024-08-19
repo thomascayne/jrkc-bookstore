@@ -1,0 +1,38 @@
+// app/not-found.tsx
+
+"use client";
+
+import { Card, CardBody, CardHeader } from "@nextui-org/react";
+import Link from "next/link";
+
+export default function Unauthorized() {
+  return (
+    <div className="404-page-wrapper container flex flex-col flex-grow justify-center items-center px-4 mx-auto">
+      <div className="max-w-md w-full">
+        <Card className="p-4 sm:p-6 md:p-8" shadow="lg">
+          <CardHeader className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl font-bold mb-2">401</h1>
+            <h2 className="text-2xl font-semibold mb-4">UNAUTHORIZED</h2>
+          </CardHeader>
+          <CardBody>
+            <p className="text-2xl font-bold mb-6 text-center">OOPS!</p>
+            <p className="mb-6 text-center">
+              You want your way to the wrong place.
+            </p>
+            <div className="stacked-books flex justify-center mt-auto mb-[0.125rem] items-end">
+              <div className="w-9 h-24 bg-blue-500 rounded transform -rotate-[-12deg] mr-2"></div>
+              <div className="w-9 h-32 bg-green-500 rounded transform rotate-5 mr-2 mt-[-5px]"></div>
+              <div className="w-9 h-24 bg-red-500 rounded transform -rotate-[12deg]"></div>
+            </div>
+            <Link
+              href="/"
+              className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+            >
+              Return to Homepage
+            </Link>
+          </CardBody>
+        </Card>
+      </div>
+    </div>
+  );
+}
