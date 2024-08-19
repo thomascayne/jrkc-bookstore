@@ -1,5 +1,5 @@
-import { IBook } from '@/interfaces/IBook';
 import { OrderStatus } from './IOrder';
+import { IBookInventory } from '@/interfaces/IBookInventory';
 
 export interface ICartOrder {
     id: string;
@@ -14,7 +14,7 @@ export interface ICartOrder {
 export interface ICartOrderItem {
     id: string;
     book_id: string;
-    book: IBook;
+    book: IBookInventory;
     discount_percentage?: number;
     final_price: number;
     order_id: string;

@@ -1,6 +1,6 @@
 // stores/cartStore.ts
 
-import { IBook } from '@/interfaces/IBook';
+import { IBookInventory } from '@/interfaces/IBookInventory';
 import { ICustomerCartItem } from '@/interfaces/ICustomerCart';
 import { ShippingAddress } from '@/interfaces/ShippingAddress';
 import { fetchBookFromSupabase } from '@/utils/bookFromSupabaseApi';
@@ -20,7 +20,7 @@ export interface CartState {
 
 export const cartStore = new Store<CartState>({ items: [], isInitialized: false });
 
-export const addCartItem = async (book: IBook, quantity: number = 1) => {
+export const addCartItem = async (book: IBookInventory, quantity: number = 1) => {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
@@ -42,7 +42,7 @@ export const addCartItem = async (book: IBook, quantity: number = 1) => {
 
         if (cartItems) {
             const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICustomerCartItem) => {
-                const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
+                const bookData = await fetchBookFromSupabase<IBookInventory>(item.book_id);
                 return {
                     ...item,
                     book: bookData,
@@ -88,7 +88,7 @@ export const addCartItem = async (book: IBook, quantity: number = 1) => {
     }
 };
 
-export const calculateDiscountedPrice = (book: IBook) => {
+export const calculateDiscountedPrice = (book: IBookInventory) => {
     if (!book) return 0;
     if (book.is_promotion && book.discount_percentage) {
         const discountAmount = book.list_price * (book.discount_percentage / 100);
@@ -191,7 +191,7 @@ export const fetchCart = async () => {
 
             if (cartItems) {
                 const itemsWithBooks = await Promise.all(cartItems.map(async (item: ICustomerCartItem) => {
-                    const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
+                    const bookData = await fetchBookFromSupabase<IBookInventory>(item.book_id);
                     return {
                         ...item,
                         book: bookData,
@@ -296,7 +296,7 @@ export const initializeCart = async () => {
             console.error('Error fetching cart:', error);
         } else if (cartItems && cartItems.length > 0) {
             items = await Promise.all(cartItems.map(async (item: ICustomerCartItem) => {
-                const bookData = await fetchBookFromSupabase<IBook>(item.book_id);
+                const bookData = await fetchBookFromSupabase<IBookInventory>(item.book_id);
                 return {
                     ...item,
                     book: bookData,

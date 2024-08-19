@@ -5,7 +5,7 @@ import InputButtonGroup from '@/components/InputButtonGroup';
 import PlaceholderImage from '@/components/PlaceholderImage';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import { useSidePanel } from '@/contexts/SidePanelContext';
-import { IBook } from '@/interfaces/IBook';
+import { IBookInventory } from '@/interfaces/IBookInventory';
 import {
   calculateDiscountedPrice,
   cartStore,
@@ -67,7 +67,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
     }
   };
 
-  const handleBookClick = async (book: IBook) => {
+  const handleBookClick = async (book: IBookInventory) => {
     try {
       const bookTitle = `${book.title}`;
 

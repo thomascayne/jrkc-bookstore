@@ -22,7 +22,6 @@ import {
 } from "@nextui-org/react";
 import PlaceholderImage from "@/components/PlaceholderImage";
 import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
-import { IBook } from "@/interfaces/IBook";
 import BookDetails from "@/components/BookDetails";
 import { GoogleBook } from "@/interfaces/GoogleBook";
 import { fetchBookDetails } from "@/utils/bookApi";
@@ -31,6 +30,7 @@ import InputButtonGroup from "@/components/InputButtonGroup";
 import { useRouter } from "next/navigation";
 import CartLoadingSkeleton from "@/components/CartLoadingSkeleton";
 import { ICustomerCartItem } from "@/interfaces/ICustomerCart";
+import { IBookInventory } from "@/interfaces/IBookInventory";
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
@@ -51,10 +51,10 @@ const CartPage = () => {
     }
   };
 
-  const handleBookClick = async (book: IBook) => {
+  const handleBookClick = async (book: IBookInventory) => {
     try {
       // fetch book details from supabase
-      const supabaseBook = await fetchBookFromSupabase<IBook>(book.id);
+      const supabaseBook = await fetchBookFromSupabase<IBookInventory>(book.id);
 
       // fetch additional book details from Google Books API
       const googleBookDetails = await fetchBookDetails<GoogleBook>(book.id);

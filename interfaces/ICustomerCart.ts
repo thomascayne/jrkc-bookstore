@@ -1,5 +1,6 @@
-import { IBook } from '@/interfaces/IBook';
 // src/interfaces/ICustomerCart.ts
+
+import { IBookInventory } from "./IBookInventory";
 
 export interface ICustomerCart {
     id: string;
@@ -11,7 +12,7 @@ export interface ICustomerCart {
 export interface ICustomerCartItem {
     id: string;
     book_id: string;
-    book: IBook;
+    book: IBookInventory;
     cart_id: string;
     current_price: number;
     discount_percentage?: number;
