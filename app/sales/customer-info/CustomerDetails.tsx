@@ -1,24 +1,45 @@
 // app/sales/customer-info/CustomerDetails.tsx
-import React from 'react';
-import PurchaseHistory from './PurchaseHistory';
-import Recommendations from './Recommendations';
 
-interface UserProfile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email?: string;
+import { useEffect, useState } from 'react';
+import { supabase } from '@/utils/supabase/client';
+import { UserProfile } from '@/interfaces/UserProfile';
+
+interface CustomerDetailsProps {
+  customerId: string;  // Accepts only the customerId
 }
 
-export default function CustomerDetails({ customer }: { customer: UserProfile }) {
+const CustomerDetails = ({ customerId }: CustomerDetailsProps) => {
+  const [customer, setCustomer] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchCustomer = async () => {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('id', customerId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching customer:', error);
+      } else {
+        setCustomer(data);
+      }
+    };
+
+    fetchCustomer();
+  }, [customerId]);
+
+  if (!customer) return <div>Loading...</div>;
+
   return (
     <div>
-      <h2>{customer.first_name} {customer.last_name}</h2>
+      <h1>{customer.first_name} {customer.last_name}</h1>
       <p>Email: {customer.email}</p>
-      {/* Render other customer details */}
-      
-      <PurchaseHistory customerId={customer.id} />
-      <Recommendations customerId={customer.id} />
+      <p>Phone: {customer.phone}</p>
+      <p>Address: {customer.street_address1}, {customer.city}, {customer.state}, {customer.zipcode}</p>
+      {/* Add more fields as necessary */}
     </div>
   );
-}
+};
+
+export default CustomerDetails;
