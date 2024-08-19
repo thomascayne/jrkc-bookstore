@@ -10,6 +10,7 @@ export interface UserProfile {
     is_deleted?: boolean | null;
     last_name?: string;
     phone?: string | null;
+    email?: string;
     postal_code?: string | null;
     province?: string | null;
     shipping_city?: string | null;
