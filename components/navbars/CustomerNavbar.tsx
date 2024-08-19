@@ -37,7 +37,7 @@ import { useSidePanel } from '@/contexts/SidePanelContext';
 import CartContent from '@/components/CartContent';
 import { useStore } from '@tanstack/react-store';
 import { cartStore, getCartItemCount } from '@/stores/cartStore';
-import SearchBar from '@/components/Searchbar';
+import SearchBar from '@/components/SearchBar';
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -110,25 +110,36 @@ function CustomerNavbar({
     }
   };
 
+  const userMenuItems = useMemo(
+    () => [
+      ...(user
+        ? [
+            {
+              item: 'Profile',
+              icon: <FaRegUser className="mr-1" />,
+              href: '/profile',
+            },
+            {
+              item: 'Sign Out',
+              icon: <VscSignOut className="mr-1" />,
+              href: '#',
+              onClick: signOut,
+            },
+          ]
+        : [
+            {
+              item: 'Sign In',
+              icon: <VscSignIn className="mr-1" />,
+              href: '/signin',
+            },
+          ]),
+    ],
+    [user, signOut],
+  );
+
   const menuItems = useMemo(
     () => [{ item: 'Cart', icon: <RiShoppingCart2Line />, special: true }],
     [],
-  );
-
-  const userMenuItems = useMemo(
-    () => [
-      {
-        item: user ? 'Profile' : '',
-        icon: user ? <FaRegUser /> : '',
-        href: user ? '/profile' : '#',
-      },
-      {
-        item: user ? 'Sign Out' : 'Sign In',
-        icon: user ? <VscSignOut /> : <VscSignIn />,
-        onClick: user ? signOut : () => router.push('/signin'),
-      },
-    ],
-    [signOut, user],
   );
 
   const navbarStyle = useMemo(
@@ -169,7 +180,7 @@ function CustomerNavbar({
 
   return (
     <Navbar
-      className="fixed top-0 left-0 right-0 z-50 shadow-lg"
+      className="fixed top-0 left-0 right-0 w-full z-50 shadow-lg"
       isBordered
       isMenuOpen={isMenuOpen}
       maxWidth="full"
@@ -177,7 +188,7 @@ function CustomerNavbar({
       position="static"
       style={isAdmin && emulatedRole ? navbarStyle : {}}
     >
-      <div className="w-full flex gap-2 max-w-60">
+      <div className="flex gap-2 w-36 sm:max-w-60 md:w-full justify-start mr-6 md:mr-4">
         <NavbarContent className="flex !flex-none !flex-shrink-0">
           <NavbarBrand>
             <Link
@@ -188,7 +199,8 @@ function CustomerNavbar({
             </Link>
           </NavbarBrand>
         </NavbarContent>
-        <NavbarContent className="this-is-for-when-menu-is-close-on-md-and-up basis-0 flex-grow-0">
+
+        <NavbarContent className="hidden sm:flex this-is-for-when-menu-is-close-on-md-and-up basis-0 flex-grow-0">
           <Dropdown backdrop="blur" radius="none">
             <NavbarItem className="hidden sm:flex">
               <DropdownTrigger>
@@ -244,183 +256,164 @@ function CustomerNavbar({
           </Dropdown>
         </NavbarContent>
       </div>
-      
-      <NavbarContent className="hidden sm:flex flex-grow basis-0 justify-center" justify="center">
-        <SearchBar onSearch={handleSearch} className="w-full flex flex-grow max-w-xl" />
-      </NavbarContent>
 
-      <NavbarContent className="flex-grow basis-0 gap-1" justify="end">
-        <NavbarItem>
+      <SearchBar onSearch={handleSearch} className="!w-full" />
+
+      <div className="flex gap-0">
+        <NavbarContent
+          className="flex-grow basis-0 gap-1 ml-auto"
+          justify="end"
+        >
+          <NavbarItem>
+            {isAdmin && (
+              <RoleSwitcher
+                user={user}
+                emulatedRole={emulatedRole}
+                onRoleChange={onRoleChange}
+              />
+            )}
+          </NavbarItem>
+
+          {/***
+           * NEW MENU HERE
+           *    |
+           *    V
+           */}
+
+          <NavbarItem className="hidden">
+            <Link
+              color="foreground"
+              href="#"
+              className="relative flex border-transparent hover:border-current border-1 rounded-md p-1"
+              onClick={handleCartClick}
+            >
+              <Badge
+                className="top-0 right-[-5px]"
+                color="danger"
+                content={cartItemCount}
+                isInvisible={cartItemCount === 0}
+                placement="top-right"
+                shape="circle"
+              >
+                <span className="cart-only-show-with-this-question-mark">
+                  &nbsp;
+                </span>
+                <CartIcon />
+              </Badge>
+            </Link>
+          </NavbarItem>
+
+          <NavbarItem className="p-0 !justify-end">
+            <ThemeSwitch
+              onThemeChange={handleThemeChange}
+              initialTheme={theme}
+            />
+          </NavbarItem>
+
+          <NavbarContent className="hidden sm:flex gap-0 !justify-end">
+            {userMenuItems.map((item, index) => (
+              <NavbarItem key={`${item.item}-${index}`}>
+                <Link
+                  href={item.href}
+                  onClick={item.onClick}
+                  className="flex py-2 px-3 no-underline bg-transparent border-transparent transition-all ease-in-out duration-200 hover:bg-gray-200 items-center"
+                >
+                  {item.icon}
+                  <span className="ml-1">{item.item}</span>
+                </Link>
+              </NavbarItem>
+            ))}
+          </NavbarContent>
+
+          <NavbarMenuToggle
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            className="lg:hidden"
+          />
+        </NavbarContent>
+      </div>
+
+      <NavbarMenu className="this-is-for-when-the-menu-is-open-on-smaller-screens flex flex-col sm:hidden">
+        <NavbarMenuItem>
           <Link
-            color="foreground"
+            className="hover:bg-default-300 text-blue-500 dark:hover:bg-gray-200 dark:hover:text-black p-2 w-full flex"
             href="#"
-            className="relative flex border-transparent hover:border-current border-1 rounded-md p-1"
             onClick={handleCartClick}
           >
             <Badge
-              className="top-0 right-[-5px]"
               color="danger"
               content={cartItemCount}
               isInvisible={cartItemCount === 0}
-              placement="top-right"
               shape="circle"
             >
-              <span className="cart-only-show-with-this-question-mark"> </span>
               <CartIcon />
             </Badge>
+            <span className="ml-2">Cart</span>
           </Link>
-        </NavbarItem>
+        </NavbarMenuItem>
 
-        <NavbarItem>
-          {isAdmin && (
-            <RoleSwitcher
-              user={user}
-              emulatedRole={emulatedRole}
-              onRoleChange={onRoleChange}
-            />
-          )}
-        </NavbarItem>
-        <NavbarItem className="p-0">
-          <ThemeSwitch onThemeChange={handleThemeChange} initialTheme={theme} />
-        </NavbarItem>
-
-        <NavbarItem className="hidden sm:flex">
-          {user ? (
-            <div className="flex">
-              <Link
-                href="/profile"
-                className="py-2 px-3 flex no-underline bg-transparent border-transparent hover:border-current border-1 rounded-md p-1 items-center"
-              >
-                <FaRegUser className="mr-1" />
-                <span>Profile</span>
-              </Link>
-              <button
-                onClick={signOut}
-                className="py-2 px-3 flex no-underline bg-transparent border-transparent hover:border-current border-1 rounded-md p-1 items-center"
-              >
-                <VscSignOut className="mr-1" />
-                <span>Sign Out</span>
-              </button>
-            </div>
-          ) : (
-            <Link
-              href="/signin"
-              className="py-2 px-3 flex no-underline bg-transparent border-transparent hover:border-current border-1 rounded-md p-1 items-center"
+        <Dropdown backdrop="blur" radius="none">
+          <DropdownTrigger>
+            <Button
+              disableRipple
+              className="w-full cursor-pointer px-2 text-lg justify-start hover:bg-default-300 text-blue-500 dark:hover:bg-gray-200 dark:hover:text-black"
+              radius="none"
+              variant="light"
+              endContent={<FaChevronDown />}
             >
-              <VscSignIn className="mr-1" />
-              <span>Sign In</span>
-            </Link>
-          )}
-        </NavbarItem>
-        <NavbarMenuToggle
-          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-          className="lg:hidden"
-        />
-      </NavbarContent>
+              <BiCategory className="mr-1" />
+              <span>Categories</span>
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label="Book Categories"
+            className="p-0"
+            itemClasses={{
+              base: [
+                'data-[hover=true]:bg-default-100',
+                'min-w-[120px]',
+                'whitespace-nowrap',
+              ],
+            }}
+            items={bookCategories}
+            classNames={{
+              list: 'grid grid-cols-2 sm:grid-cols-2 gap-2 py-2 px-4',
+            }}
+            onAction={(key) => {
+              const category = bookCategories.find((cat) => cat.key === key);
 
-      <NavbarMenu className="this-is-for-when-the-menu-is-open sm:flex">
-        {menuItems.map(({ item, icon, special }, index) => (
-          <NavbarMenuItem
-            key={`${item}-${index}`}
-            className="hover:bg-default-300 text-blue-500 dark:hover:bg-gray-200 dark:hover:text-black py-2"
+              if (category) {
+                handleCategorySelect(category.key, category.label);
+              }
+            }}
           >
-            {special && item === 'Cart' ? (
-              <Link
-                color="foreground"
-                className="w-full flex items-center"
-                href="#"
-                onClick={handleCartClick}
+            {(category) => (
+              <DropdownItem
+                key={category.key}
+                className="rounded-none"
+                variant="faded"
               >
-                <Badge
-                  color="danger"
-                  content={cartItemCount}
-                  isInvisible={cartItemCount === 0}
-                  shape="circle"
+                <Link
+                  href={`/category/${encodeURIComponent(category.key)}`}
+                  className="flex items-center p-0 w-full"
                 >
-                  <CartIcon />
-                </Badge>
-                <span className="ml-2">Cart</span>
-              </Link>
-            ) : item === 'Sign Out' ? (
-              <button
-                className="w-full flex text-danger text-lg items-center"
-                onClick={signOut}
-              >
-                {icon && <span className="mr-2">{icon}</span>}
-                {item}
-              </button>
-            ) : item === 'Categories' ? (
-              <Dropdown>
-                <DropdownTrigger>
-                  <Link
-                    color={index === 2 ? 'primary' : 'foreground'}
-                    className="w-full cursor-pointer"
-                    size="lg"
-                  >
-                    {icon && <span className="mr-2">{icon}</span>}
-                    {item}
-                  </Link>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Book Categories"
-                  className="p-0 w-full max-h-[calc(100vh-100px)] overflow-auto"
-                  itemClasses={{
-                    base: [
-                      'data-[hover=true]:bg-default-100',
-                      'min-w-[120px]',
-                      'whitespace-nowrap',
-                    ],
-                  }}
-                  items={bookCategories}
-                  classNames={{
-                    list: 'grid grid-cols-2 sm:grid-cols-2 gap-2 py-2 px-4',
-                  }}
-                  onAction={(key) => {
-                    const category = bookCategories.find(
-                      (cat) => cat.key === key,
-                    );
-                    if (category) {
-                      handleCategorySelect(category.key, category.label);
-                    }
-                  }}
-                >
-                  {(category) => (
-                    <DropdownItem key={category.key}>
-                      <Link
-                        href={`/category/${encodeURIComponent(category.key)}`}
-                        className="flex items-center p-2 w-full"
-                      >
-                        <span>{category.label}</span>
-                      </Link>
-                    </DropdownItem>
-                  )}
-                </DropdownMenu>
-              </Dropdown>
-            ) : (
-              <Link
-                color={
-                  index === 2
-                    ? 'primary'
-                    : index === menuItems.length - 1
-                      ? 'foreground'
-                      : 'foreground'
-                }
-                className="w-full"
-                href={
-                  item === 'Sign In'
-                    ? '/signin'
-                    : item === 'Profile'
-                      ? '/profile'
-                      : '#'
-                }
-                size="lg"
-              >
-                {icon && <span className="mr-2">{icon}</span>}
-                {item}
-              </Link>
+                  <span>{category.label}</span>
+                </Link>
+              </DropdownItem>
             )}
-          </NavbarMenuItem>
-        ))}
+          </DropdownMenu>
+        </Dropdown>
+          {userMenuItems.map((item, index) => (
+            <NavbarItem key={`${item.item}-${index}`} className="w-full justify-start">
+              <Link
+                href={item.href}
+                onClick={item.onClick}
+                className="hover:bg-default-300 text-blue-500 dark:hover:bg-gray-200 dark:hover:text-black p-2 w-full flex text-lg"
+              >
+                {item.icon}
+                <span className="ml-1">{item.item}</span>
+              </Link>
+            </NavbarItem>
+          ))}
       </NavbarMenu>
     </Navbar>
   );
