@@ -65,8 +65,8 @@ function SalesAssociateNavbar({
   const menuItems = [
     { item: "Dashboard", icon: <MdDashboard />, href: "/sales/dashboard" },
     { item: "POS", icon: <FaCashRegister />, href: "/sales/point-of-sale" },
-    { item: "Customer Info", icon: <FaAddressBook />, href: "#" },
-    { item: "Inventory Search", icon: <FaSearch />, href: "#" },
+    { item: "Customer Info", icon: <FaAddressBook />, href: "/sales/customer-info" },
+    { item: "Inventory Search", icon: <FaSearch />, href: "/inventory" },
     { item: "Top Sellers", icon: <FaChartLine />, href: "#" },
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
   ];

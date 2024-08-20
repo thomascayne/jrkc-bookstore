@@ -84,8 +84,8 @@ function SystemAdminNavbar({
 
     // Sales Associate items
     { item: "POS", icon: <FaCashRegister />, href: "/pos" },
-    { item: "Customer Info", icon: <FaAddressBook />, href: "/customers" },
-    { item: "Inventory Search", icon: <FaSearch />, href: "/inventory-search" },
+    { item: "Customer Info", icon: <FaAddressBook />, href: "/sales/customers-info" },
+    { item: "Inventory Search", icon: <FaSearch />, href: "/inventory" },
     { item: "Top Sellers", icon: <FaChartBar />, href: "/top-sellers" },
     { item: "separator", icon: null, href: "" },
 
