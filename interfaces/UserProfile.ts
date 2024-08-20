@@ -30,4 +30,5 @@ export interface UserProfile {
     theme?: string | null;
     updated_at?: string;
     zipcode?: string | null;
-}
+  }
+  

@@ -1,28 +1,14 @@
 // app/sales/customer-info/CustomerList.tsx
 
-import React, { useEffect, useState } from 'react';
-import { fetchCustomers } from '@/utils/supabase/customerApi';
 import { UserProfile } from '@/interfaces/UserProfile';
 
 interface CustomerListProps {
-  onSelectCustomer: (customer: UserProfile) => void;
+  customers: UserProfile[];
 }
 
-const CustomerList = ({ onSelectCustomer }: CustomerListProps) => {
-  const [customers, setCustomers] = useState<UserProfile[]>([]);
-
-  useEffect(() => {
-    const loadCustomers = async () => {
-      const data = await fetchCustomers();
-      console.log('Fetched Customers:', data); // Log the fetched customers for debugging
-      setCustomers(data);
-    };
-
-    loadCustomers();
-  }, []);
-
-  if (customers.length === 0) {
-    return <p>No customers found</p>;
+export default function CustomerList({ customers }: CustomerListProps) {
+  if (!customers || customers.length === 0) {
+    return <div>No customers found.</div>;
   }
 
   return (
@@ -39,7 +25,7 @@ const CustomerList = ({ onSelectCustomer }: CustomerListProps) => {
         </thead>
         <tbody>
           {customers.map((customer) => (
-            <tr key={customer.id} onClick={() => onSelectCustomer(customer)}>
+            <tr key={customer.id}>
               <td>{customer.id}</td>
               <td>{customer.first_name}</td>
               <td>{customer.last_name}</td>
@@ -50,6 +36,4 @@ const CustomerList = ({ onSelectCustomer }: CustomerListProps) => {
       </table>
     </div>
   );
-};
-
-export default CustomerList;
+}
