@@ -1,18 +1,17 @@
 // utils/fetchBooksByCategory.ts
 
-import { BookCategory } from '@/interfaces/BookCategory';
 import { IBookInventory } from '@/interfaces/IBookInventory';
 import { createClient } from '@/utils/supabase/client';
 
-interface FilterOptions {
+export interface FilterOptions {
   author?: string;
-  discounted?: boolean;
-  inStock?: boolean;
+  discount_percentage_min?: number;
+  in_stock?: boolean;
   price?: { min?: number; max?: number };
-  quantity?: { min?: number; max?: number };
-  percentage?: boolean;
-  rating?: boolean;
-  title?: string;
+  rating_min?: number;
+  ratings_count_min?: number;
+  sort_by?: 'discount_percentage' | 'price' | 'average_rating';
+  sort_order?: 'ASC' | 'DESC';
 }
 
 export async function fetchBooksByCategory(
@@ -40,20 +39,18 @@ export async function fetchBooksByCategory(
 
     const { data: books, count, error: booksError } = await supabase.rpc('get_books_by_category', {
       author_filter: filters.author,
-      category_filter: null, 
       category_id_filter: categoryId,
-      discounted_filter: filters.discounted,
-      in_stock_filter: filters.inStock,
+      discount_percentage_min: filters.discount_percentage_min,
+      in_stock_filter: filters.in_stock,
       limit: booksPerPage,
       offset: (page - 1) * booksPerPage,
-      percentage_filter: filters.percentage,
-      price_min: filters.price?.min,
       price_max: filters.price?.max,
-      quantity_min: filters.quantity?.min,
-      quantity_max: filters.quantity?.max,
-      rating_filter: filters.rating,
+      price_min: filters.price?.min,
+      rating_min: filters.rating_min,
+      ratings_count_min: filters.ratings_count_min,
       search_query: searchQuery,
-      title_filter: filters.title,
+      sort_by: filters.sort_by || 'average_rating',
+      sort_order: filters.sort_order || 'DESC'
     });
 
     if (booksError) throw booksError;

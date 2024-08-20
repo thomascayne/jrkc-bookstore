@@ -1,6 +1,6 @@
 // hooks/useBooksByCategory.ts
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchBooksByCategory } from '@/utils/fetchBooksByCategory ';
 
 export interface SearchFilterOptions {
@@ -21,8 +21,11 @@ export const useBooksByCategory = (
   page: number,
   searchQuery: string
 ) => {
+  const queryClient = useQueryClient();
+  const queryKey = ['books', categoryKey, booksPerPage, filters, page, searchQuery];
+
   const query = useQuery({
-    queryKey: ['books', categoryKey, booksPerPage, filters, page, searchQuery],
+    queryKey,
     queryFn: () => fetchBooksByCategory(booksPerPage, categoryKey, filters, page, searchQuery),
     select: (data) => ({
       ...data,
@@ -31,12 +34,18 @@ export const useBooksByCategory = (
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const refetch = async () => {
+    await queryClient.invalidateQueries({ queryKey });
+    return query.refetch();
+  };
+
   return {
     category: query.data?.category || '',
-    displayedBooks: query.data?.displayedBooks || [],
+    displayedBooks: query.data?.books || [],
+    totalBooks: query.data?.totalBooks || 0,
+    isLoading: query.isLoading,
     error: query.error,
     isFetching: query.isFetching,
-    isLoading: query.isLoading,
-    totalBooks: query.data?.totalBooks || 0,
+    refetch,
   };
 };

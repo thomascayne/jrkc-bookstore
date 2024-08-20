@@ -1,17 +1,17 @@
 // app/cart/page.tsx
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { useStore } from "@tanstack/react-store";
+import React, { useEffect, useState } from 'react';
+import { useStore } from '@tanstack/react-store';
 import {
   calculateDiscountedPrice,
   cartStore,
   getTotal,
   removeItem,
   updateQuantity,
-} from "@/stores/cartStore";
-import Link from "next/link";
-import Image from "next/image";
+} from '@/stores/cartStore';
+import Link from 'next/link';
+import Image from 'next/image';
 import {
   Button,
   Card,
@@ -19,25 +19,30 @@ import {
   CardHeader,
   Divider,
   Input,
-} from "@nextui-org/react";
-import PlaceholderImage from "@/components/PlaceholderImage";
-import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
-import BookDetails from "@/components/BookDetails";
-import { GoogleBook } from "@/interfaces/GoogleBook";
-import { fetchBookDetails } from "@/utils/bookApi";
-import { fetchBookFromSupabase } from "@/utils/bookFromSupabaseApi";
-import InputButtonGroup from "@/components/InputButtonGroup";
-import { useRouter } from "next/navigation";
-import CartLoadingSkeleton from "@/components/CartLoadingSkeleton";
-import { ICustomerCartItem } from "@/interfaces/ICustomerCart";
-import { IBookInventory } from "@/interfaces/IBookInventory";
+} from '@nextui-org/react';
+import PlaceholderImage from '@/components/PlaceholderImage';
+import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
+import BookDetails from '@/components/BookDetails';
+import { GoogleBook } from '@/interfaces/GoogleBook';
+import { fetchBookDetails } from '@/utils/bookApi';
+import { fetchBookFromSupabase } from '@/utils/bookFromSupabaseApi';
+import InputButtonGroup from '@/components/InputButtonGroup';
+import { useRouter } from 'next/navigation';
+import CartLoadingSkeleton from '@/components/CartLoadingSkeleton';
+import { ICustomerCartItem } from '@/interfaces/ICustomerCart';
+import { IBookInventory } from '@/interfaces/IBookInventory';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
   const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
-  const cartItems = useStore(cartStore, (state) => state.items) as ICustomerCartItem[];
+  const cartItems = useStore(
+    cartStore,
+    (state) => state.items,
+  ) as ICustomerCartItem[];
   const router = useRouter();
   const total = useStore(cartStore, getTotal);
+  const { profile } = useUserProfile();
 
   useEffect(() => {
     setIsClient(true);
@@ -68,7 +73,7 @@ const CartPage = () => {
 
       openFullScreenModal(<BookDetails bookId={book.id} />, bookTitle);
     } catch (error) {
-      console.error("Error fetching book details:", error);
+      console.error('Error fetching book details:', error);
     }
   };
 
@@ -79,37 +84,44 @@ const CartPage = () => {
   if (cartItems.length === 0) {
     return (
       <section className="container flex flex-col items-center w-full mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">Your Bookstore Cart is Empty</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          Your Bookstore Cart is Empty
+        </h1>
         <p className="mb-4">
           Looks like you have not added any items to your cart yet.
         </p>
-        <Link href="/" className="text-blue-500 hover:underline">
+        <Link
+          href="/"
+          className="text-blue-500 hover:underline"
+          onClick={(e) => handleContinueShopping(e)}
+        >
           Continue Shopping
         </Link>
       </section>
     );
   }
 
-  const handleContinueShopping = () => {
-    const historyLength = window.history.length;
+  const handleContinueShopping = (
+    e:
+      | React.MouseEvent<HTMLAnchorElement>
+      | React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    e.preventDefault();
 
-    if (historyLength > 1) {
-      for (let i = historyLength - 2; i >= 0; i--) {
-        const prevPath = window.history.state[i];
-
-        if (prevPath && !prevPath.includes("/cart")) {
-          window.history.go(i - historyLength);
-          return;
-        }
-      }
-    }
-
-    // If no suitable previous path is found, navigate to the root path
-    // window.history.pushState({}, "", "/");
+    const lastVisitedPath = localStorage.getItem('lastVisitedPath') || '/';
+    router.push(lastVisitedPath);
   };
 
   const handleProceedToCheckout = () => {
-    router.push("/checkout");
+    console.log('inside cart to proceed to checkout:', profile);
+    if (profile) {
+      router.push('/checkout');
+    } else {
+      // Store the intention to checkout
+      localStorage.setItem('intendedAction', 'checkout');
+      // Redirect to login page
+      router.push('/signin');
+    }
   };
 
   return (
@@ -123,15 +135,16 @@ const CartPage = () => {
               key={item.book_id}
               className="flex items-center border-b border-gray-300 dark:border-gray-600 py-4 px-4"
             >
-              {item.book.is_promotion ? (
+              {item.book.is_promotion &&
+              item.book.small_thumbnail_image_link ? (
                 <div className="relative h-[75px] w-[50px] mr-4">
-                <Image
-                  alt={item.book.title}
-                  className="object-cover mr-4"
-                  fill
-                  src={item.book.small_thumbnail_image_link}
-                />
-              </div>
+                  <Image
+                    src={item.book.small_thumbnail_image_link}
+                    alt={item.book.title}
+                    className="object-cover mr-4"
+                    layout="fill"
+                  />
+                </div>
               ) : (
                 <div className="mr-4">
                   <PlaceholderImage />
@@ -250,7 +263,7 @@ const CartPage = () => {
       </div>
       <div className="mt-8">
         <Button
-          onClick={handleContinueShopping}
+          onClick={(e) => handleContinueShopping(e)}
           className="bg-primary-500 hover:bg-primary-700 rounded-none text-white px-6 text-lg py-2"
         >
           Continue Shopping
