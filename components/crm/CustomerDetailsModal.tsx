@@ -1,8 +1,9 @@
-// components/crm/CustomerDetailsModal.tsx
+// Directory: components/crm/CustomerDetailsModal.tsx
 
 import React, { useEffect, useState } from 'react';
-import { fetchPurchaseHistory, fetchRecommendations } from '@/utils/supabase/customerApi'; // Import fetch functions
+import { fetchPurchaseHistory, fetchRecommendations } from '@/utils/supabase/customerApi'; // Import the appropriate API calls
 
+// Define the structure of the Customer and Purchase History interfaces
 interface Customer {
   id: string;
   first_name: string;
@@ -27,45 +28,48 @@ interface Recommendation {
   recommendation: string;
 }
 
+// Define the props for the CustomerDetailsModal component
 interface CustomerDetailsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  customer: Customer | null;
+  isOpen: boolean; // Determines if the modal is open
+  onClose: () => void; // Function to close the modal
+  customer: Customer | null; // The selected customer details
 }
 
+// The CustomerDetailsModal component displays customer details, purchase history, and recommendations
 const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onClose, customer }) => {
+  // State to store the fetched purchase history and recommendations
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistory[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Loading state
 
+  // useEffect to fetch customer details when the modal opens and a customer is selected
   useEffect(() => {
     if (customer) {
-      // Fetch purchase history and recommendations
       const fetchDetails = async () => {
-        setLoading(true);
+        setLoading(true); // Set loading state to true
 
         try {
-          // Fetch both purchase history and recommendations
+          // Fetch both purchase history and recommendations in parallel
           const [purchaseHistoryData, recommendationsData] = await Promise.all([
-            fetchPurchaseHistory(customer.id),  // Fetch purchase history using customer ID
-            fetchRecommendations(customer.id),  // Fetch recommendations using customer ID
+            fetchPurchaseHistory(customer.id), // Fetch purchase history using customer ID and .rpc protocol
+            fetchRecommendations(customer.id), // Fetch recommendations using customer ID and .rpc protocol
           ]);
 
-          // Update state with fetched data
+          // Update state with the fetched data
           setPurchaseHistory(purchaseHistoryData);
           setRecommendations(recommendationsData);
         } catch (error) {
-          console.error('Error fetching data:', error); // Log any error for debugging
+          console.error('Error fetching data:', error); // Log any errors that occur
         } finally {
-          setLoading(false);  // Set loading to false once data is fetched
+          setLoading(false); // Stop loading once the data is fetched
         }
       };
 
-      fetchDetails();
+      fetchDetails(); // Fetch customer details
     }
-  }, [customer]);
+  }, [customer]); // Re-run the effect if the customer changes
 
-  // Return null if modal is not open or customer is null
+  // If the modal is not open or no customer is selected, return null
   if (!isOpen || !customer) return null;
 
   return (
@@ -79,7 +83,7 @@ const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onC
           <p>Loading...</p>
         ) : (
           <>
-            {/* Display customer information */}
+            {/* Display customer details */}
             <p><strong>First Name:</strong> {customer.first_name}</p>
             <p><strong>Last Name:</strong> {customer.last_name}</p>
             <p><strong>Phone:</strong> {customer.phone}</p>
