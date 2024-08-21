@@ -1,34 +1,27 @@
 // Directory: /components/crm/SalesReportModal.tsx
 
 import React, { useEffect, useState } from 'react';
-import { fetchSalesData } from '@/utils/supabase/salesApi'; // Ensure you fetch from the correct API
+import { fetchSalesData } from '@/utils/supabase/salesApi';
 import Loading from '@/components/Loading';
 
 interface SalesReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  startDate: string;
-  endDate: string;
+  startDate: string | null;  // Allow null
+  endDate: string | null;  // Allow null
+  reportType: string;
 }
 
-/**
- * SalesReportModal component fetches and displays sales data in a table.
- * @param isOpen - Boolean to determine if the modal is open.
- * @param onClose - Function to close the modal.
- * @param startDate - Start date for the sales report.
- * @param endDate - End date for the sales report.
- */
-const SalesReportModal: React.FC<SalesReportModalProps> = ({ isOpen, onClose, startDate, endDate }) => {
+const SalesReportModal: React.FC<SalesReportModalProps> = ({ isOpen, onClose, startDate, endDate, reportType }) => {
   const [salesData, setSalesData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isOpen) {
-      // Fetch sales data when the modal is opened
+    if (isOpen && startDate && endDate) {
       const loadSalesData = async () => {
         setIsLoading(true);
         try {
-          const data = await fetchSalesData(startDate, endDate); // Fetch sales data
+          const data = await fetchSalesData(startDate, endDate);
           setSalesData(data);
         } catch (error) {
           console.error('Error fetching sales data:', error);
@@ -46,7 +39,7 @@ const SalesReportModal: React.FC<SalesReportModalProps> = ({ isOpen, onClose, st
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white p-8 rounded shadow-lg relative w-3/4 h-3/4 overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">Sales Report</h2>
+        <h2 className="text-2xl font-bold mb-4">{reportType} Report</h2>
         <button className="absolute top-4 right-4 text-red-500" onClick={onClose}>
           Close
         </button>
