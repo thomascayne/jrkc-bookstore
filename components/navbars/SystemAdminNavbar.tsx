@@ -33,6 +33,7 @@ import {
   FaPlug,
   FaClipboardList,
   FaChevronDown,
+  FaArchive,
 } from "react-icons/fa";
 import { VscSignOut } from "react-icons/vsc";
 import ThemeSwitch, { Theme } from "@/components/ThemeSwitcher";
@@ -79,6 +80,7 @@ function SystemAdminNavbar({
     { item: "Dashboard", icon: <MdDashboard />, href: "/dashboard" },
     { item: "User Management", icon: <FaUsers />, href: "/users" },
     { item: "System Settings", icon: <FaCog />, href: "/settings" },
+    { item: "Sales Reports", icon: <FaArchive />, href: "/sales-reporting" },
     { item: "Reports", icon: <FaChartBar />, href: "/reports" },
     { item: "separator", icon: null, href: "" },
 
