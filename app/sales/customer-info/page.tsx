@@ -1,47 +1,68 @@
-//Directory: app/sales/customer-info/page.tsx
-
-'use client'; // Marks this component as a Client Component
+// app/sales/customer-info/page.tsx
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import CustomerDetailsModal from '@/components/crm/CustomerDetailsModal';
-import { fetchAllCustomers } from '@/utils/supabase/customerApi';
+import { fetchCustomers } from '@/utils/supabase/customerApi';
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@nextui-org/react';
 
 interface Customer {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
+  first_name: string;
+  last_name: string;
 }
 
 export default function CustomerInfoPage() {
-  const [customers, setCustomers] = useState<Customer[]>([]); // Explicitly typing customers as an array of Customer objects
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // Typing selectedCustomer as Customer or null
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Fetch customers using the fetchCustomers function
   useEffect(() => {
-    const getCustomers = async () => {
-      const data: Customer[] = await fetchAllCustomers(); // Assuming fetchAllCustomers returns an array of Customer objects
-      setCustomers(data); // Set state with typed data
+    const loadCustomers = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchCustomers();
+        setCustomers(data);
+      } catch (error) {
+        console.error('Failed to fetch customers:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    getCustomers();
+
+    loadCustomers();
   }, []);
 
-  return (
-    <div>
-      <h1>Customer Information Page</h1>
-      {/* Mapping over customers with proper typing */}
-      {customers.map((customer) => (
-        <div key={customer.id} onClick={() => setSelectedCustomer(customer)}>
-          <p>{customer.name}</p>
-        </div>
-      ))}
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
 
-      {/* Rendering the modal if a customer is selected */}
+  return (
+    <div className="customer-info-page">
+      <h1 className="text-2xl font-bold">Customer Information</h1>
+      <Table aria-label="Customer table">
+        <TableHeader>
+          <TableColumn>ID</TableColumn>
+          <TableColumn>First Name</TableColumn>
+          <TableColumn>Last Name</TableColumn>
+        </TableHeader>
+        <TableBody>
+          {customers.map((customer) => (
+            <TableRow key={customer.id} onClick={() => setSelectedCustomer(customer)}>
+              <TableCell>{customer.id}</TableCell>
+              <TableCell>{customer.first_name}</TableCell>
+              <TableCell>{customer.last_name}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
       {selectedCustomer && (
         <CustomerDetailsModal
           isOpen={!!selectedCustomer}
           onClose={() => setSelectedCustomer(null)}
-          customer={selectedCustomer} // Passing the selected customer as a prop
+          customer={selectedCustomer}
         />
       )}
     </div>

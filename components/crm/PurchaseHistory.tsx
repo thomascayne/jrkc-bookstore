@@ -1,61 +1,67 @@
-// components/crm/PurchaseHistory.tsx
-
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { fetchCustomerDetails } from '@/utils/supabase/customerApi'; // Corrected import for fetching purchase history
-import Loading from '@/components/Loading'; // Corrected import for Loading component
+import { fetchPurchaseHistory } from '@/utils/supabase/customerApi'; // Updated import for fetching purchase history
+import Loading from '@/components/Loading';
 
 interface PurchaseHistoryProps {
   customerId: string;
 }
 
-/**
- * PurchaseHistory component displays a list of previous purchases made by a customer.
- * @param {PurchaseHistoryProps} props - The props for this component, including the customerId.
- */
-const PurchaseHistory: React.FC<PurchaseHistoryProps> = ({ customerId }) => {
-  const [history, setHistory] = useState<any[]>([]); // Storing purchase history
+interface Purchase {
+  id: string;
+  product_name: string;
+  date: string;
+  amount: number;
+}
+
+export default function PurchaseHistory({ customerId }: PurchaseHistoryProps) {
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const getPurchaseHistory = async () => {
+    const fetchCustomerPurchases = async () => {
       try {
-        const purchaseHistoryData = await fetchCustomerDetails(customerId); // Fetching purchase history using customerId
-        setHistory(purchaseHistoryData);
-      } catch (error) {
-        console.error('Error fetching purchase history:', error);
+        setIsLoading(true);
+
+        const data = await fetchPurchaseHistory(customerId); // Correctly fetch purchase history
+        setPurchases(data || []);
+      } catch (error: any) {
+        console.error('Error fetching purchase history:', error.message);
+        setError('Failed to fetch purchase history');
       } finally {
         setIsLoading(false);
       }
     };
 
-    getPurchaseHistory();
+    fetchCustomerPurchases();
   }, [customerId]);
 
   if (isLoading) {
-    return <Loading containerClass="w-full h-full" />;
+    return <Loading />;
   }
 
-  if (!history.length) {
-    return <p>No purchase history available.</p>;
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  if (!purchases.length) {
+    return <p>No purchase history found.</p>;
   }
 
   return (
-    <div className="purchase-history">
-      <h2 className="text-lg font-bold">Purchase History</h2>
+    <div>
+      <h2 className="text-xl font-bold">Purchase History</h2>
       <ul>
-        {history.map((purchase) => (
-          <li key={purchase.id} className="mb-2">
-            <p><strong>Product:</strong> {purchase.product_name}</p>
-            <p><strong>Amount:</strong> ${purchase.amount.toFixed(2)}</p>
-            <p><strong>Date:</strong> {new Date(purchase.date).toLocaleDateString()}</p>
+        {purchases.map((purchase) => (
+          <li key={purchase.id}>
+            <strong>Product:</strong> {purchase.product_name} <br />
+            <strong>Date:</strong> {purchase.date} <br />
+            <strong>Amount:</strong> {purchase.amount}
           </li>
         ))}
       </ul>
     </div>
   );
-};
-
-export default PurchaseHistory;
+}

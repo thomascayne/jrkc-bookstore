@@ -1,51 +1,66 @@
-//Directory: app\sales\customer-info\CustomerProfile.tsx
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { fetchCustomerDetails } from '@/utils/supabase/customerApi'; // Fetching customer details
+import { fetchCustomerDetails } from '@/utils/supabase/customerApi'; // Corrected import for fetching customer details
 import Loading from '@/components/Loading';
 
 interface CustomerProfileProps {
   customerId: string;
 }
 
-const CustomerProfile: React.FC<CustomerProfileProps> = ({ customerId }) => {
-  const [customer, setCustomer] = useState<any>(null);
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+export default function CustomerProfile({ customerId }: CustomerProfileProps) {
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const getCustomerInfo = async () => {
+    const getCustomerDetails = async () => {
       try {
-        const customerData = await fetchCustomerDetails(customerId);
-        setCustomer(customerData);
-      } catch (error) {
-        console.error('Error fetching customer data:', error);
+        setIsLoading(true);
+        const data = await fetchCustomerDetails(customerId); // Correctly pass customerId
+        setCustomer(data);
+      } catch (error: any) {
+        console.error('Error fetching customer details:', error.message);
+        setError('Failed to fetch customer details');
       } finally {
         setIsLoading(false);
       }
     };
 
-    getCustomerInfo();
+    getCustomerDetails();
   }, [customerId]);
 
   if (isLoading) {
-    return <Loading containerClass="w-full h-full" />;
+    return <Loading />;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
   }
 
   if (!customer) {
-    return <p>No customer data available.</p>;
+    return <p>No customer found.</p>;
   }
 
   return (
-    <div className="customer-info">
-      <h2 className="text-lg font-bold">Customer Information</h2>
-      <p><strong>Name:</strong> {customer.name}</p>
-      <p><strong>Email:</strong> {customer.email}</p>
-      <p><strong>Phone:</strong> {customer.phone}</p>
-      <p><strong>Address:</strong> {customer.address}</p>
+    <div>
+      <h2 className="text-xl font-bold">Customer Profile</h2>
+      <p>
+        <strong>ID:</strong> {customer.id}
+      </p>
+      <p>
+        <strong>Name:</strong> {customer.first_name} {customer.last_name}
+      </p>
+      <p>
+        <strong>Email:</strong> {customer.email}
+      </p>
     </div>
   );
-};
-
-export default CustomerProfile;
+}

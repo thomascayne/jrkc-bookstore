@@ -129,7 +129,7 @@ const dashboardItems = [
   {
     bgColor: 'bg-indigo-500',
     description: 'Manage customer information',
-    href: '#',
+    href: '/sales/customer-info',
     icon: <FaSearch />,
     iconColor: 'text-emerald-300',
     title: 'Customer Lookup',
@@ -145,7 +145,7 @@ const dashboardItems = [
   {
     bgColor: 'bg-cyan-500',
     description: 'Quick access to book inventory status',
-    href: '#',
+    href: '/inventory',
     icon: <FaBook />,
     iconColor: 'text-orange-300',
     title: 'Inventory Check',

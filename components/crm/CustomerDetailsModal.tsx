@@ -1,32 +1,54 @@
 // components/crm/CustomerDetailsModal.tsx
-
-import React from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@nextui-org/react';
+import React, { useEffect, useState } from 'react';
+import { fetchCustomerDetails } from '@/utils/supabase/customerApi';
 
 interface CustomerDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  customer: any; // You can replace 'any' with a more specific type if you have a Customer interface
+  customer: {
+    id: string;
+  };
 }
 
-export default function CustomerDetailsModal({ isOpen, onClose, customer }: CustomerDetailsModalProps) {
+const CustomerDetailsModal: React.FC<CustomerDetailsModalProps> = ({ isOpen, onClose, customer }) => {
+  const [customerDetails, setCustomerDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCustomerDetails = async () => {
+      try {
+        setLoading(true);
+        const details = await fetchCustomerDetails(customer.id);
+        setCustomerDetails(details);
+      } catch (error) {
+        console.error('Failed to fetch customer details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      loadCustomerDetails();
+    }
+  }, [isOpen, customer]);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!customerDetails) {
+    return <p>No details available</p>;
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalContent>
-        <ModalHeader>Customer Details</ModalHeader>
-        <ModalBody>
-          <p><strong>Name:</strong> {customer.name}</p>
-          <p><strong>Email:</strong> {customer.email}</p>
-          <p><strong>Phone:</strong> {customer.phone}</p>
-          <p><strong>Address:</strong> {customer.address}</p>
-        </ModalBody>
-        <ModalFooter>
-          {/* Removed 'flat' and 'auto' and used supported properties */}
-          <Button color="danger" onClick={onClose}>
-            Close
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <div className="modal">
+      <h2>Customer Details</h2>
+      <p>ID: {customerDetails.id}</p>
+      <p>Name: {customerDetails.first_name} {customerDetails.last_name}</p>
+      {/* Add more fields as necessary */}
+      <button onClick={onClose}>Close</button>
+    </div>
   );
-}
+};
+
+export default CustomerDetailsModal;

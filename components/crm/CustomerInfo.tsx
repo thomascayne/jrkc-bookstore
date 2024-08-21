@@ -1,54 +1,83 @@
-// Directory: /components/crm/CustomerInfo.tsx
-
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { fetchCustomerDetails } from '@/utils/supabase/customerApi'; // Function to fetch customer details
-import Loading from '@/components/Loading'; // Loading component
-import { UserProfile } from '@/interfaces/UserProfile'; // Use the UserProfile interface
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/utils/supabase/client'; // Import your Supabase client
+import CustomerDetailsModal from '@/components/crm/CustomerDetailsModal';
 
-interface CustomerInfoProps {
-  customerId: string;
+interface UserProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
 }
 
-/**
- * CustomerInfo component displays basic customer information such as name, email, phone, and address.
- * @param {CustomerInfoProps} props - The props for this component, including the customerId.
- */
-export default function CustomerInfo({ customerId }: CustomerInfoProps) {
-  const [customer, setCustomer] = useState<UserProfile | null>(null);
+export default function CustomerInfo() {
+  const [profile, setProfile] = useState<UserProfile | null>(null); // Expecting a single user profile or null
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const getCustomerInfo = async () => {
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      // Replace 'user_id' with the actual user ID logic (if applicable)
+      const userId = 'your-user-id'; // You might be getting this from the session or props
+
       try {
-        const customerData = await fetchCustomerDetails(customerId); // Corrected function name
-        setCustomer(customerData);
-      } catch (error) {
-        console.error('Error fetching customer data:', error);
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId); // Fetching based on the user's ID
+
+        if (error) {
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          setProfile(data[0]); // Set the first item in the array to the state
+        } else {
+          setProfile(null); // No profile found
+        }
+      } catch (error: any) {
+        console.error('Error fetching user profile:', error.message);
+        setError('Error fetching user profile');
       } finally {
         setIsLoading(false);
       }
     };
 
-    getCustomerInfo();
-  }, [customerId]);
+    fetchProfile();
+  }, []); // Run once on mount
 
   if (isLoading) {
-    return <Loading containerClass="w-full h-full" />;
+    return <p>Loading...</p>;
   }
 
-  if (!customer) {
-    return <p>No customer data available.</p>;
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  if (!profile) {
+    return <p>No user profile found.</p>;
   }
 
   return (
-    <div className="customer-info">
-      <h2 className="text-lg font-bold">Customer Information</h2>
-      <p><strong>Name:</strong> {customer.first_name} {customer.last_name}</p>
-      <p><strong>Email:</strong> {customer.email}</p>
-      <p><strong>Phone:</strong> {customer.phone}</p>
-      <p><strong>Address:</strong> {customer.street_address1}, {customer.city}, {customer.state}, {customer.zipcode}</p>
+    <div className="customer-info-page">
+      <h1 className="text-2xl font-bold">Customer Information</h1>
+      <ul>
+        <li>ID: {profile.id}</li>
+        <li>First Name: {profile.first_name}</li>
+        <li>Last Name: {profile.last_name}</li>
+        <li>Email: {profile.email}</li>
+      </ul>
+
+      {/* Example of using the modal to show more customer details */}
+      <CustomerDetailsModal
+        isOpen={!!profile}
+        onClose={() => setProfile(null)}
+        customer={profile}
+      />
     </div>
   );
 }
