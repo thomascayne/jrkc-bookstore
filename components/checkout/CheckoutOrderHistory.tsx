@@ -16,7 +16,7 @@ export default function CheckoutOrderHistory() {
         const { data, error } = await supabase
           .from("orders")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("id", user.id)
           .order("created_at", { ascending: false });
 
         if (error) {

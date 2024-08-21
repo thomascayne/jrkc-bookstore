@@ -214,3 +214,7 @@
     top: 55%;
   }
 }
+
+svg[clip-path] {
+  clip-path: none !important;
+}

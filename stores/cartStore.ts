@@ -1,14 +1,15 @@
 // stores/cartStore.ts
 
 import { IBookInventory } from '@/interfaces/IBookInventory';
-import { ICustomerCartItem } from '@/interfaces/ICustomerCart';
+import { ICustomerCart, ICustomerCartItem } from '@/interfaces/ICustomerCart';
+import { ICartOrder, ICartOrderItem } from '@/interfaces/ICustomerCartOrder';
 import { ShippingAddress } from '@/interfaces/ShippingAddress';
 import { fetchBookFromSupabase } from '@/utils/bookFromSupabaseApi';
 import { ApplicationLogError } from '@/utils/errorLogging';
 import { createClient } from '@/utils/supabase/client';
 import { Store } from '@tanstack/react-store';
 
-const LOCAL_STORAGE_KEY = 'cart';
+const LOCAL_STORAGE_KEY = 'customer_cart';
 const isClient = typeof window !== 'undefined';
 
 const supabase = createClient();
@@ -222,7 +223,7 @@ export const fetchCart = async () => {
 };
 
 export const getCartItemCount = () => {
-    
+
     if (!cartStore.state || !cartStore.state.items) {
         return 0;
     }
@@ -353,7 +354,7 @@ export const removeItem = async (bookId: string) => {
 
     cartStore.setState((state) => {
         const updatedItems = state.items.filter(item => item.book_id !== bookId);
-        
+
         // Clear localStorage if the cart is now empty
         if (updatedItems.length === 0 && isClient) {
             localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -417,3 +418,88 @@ export const updateQuantity = async (bookId: string, quantity: number) => {
 };
 
 
+export const finalizePaidCartItems = async (paymentDetails: { paymentMethod: string, totalPaid: number, user_id: string }): Promise<ICartOrder> => {
+    try {
+        // 1. Fetch the current cart for the user
+        const { data: cart, error: cartError } = await supabase
+            .from('carts')
+            .select('*, items:cart_items(*)')
+            .eq('user_id', paymentDetails.user_id)
+            .single();
+
+        if (cartError) {
+            throw new Error(`Error fetching cart: ${cartError.message}`);
+        }
+
+        const currentCart = cart as ICustomerCart;
+
+        // 2. Verify the total amount
+        const cartTotal = currentCart.items.reduce((sum, item) => sum + (item.current_price * item.quantity), 0);
+        if (Math.abs(cartTotal - paymentDetails.totalPaid) > 0.01) {  // Allow for small float precision differences
+            throw new Error(`Payment amount mismatch: expected ${cartTotal}, got ${paymentDetails.totalPaid}`);
+        }
+
+        // 3. Create new order
+        const { data: order, error: orderError } = await supabase.rpc('insert_order', {
+            p_user_id: paymentDetails.user_id, // Assuming you have the user object
+            p_status: 'paid',
+            p_total_amount: cartTotal,
+            p_payment_method: paymentDetails.paymentMethod
+        });
+
+        if (orderError) {
+            throw new Error(`Error creating order: ${orderError.message}`);
+        }
+
+        // 4. Move cart items to order_items
+        const orderItems: Omit<ICartOrderItem, 'id' | 'book'>[] = currentCart.items.map(item => ({
+            book_id: item.book_id,
+            order_id: order.id,
+            discount_percentage: item.discount_percentage,
+            final_price: item.current_price,
+            original_price: item.book.price,
+            quantity: item.quantity,
+        }));
+
+        // Insert order items
+        const { data: insertedOrderItems, error: insertError } = await supabase.rpc('insert_order_items', {
+            p_order_items: orderItems
+        });
+
+        if (insertError) {
+            throw new Error(`Error inserting order items: ${insertError.message}`);
+        }
+
+        // 5. Clear the cart
+        const { error: clearError } = await supabase
+            .from('cart_items')
+            .delete()
+            .eq('cart_id', currentCart.id);
+
+        if (clearError) {
+            throw new Error(`Error clearing cart: ${clearError.message}`);
+        }
+
+        // 6. Update local cart state
+        cartStore.setState((state) => ({
+            ...state,
+            items: []
+        }));
+
+        // 7. Construct and return the ICartOrder object
+        const finalOrder: ICartOrder = {
+            id: order.id,
+            user_id: order.user_id,
+            status: order.status,
+            total_amount: order.total_amount,
+            created_at: order.created_at,
+            updated_at: order.updated_at,
+            items: insertedOrderItems as ICartOrderItem[]
+        };
+
+        return finalOrder;
+    } catch (error) {
+        console.error('Error in finalizePaidCartItems:', error);
+        throw error;
+    }
+};

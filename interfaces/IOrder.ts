@@ -11,6 +11,8 @@ export interface IOrder {
     payment_method?: string;
     sales_person_id: string;
     status: OrderStatus;
+    subtotal?: number;
     total_amount: number;
+    tax_amount?: number;
     transaction_id: string;
 }

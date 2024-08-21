@@ -9,6 +9,7 @@ import ProfileAddress from "@/app/profile/ProfileAddress";
 import ProfileAdminPanel from "@/app/profile/ProfileAdminPanel";
 import AuthNavbar from "@/components/navbars/AuthNavbar";
 import ProfilePersonalInformation from "@/app/profile/ProfilePersonalInformation";
+import ProfileOrderHistory from "@/app/profile/ProfileOrderHistory";
 
 interface Tab {
   component: React.ComponentType<{ user: User | null }>;
@@ -36,6 +37,12 @@ const tabs: Tab[] = [
     key: "admin",
     label: "Admin Panel",
   },
+  {
+    component: ProfileOrderHistory,
+    isVisible: (roles: string[]) => roles.length === 1 && roles[0] === "USER",
+    key: "order-history",
+    label: "Order History",
+  }
 ];
 
 export default function ProfilePage() {

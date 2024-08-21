@@ -1,7 +1,5 @@
-import { BillingAddress } from "@/interfaces/BillingAddress";
 import { ICustomerCartItem } from "@/interfaces/ICustomerCart";
 import { IPaymentMethod } from "@/interfaces/IPaymentMethod";
-import { ShippingAddress } from "@/interfaces/ShippingAddress";
 import { UserProfile } from "@/interfaces/UserProfile";
 import { Card, CardBody, Divider, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
 import { CardHeader } from "@nextui-org/react";
