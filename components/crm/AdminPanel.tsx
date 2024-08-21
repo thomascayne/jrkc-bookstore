@@ -1,5 +1,7 @@
 // Directory: /components/crm/AdminPanel.tsx
 
+'use client';
+
 import React, { useState } from 'react';
 import CustomerDetailsModal from '@/components/crm/CustomerDetailsModal';
 

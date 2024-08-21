@@ -1,5 +1,7 @@
 // components/crm/Recommendations.tsx
 
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { fetchRecommendations } from '@/utils/supabase/customerApi'; // Corrected import for fetching recommendations
 import Loading from '@/components/Loading'; // Corrected import for Loading component

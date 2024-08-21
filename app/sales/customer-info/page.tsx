@@ -1,5 +1,6 @@
-// app/sales/customer-info/page.tsx
-"use client"; // Marks this component as a Client Component
+//Directory: app/sales/customer-info/page.tsx
+
+'use client'; // Marks this component as a Client Component
 
 import React, { useState, useEffect } from 'react';
 import CustomerDetailsModal from '@/components/crm/CustomerDetailsModal';

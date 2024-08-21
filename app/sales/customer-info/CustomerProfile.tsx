@@ -1,21 +1,51 @@
-// Directory: /components/crm/CustomerInfo.tsx
+//Directory: app\sales\customer-info\CustomerProfile.tsx
 
-interface CustomerInfoProps {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { fetchCustomerDetails } from '@/utils/supabase/customerApi'; // Fetching customer details
+import Loading from '@/components/Loading';
+
+interface CustomerProfileProps {
+  customerId: string;
 }
 
-const CustomerInfo: React.FC<CustomerInfoProps> = ({ name, email, phone, address }) => {
+const CustomerProfile: React.FC<CustomerProfileProps> = ({ customerId }) => {
+  const [customer, setCustomer] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const getCustomerInfo = async () => {
+      try {
+        const customerData = await fetchCustomerDetails(customerId);
+        setCustomer(customerData);
+      } catch (error) {
+        console.error('Error fetching customer data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getCustomerInfo();
+  }, [customerId]);
+
+  if (isLoading) {
+    return <Loading containerClass="w-full h-full" />;
+  }
+
+  if (!customer) {
+    return <p>No customer data available.</p>;
+  }
+
   return (
-    <div>
-      <h3>{name}</h3>
-      <p>Email: {email}</p>
-      <p>Phone: {phone}</p>
-      <p>Address: {address}</p>
+    <div className="customer-info">
+      <h2 className="text-lg font-bold">Customer Information</h2>
+      <p><strong>Name:</strong> {customer.name}</p>
+      <p><strong>Email:</strong> {customer.email}</p>
+      <p><strong>Phone:</strong> {customer.phone}</p>
+      <p><strong>Address:</strong> {customer.address}</p>
     </div>
   );
 };
 
-export default CustomerInfo;
+export default CustomerProfile;

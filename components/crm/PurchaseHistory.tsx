@@ -1,5 +1,8 @@
 // components/crm/PurchaseHistory.tsx
 
+
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { fetchCustomerDetails } from '@/utils/supabase/customerApi'; // Corrected import for fetching purchase history
 import Loading from '@/components/Loading'; // Corrected import for Loading component

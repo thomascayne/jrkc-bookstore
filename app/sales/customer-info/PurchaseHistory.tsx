@@ -1,4 +1,6 @@
-// app/sales/customer-info/PurchaseHistory.tsx
+//Directory: app/sales/customer-info/PurchaseHistory.tsx
+
+'use client';
 
 import React, { useEffect, useState } from 'react';
 import { fetchPurchaseHistory } from '@/utils/supabase/purchaseApi'; // Importing the function from the purchase API

@@ -1,5 +1,7 @@
 // Directory: /components/crm/CustomerInfo.tsx
 
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { fetchCustomerDetails } from '@/utils/supabase/customerApi'; // Function to fetch customer details
 import Loading from '@/components/Loading'; // Loading component
