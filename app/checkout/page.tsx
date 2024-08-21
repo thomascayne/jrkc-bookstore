@@ -33,7 +33,7 @@ export default function CheckoutCheckoutPage() {
     };
 
     checkAuthStatus();
-  }, [router]);
+  }, [router, supabase.auth]);
 
   useEffect(() => {
     const getUser = async () => {

@@ -63,7 +63,7 @@ const CartPage = () => {
     };
 
     checkAuthStatus();
-  }, []);
+  }, [supabase.auth]);
 
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity > 0) {

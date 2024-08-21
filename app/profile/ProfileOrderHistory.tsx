@@ -32,7 +32,8 @@ export default function ProfileOrderHistory({ user }: OrderHistoryProps) {
   useEffect(() => {
     fetchOrders();
     fetchTotalOrders();
-  }, [user, currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function fetchOrders() {
     if (!user) return;
