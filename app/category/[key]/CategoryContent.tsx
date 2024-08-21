@@ -1,55 +1,56 @@
 // app/category/[key]/CategoryContent.tsx
 
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { SearchFilterOptions, useBooksByCategory } from "@/hooks/useBooksByCategory";
-import { useFullScreenModal } from "@/contexts/FullScreenModalContext";
-import { BiArrowToTop, BiCaretDown } from "react-icons/bi";
-import { Button, Checkbox, Input, Slider } from "@nextui-org/react";
-import Image from "next/image";
-import StarRating from "@/components/StarRating";
-import EmptyBookshelf from "@/components/EmptyBookshelf";
-import { addCartItem } from "@/stores/cartStore";
-import BookDetails from "@/components/BookDetails";
-import CategoryLoadingSkeleton from "@/components/CategoryLoadingSkeleton";
-import { useRouter, useSearchParams } from "next/navigation";
-import { IBookInventory } from "@/interfaces/IBookInventory";
-import { FaTimes } from "react-icons/fa";
-import { BookCategory } from "@/interfaces/BookCategory";
-import { fetchBookCategories } from "@/utils/bookCategoriesApi";
+import React, { useCallback, useEffect, useState } from 'react';
+import { useBooksByCategory } from '@/hooks/useBooksByCategory';
+import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
+import { Button, Input, Link, Slider } from '@nextui-org/react';
+import Image from 'next/image';
+import StarRating from '@/components/StarRating';
+import { addCartItem } from '@/stores/cartStore';
+import BookDetails from '@/components/BookDetails';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { IBookInventory } from '@/interfaces/IBookInventory';
+import { FaTimes } from 'react-icons/fa';
+import { BookCategory } from '@/interfaces/BookCategory';
+import { fetchBookCategories } from '@/utils/bookCategoriesApi';
+import { FilterOptions } from '@/utils/fetchBooksByCategory ';
+import { useUrlSync } from '@/hooks/useUrlSync';
+import BookPagination from '@/components/BookPagination';
+import ClearFiltersButton from '@/components/ClearFiltersButton';
+import { useCachedCategories } from '@/hooks/useCachedCategories';
 
 export default function CategoryContent({
   params,
 }: {
   params: { key: string };
 }) {
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const booksPerPage = 20;
+  const booksPerPage = 24;
+  const page = searchParams ? Number(searchParams.get('page')) || 1 : 1;
 
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [filters, setFilters] = useState<SearchFilterOptions>({});
-  const [page, setPage] = useState(1);
-  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
-  const searchQuery = (searchParams && searchParams.get('q') || '');
-  const [ratingFilter, setRatingFilter] = useState();
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
+  const {
+    categories,
+    isLoading: isCategoriesLoading,
+    error: categoriesError,
+  } = useCachedCategories();
 
-  const { category, displayedBooks, isFetching, isLoading, error, totalBooks } = useBooksByCategory(
-    booksPerPage,
-    params.key,
-    filters,
-    page,
-    searchQuery,
-  );
+  const [filters, setFilters] = useState<FilterOptions>({});
+  const searchQuery = searchParams ? searchParams.get('q') || '' : '';
 
-  useEffect(() => {
-    // Reset page when search query or filters change
-    setPage(1);
-  }, [searchQuery, filters]);
+  useUrlSync(filters, setFilters);
+
+  const { displayedBooks, isLoading, error, totalBooks, isFetching, refetch } =
+    useBooksByCategory(booksPerPage, params.key, filters, page, searchQuery);
+  const totalPages = Math.ceil(totalBooks / booksPerPage);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -64,75 +65,118 @@ export default function CategoryContent({
     fetchCategories();
   }, []);
 
+  const updateURLParams = useCallback(
+    (newFilters: FilterOptions) => {
+      const params = new URLSearchParams(window.location.search);
+
+      // Remove all existing filter params
+      Array.from(params.keys()).forEach((key) => {
+        if (key !== 'q' && key !== 'page') {
+          // Preserve search query and page number
+          params.delete(key);
+        }
+      });
+
+      // Add new filter params
+      Object.entries(newFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (key === 'price' && typeof value === 'object') {
+            params.set(key, `${value.min},${value.max}`);
+          } else {
+            params.set(key, value.toString());
+          }
+        }
+      });
+
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      router.push(newUrl, { scroll: false });
+    },
+    [router],
+  );
+
+  const handleFilterChange = useCallback(
+    (filterName: keyof FilterOptions, value: any) => {
+      const newFilters = { ...filters };
+
+      if (filterName === 'sort_by' || filterName === 'sort_order') {
+        newFilters[filterName] = value;
+      } else if (filterName === 'price') {
+        if (
+          newFilters.price &&
+          newFilters.price.min === value.min &&
+          newFilters.price.max === value.max
+        ) {
+          delete newFilters.price;
+        } else {
+          newFilters.price = value;
+        }
+      } else if (newFilters[filterName] === value) {
+        delete newFilters[filterName];
+      } else {
+        newFilters[filterName] = value;
+      }
+
+      // Remove undefined or null values
+      Object.keys(newFilters).forEach((key) => {
+        if (
+          newFilters[key as keyof FilterOptions] === undefined ||
+          newFilters[key as keyof FilterOptions] === null
+        ) {
+          delete newFilters[key as keyof FilterOptions];
+        }
+      });
+
+      updateURLParams(newFilters);
+    },
+    [filters, updateURLParams],
+  );
+
   const clearAllFilters = () => {
-    setFilters({});
-    setPriceRange([0, 100]);
+    router.push(pathname as string);
+  };
+
+  const handlePriceFilterGo = () => {
+    handleFilterChange('price', { min: priceRange[0], max: priceRange[1] });
+  };
+
+  const handleBookClick = (book: IBookInventory) => {
+    openFullScreenModal(<BookDetails bookId={book.id} />, `${book.title}`);
   };
 
   const handleAddToCart = (book: IBookInventory) => {
     addCartItem(book);
   };
 
-  const handleFilterChange = (filterName: string, value: any) => {
-    setFilters(prev => ({ ...prev, [filterName]: value }));
-    if (!activeFilters.includes(filterName)) {
-      setActiveFilters(prev => [...prev, filterName]);
-    }
-  };
-  
-  const handlePriceFilterGo = () => {
-    setFilters((prev) => ({
-      ...prev,
-      price: { min: priceRange[0], max: priceRange[1] },
-    }));
+  const handlePageChange = (newPage: number) => {
+    if (!searchParams) return;
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.set('page', newPage.toString());
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+    router.push(`${pathname}${query}`);
   };
 
-  const handleBookClick = (book: IBookInventory) => {
-    openFullScreenModal(
-      <BookDetails bookId={book.id} />,
-      `${category} - ${book.title}`
-    );
-  };
-
-
-  const toggleFilter = (filterName: keyof SearchFilterOptions) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterName]: !prev[filterName],
-    }));
-  };
-
-  if (isLoading) return <CategoryLoadingSkeleton />;
-  if (error) return <div>Error loading books</div>;
-  if (!displayedBooks || displayedBooks.length === 0) {
-    return (
-      <EmptyBookshelf
-        message={`We are working on adding books to this category. In the meantime, why not explore our other categories?`}
-        subtitle="We are still stocking this shelf"
-        title={`No Books in ${category  || "this category"}`}
-      />
-    );
-  }
+  if (error) return <div>Error loading books: {error.message}</div>;
 
   return (
-    <div className="flex flex-col md:flex-row">
-      {/* Filters */}
-      <div className="w-full md:w-[200px] p-4 bg-gray-100">
+    <div className="flex w-full flex-col md:flex-row">
+      {/* Filters column */}
+      <div className="w-full md:w-[200px] p-4 transition-transform-background bg-content1 text-background box-border">
         <h2 className="text-xl font-bold mb-4">Filters</h2>
-        <Button
-          size="sm"
-          color="primary"
-          onClick={clearAllFilters}
-          className="mb-4"
-        >
-          Clear All Filters
-        </Button>
+        <ClearFiltersButton
+          filters={filters}
+          onClearFilters={clearAllFilters}
+        />
 
         <div className="space-y-4">
-          <div className='flex flex-col items-start'>
-            <h3 className="font-semibold">Price</h3>
+          {/* Price Filter */}
+          <div className="flex flex-col items-start">
+            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+              Price
+            </h3>
             <Slider
               size="sm"
+              color="warning"
               step={1}
               minValue={0}
               maxValue={100}
@@ -140,7 +184,7 @@ export default function CategoryContent({
               onChange={(value) => setPriceRange(value as [number, number])}
               className="max-w-md"
             />
-            <div className="flex items-center mt-2">
+            <div className="flex w-full items-center my-2">
               <Input
                 size="sm"
                 value={`$${priceRange[0]} - $${priceRange[1]}`}
@@ -151,82 +195,156 @@ export default function CategoryContent({
                 Go
               </Button>
             </div>
-            {Object.entries(filters).map(
-              ([key, value]) =>
-                key !== 'price' && (
-                  <Button
-                    key={key}
-                    size="sm"
-                    color={value ? 'success' : 'default'}
-                    onClick={() =>
-                      toggleFilter(key as keyof SearchFilterOptions)
-                    }
-                    endContent={value && <FaTimes />}
-                  >
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </Button>
-                ),
-            )}
           </div>
+
+          {/* Rating Filter */}
           <div>
-            <h3 className="font-semibold">Rating</h3>
-            <Checkbox
-              checked={filters.rating}
-              onChange={(e) => handleFilterChange('rating', e.target.checked)}
-              size='sm'
-              value={ratingFilter}
-            >
-              4 Stars & Up
-            </Checkbox>
+            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+              Customer Rating
+            </h3>
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <Link
+                key={rating}
+                className={`flex px-2 rounded-md hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${filters.rating_min === rating ? 'bg-success-400 text-white' : ''}`}
+                onClick={() => handleFilterChange('rating_min', rating)}
+              >
+                <StarRating rating={rating} />
+                <span className="mx-2 text-sm">{rating}</span>
+                {filters.rating_min === rating && <FaTimes />}
+              </Link>
+            ))}
           </div>
+
+          {/* Availability Filter */}
           <div>
-            <h3 className="font-semibold">Availability</h3>
-            <Checkbox
-              checked={filters.inStock}
-              onChange={(e) => handleFilterChange('inStock', e.target.checked)}
+            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+              Availability
+            </h3>
+            <Link
+              className={`flex px-2 hover:underline rounded-lg hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${filters.in_stock ? 'bg-success text-white' : ''}`}
+              onClick={() => handleFilterChange('in_stock', !filters.in_stock)}
             >
-              In Stock
-            </Checkbox>
+              <span className="mr-2">Hide out of stock</span>
+              <span>{filters.in_stock && <FaTimes />}</span>
+            </Link>
           </div>
-          <div className="flex flex-col items-start mb-4">
-            <h3 className="font-semibold">Discounts</h3>
-            <Checkbox
-              checked={filters.discounted}
-              onChange={(e) =>
-                handleFilterChange('discounted', e.target.checked)
-              }
-            >
-              On Sale
-            </Checkbox>
+
+          {/* Discount Filter */}
+          <div>
+            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+              Discounts
+            </h3>
+            {[80, 70, 60, 50, 40, 30, 20, 10].map((percent) => (
+              <Link
+                key={percent}
+                className={`flex px-2 hover:underline hover:underline-offset-2 text-[0.9rem] cursor-pointer ${filters.discount_percentage_min === percent ? 'bg-success text-white' : ''}`}
+                onClick={() =>
+                  handleFilterChange('discount_percentage_min', percent)
+                }
+              >
+                <span className="mr-2">{percent}% off or more</span>
+                {filters.discount_percentage_min === percent && <FaTimes />}
+              </Link>
+            ))}
           </div>
+
+          {/* Sort Options */}
+          <div>
+            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+              Sort By
+            </h3>
+            <div className="filter-custom-select mb-2">
+              <select
+                value={filters.sort_by || 'average_rating'}
+                onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+              >
+                <option value="discount_percentage">Percent off</option>
+                <option value="price">Price</option>
+                <option value="average_rating">Rating</option>
+              </select>
+            </div>
+            <div className="filter-custom-select mb-4">
+              <select
+                value={filters.sort_order || 'DESC'}
+                onChange={(e) =>
+                  handleFilterChange(
+                    'sort_order',
+                    e.target.value as 'ASC' | 'DESC',
+                  )
+                }
+              >
+                <option value="ASC">Low to High</option>
+                <option value="DESC">High to Low</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Categories */}
           <div className="flex flex-col items-start">
-            <h4 className="font-semibold p-2 bg-primary-400">Categories</h4>
+            <h4 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+              Categories
+            </h4>
+            {isCategoriesLoading ? (
+              <p>Loading categories...</p>
+            ) : categoriesError ? (
+              <p>Error loading categories</p>
+            ) : (
+              categories.map((category, index) => (
+                <Link
+                  className="px-2 hover:underline hover:underline-offset-2 text-[0.9rem]"
+                  id={`${category.id}-${index}`}
+                  key={`${category.key}-${index}`}
+                  href={`/category/${category.key}`}
+                >
+                  <span>{category.label}</span>
+                </Link>
+              ))
+            )}{' '}
           </div>
         </div>
       </div>
 
-      {/* Book List */}
-      <div className="w-full md:w-3/4 p-4">
-        <h1 className="text-3xl font-bold mb-4">Featured Books</h1>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+      {/* Book List and Content Area */}
+      <div className="w-full flex-flex-grow p-4 relative">
+        {isLoading || isFilterLoading ? (
+          <div className="absolute inset-0 bg-white bg-opacity-50 z-10 flex items-center justify-center">
+            <div className="loader">Loading...</div>
+          </div>
+        ) : null}
+
+        <div className="mb-4 flex flex-colo items-center md:flex-row md:justify-between">
+          <h1 className="text-3xl font-bold">JRKC Book Store</h1>
+          <BookPagination
+            currentPage={page}
+            totalPages={totalPages}
+            basePath={pathname as string}
+          />
+        </div>
+
+        {displayedBooks.length === 0 && !isFetching ? (
+          <div className="w-full text-center py-4 bg-yellow-100 text-yellow-800 mb-4">
+            No books found matching the current filters.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
             {displayedBooks.map((book, index) => (
               <div
                 key={book.id}
                 className="flex flex-col h-full border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ease-in-out group opacity-0 animate-fade-in"
                 style={{
                   animationDelay: `${index * 50}ms`,
-                  animationFillMode: "forwards",
+                  animationFillMode: 'forwards',
                 }}
               >
                 <div
-                  className="relative aspect-[2/3] cursor-pointer p-2"
+                  className="relative aspect-[2/3] cursor-pointer px-2 pt-2 pb-0"
                   onClick={() => handleBookClick(book)}
                 >
                   {book.thumbnail_image_link && (
                     <div className="relative w-full h-full flex items-start justify-center">
                       <div
                         className="relative w-full"
-                        style={{ paddingBottom: "150%" }}
+                        style={{ paddingBottom: '150%' }}
                       >
                         <Image
                           alt={book.title}
@@ -259,7 +377,7 @@ export default function CategoryContent({
                   <div className="mt-auto">
                     {book.average_rating && (
                       <div className="flex items-center mb-2">
-                        <StarRating  rating={book.average_rating} />
+                        <StarRating rating={book.average_rating} />
                         <span className="ml-2 text-sm">
                           {book.average_rating}
                         </span>
@@ -285,10 +403,8 @@ export default function CategoryContent({
               </div>
             ))}
           </div>
+        )}
       </div>
-
-      {isFetching && <div className="fixed top-0 left-0 w-full h-1 bg-blue-500 animate-pulse"></div>}
     </div>
   );
 }
-

@@ -1,47 +1,41 @@
-// hooks/useBooksByCategory.ts
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchBooksByCategory } from '@/utils/fetchBooksByCategory ';
-
-export interface SearchFilterOptions {
-  author?: string;
-  discounted?: boolean;
-  inStock?: boolean;
-  price?: { min?: number; max?: number };
-  quantity?: { min?: number; max?: number };
-  percentage?: boolean;
-  rating?: boolean;
-  title?: string;
-}
+import { useState, useEffect } from 'react';
+import { IBookInventory } from '@/interfaces/IBookInventory';
+import { fetchBooksByCategory, FilterOptions } from '@/utils/fetchBooksByCategory ';
 
 export const useBooksByCategory = (
   booksPerPage: number,
   categoryKey: string | null,
-  filters: SearchFilterOptions = {},
+  filters: FilterOptions = {},
   page: number,
   searchQuery: string
 ) => {
   const queryClient = useQueryClient();
+  const [currentBooks, setCurrentBooks] = useState<IBookInventory[]>([]);
   const queryKey = ['books', categoryKey, booksPerPage, filters, page, searchQuery];
 
   const query = useQuery({
     queryKey,
     queryFn: () => fetchBooksByCategory(booksPerPage, categoryKey, filters, page, searchQuery),
-    select: (data) => ({
-      ...data,
-      displayedBooks: data.books.slice((page - 1) * booksPerPage, page * booksPerPage),
-    }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  useEffect(() => {
+    if (query.data?.books) {
+      setCurrentBooks(query.data.books);
+    }
+  }, [query.data]);
 
   const refetch = async () => {
     await queryClient.invalidateQueries({ queryKey });
     return query.refetch();
   };
 
+  console.log("useBooksByCategory hook - totalBooks:", query.data?.totalBooks, "totalPages:", query.data?.totalPages);
+
   return {
     category: query.data?.category || '',
-    displayedBooks: query.data?.books || [],
+    displayedBooks: currentBooks,
     totalBooks: query.data?.totalBooks || 0,
     isLoading: query.isLoading,
     error: query.error,

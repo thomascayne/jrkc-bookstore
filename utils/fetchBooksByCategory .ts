@@ -1,5 +1,3 @@
-// utils/fetchBooksByCategory.ts
-
 import { IBookInventory } from '@/interfaces/IBookInventory';
 import { createClient } from '@/utils/supabase/client';
 
@@ -56,7 +54,7 @@ export async function fetchBooksByCategory(
     if (booksError) throw booksError;
 
     return {
-      category: categoryKey,
+      category: categoryKey || 'all',
       totalBooks: count || 0,
       books: books as IBookInventory[],
       isLoading: false,
