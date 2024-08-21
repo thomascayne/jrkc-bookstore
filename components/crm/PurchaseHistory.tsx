@@ -1,67 +1,55 @@
-'use client';
+// components/crm/PurchaseHistory.tsx
 
-import React, { useEffect, useState } from 'react';
-import { fetchPurchaseHistory } from '@/utils/supabase/customerApi'; // Updated import for fetching purchase history
+import React, { useState, useEffect } from 'react';
+import { fetchPurchaseHistory } from '@/utils/supabase/customerApi'; // Correct import for fetching purchase history
 import Loading from '@/components/Loading';
 
 interface PurchaseHistoryProps {
   customerId: string;
 }
 
-interface Purchase {
-  id: string;
-  product_name: string;
-  date: string;
-  amount: number;
-}
-
-export default function PurchaseHistory({ customerId }: PurchaseHistoryProps) {
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
+const PurchaseHistory: React.FC<PurchaseHistoryProps> = ({ customerId }) => {
+  const [history, setHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCustomerPurchases = async () => {
+    const loadPurchaseHistory = async () => {
       try {
         setIsLoading(true);
-
-        const data = await fetchPurchaseHistory(customerId); // Correctly fetch purchase history
-        setPurchases(data || []);
-      } catch (error: any) {
-        console.error('Error fetching purchase history:', error.message);
-        setError('Failed to fetch purchase history');
+        const data = await fetchPurchaseHistory(customerId);
+        setHistory(data);
+      } catch (error) {
+        console.error('Failed to fetch purchase history:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchCustomerPurchases();
+    loadPurchaseHistory();
   }, [customerId]);
 
   if (isLoading) {
     return <Loading />;
   }
 
-  if (error) {
-    return <p>{error}</p>;
-  }
-
-  if (!purchases.length) {
-    return <p>No purchase history found.</p>;
+  if (history.length === 0) {
+    return <p>No purchase history available.</p>;
   }
 
   return (
-    <div>
+    <div className="purchase-history">
       <h2 className="text-xl font-bold">Purchase History</h2>
       <ul>
-        {purchases.map((purchase) => (
-          <li key={purchase.id}>
-            <strong>Product:</strong> {purchase.product_name} <br />
-            <strong>Date:</strong> {purchase.date} <br />
-            <strong>Amount:</strong> {purchase.amount}
+        {history.map((purchase, index) => (
+          <li key={index}>
+            <p><strong>Product:</strong> {purchase.product_name}</p>
+            <p><strong>Date:</strong> {purchase.purchase_date}</p>
+            <p><strong>Price:</strong> ${purchase.price}</p>
           </li>
         ))}
       </ul>
     </div>
   );
-}
+};
+
+export default PurchaseHistory;

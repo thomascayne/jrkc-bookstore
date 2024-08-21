@@ -1,36 +1,58 @@
-// Directory: /components/crm/AdminPanel.tsx
-
-'use client';
+// components/crm/AdminPanel.tsx
 
 import React, { useState } from 'react';
 import CustomerDetailsModal from '@/components/crm/CustomerDetailsModal';
+import { fetchCustomers } from '@/utils/supabase/customerApi';
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@nextui-org/react';
 
-interface AdminPanelProps {
-  customers: Array<{ id: string; name: string; email: string }>;
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  email: string;
+  shipping_street_address1: string;
+  shipping_city: string;
+  shipping_state: string;
+  shipping_zipcode: string;
 }
 
-export default function AdminPanel({ customers }: AdminPanelProps) {
-  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+const AdminPanel: React.FC = () => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleOpenModal = (customerId: string) => {
-    setSelectedCustomer(customerId);
+  const handleOpenModal = (customer: Customer) => {
+    setSelectedCustomer(customer);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
+    setSelectedCustomer(null);
     setIsModalOpen(false);
   };
 
   return (
-    <div>
-      <h1>Admin Panel</h1>
-      {customers.map((customer) => (
-        <div key={customer.id} onClick={() => handleOpenModal(customer.id)}>
-          <p>{customer.name}</p>
-          <p>{customer.email}</p>
-        </div>
-      ))}
+    <div className="admin-panel">
+      <h2 className="text-2xl font-bold">Admin Panel</h2>
+      <Table aria-label="Customer Table">
+        <TableHeader>
+          <TableColumn>ID</TableColumn>
+          <TableColumn>First Name</TableColumn>
+          <TableColumn>Last Name</TableColumn>
+          <TableColumn>Email</TableColumn>
+        </TableHeader>
+        <TableBody>
+          {customers.map((customer) => (
+            <TableRow key={customer.id} onClick={() => handleOpenModal(customer)}>
+              <TableCell>{customer.id}</TableCell>
+              <TableCell>{customer.first_name}</TableCell>
+              <TableCell>{customer.last_name}</TableCell>
+              <TableCell>{customer.email}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       {selectedCustomer && (
         <CustomerDetailsModal
@@ -41,4 +63,6 @@ export default function AdminPanel({ customers }: AdminPanelProps) {
       )}
     </div>
   );
-}
+};
+
+export default AdminPanel;
