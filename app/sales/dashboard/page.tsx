@@ -8,6 +8,7 @@ import { Card, CardBody } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import {
+  FaArchive,
   FaBook,
   FaCalculator,
   FaCalendarAlt,
@@ -157,6 +158,14 @@ const dashboardItems = [
     icon: <FaCalendarAlt />,
     iconColor: 'text-gray-600',
     title: 'Daily Goals',
+  },
+  {
+    bgColor: 'bg-gray-500',
+    description: 'Access sales reports',
+    href: '/sales-reporting',
+    icon: <FaArchive />,
+    iconColor: 'text-blue-600',
+    title: 'Sales Reports',
   },
   {
     bgColor: 'bg-orange-500',
