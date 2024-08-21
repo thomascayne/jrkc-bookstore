@@ -78,7 +78,6 @@ export function useUserProfile() {
         // Clear the user profile data from the cache
         queryClient.setQueryData(['userProfile'], null)
         
-        // Invalidate and refetch to ensure we get fresh data
         queryClient.invalidateQueries({ queryKey: ['userProfile'] })    }
 
     return { 

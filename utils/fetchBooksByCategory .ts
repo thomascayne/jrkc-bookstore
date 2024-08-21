@@ -56,8 +56,6 @@ export async function fetchBooksByCategory(
 
     const totalBooks = books && books.length > 0 ? Number(books[0].total_count) : 0;
 
-    console.log('fetchBooksByCategory ******* books - totalBooks:', books);
-
     return {
       category: categoryKey || 'all',
       totalBooks,

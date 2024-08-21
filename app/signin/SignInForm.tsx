@@ -39,7 +39,7 @@ export default function SignInForm() {
       } = await supabase.auth.getUser();
       if (user) {
         // User is already signed in, redirect them
-        router.replace(getRedirectUrl());
+        router.push(getRedirectUrl());
       }
     };
     checkUser();
@@ -86,43 +86,32 @@ export default function SignInForm() {
       // Initialize the cart after successful sign-in
       await initializeCart();
 
-      /**
-       * Redirect to the page specified in the query string or to the home page
-       */
-      let redirectUrl = '';
-
       // Get the roles from user metadata
       const roles = user?.app_metadata?.roles || [];
 
       // Determine where to redirect based on roles
-      let redirectPath;
+      let redirectPath = getRedirectUrl() || '/';
 
+      console.log('------------------------', redirectPath, roles);
+
+      // Only users with a single USER role can be customers
       if (roles.length === 1 && roles[0] === 'USER') {
-        // Only users with a single USER role can be customers
-        redirectPath = getRedirectUrl();
-
-        console.log('USER redirectPath:', redirectPath);
+        console.log('------------------------>>>', roles);
         // Check if there's an intended action in localStorage
         const intendedAction = localStorage.getItem('intendedAction');
+        console.log("intendedAction: ", intendedAction);
+        
         if (intendedAction === 'checkout') {
           redirectPath = '/checkout';
           localStorage.removeItem('intendedAction'); // Clear the intended action
         }
+      } else if (roles.includes('INVENTORY_MANAGER')) {
+        redirectPath = '/admin/inventory';
       } else if (roles.includes('SALES_ASSOCIATE')) {
         redirectPath = '/sales/dashboard';
-      } else if (roles.includes('ADMIN')) {
-        redirectPath = '/'; ///admin/dashboard'; // Placeholder, update when available
-      } else if (roles.includes('INVENTORY_MANAGER')) {
-        redirectPath = '/'; ///inventory/dashboard'; // Placeholder, update when available
-      } else {
-        // For any other role combinations or no roles
-        redirectPath = '/access-denied'; // Create this page to explain the situation
       }
-      console.log('Got here after redirectPath:', redirectPath);
-      
-      setTimeout(() => {
-        router.replace(redirectUrl);
-      }, 100);
+
+      router.push(redirectPath);
     }
   };
 

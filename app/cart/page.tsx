@@ -32,10 +32,15 @@ import CartLoadingSkeleton from '@/components/CartLoadingSkeleton';
 import { ICustomerCartItem } from '@/interfaces/ICustomerCart';
 import { IBookInventory } from '@/interfaces/IBookInventory';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { createClient } from '@/utils/supabase/client';
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
   const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const supabase = createClient();
+
   const cartItems = useStore(
     cartStore,
     (state) => state.items,
@@ -46,6 +51,18 @@ const CartPage = () => {
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      setIsLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      setIsAuthenticated(!!user);
+      setIsLoading(false);
+    };
+
+    checkAuthStatus();
   }, []);
 
   const handleQuantityChange = (id: string, quantity: number) => {
@@ -77,7 +94,7 @@ const CartPage = () => {
     }
   };
 
-  if (!isClient) {
+  if (!isClient || isLoading) {
     return <CartLoadingSkeleton />;
   }
 
@@ -113,14 +130,11 @@ const CartPage = () => {
   };
 
   const handleProceedToCheckout = () => {
-    console.log('inside cart to proceed to checkout:', profile);
-    if (profile) {
-      router.push('/checkout');
-    } else {
-      // Store the intention to checkout
+    if (!isAuthenticated) {
       localStorage.setItem('intendedAction', 'checkout');
-      // Redirect to login page
       router.push('/signin');
+    } else {
+      router.push('/checkout');
     }
   };
 
