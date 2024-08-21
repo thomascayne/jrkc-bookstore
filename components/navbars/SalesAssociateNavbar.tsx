@@ -20,6 +20,8 @@ import {
   FaSearch,
   FaChartLine,
   FaRegUser,
+  FaRegFilePowerpoint,
+  FaArchive,
 } from "react-icons/fa";
 import { VscSignOut } from "react-icons/vsc";
 import ThemeSwitch, { Theme } from "@/components/ThemeSwitcher";
@@ -67,6 +69,7 @@ function SalesAssociateNavbar({
     { item: "POS", icon: <FaCashRegister />, href: "/sales/point-of-sale" },
     { item: "Customer Info", icon: <FaAddressBook />, href: "/sales/customer-info" },
     { item: "Inventory Search", icon: <FaSearch />, href: "/inventory" },
+    { item: "Sales Reports", icon: <FaArchive />, href: "/sales-reporting" },
     { item: "Top Sellers", icon: <FaChartLine />, href: "#" },
     { item: "Profile", icon: <FaRegUser />, href: "/profile" },
   ];
