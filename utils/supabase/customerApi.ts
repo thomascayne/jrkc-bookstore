@@ -54,5 +54,5 @@ export const fetchPurchaseHistory = async (customerId: string): Promise<any[]> =
     throw error;
   }
 
-  return data || []; // Return purchase history
+  return data || [];
 };
