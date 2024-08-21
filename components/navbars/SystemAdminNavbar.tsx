@@ -118,8 +118,12 @@ function SystemAdminNavbar({
     { item: "Logs", icon: <FaClipboardList />, href: "/logs" },
 
     // Profile (common for all)
-    { item: "Profile", icon: <FaRegUser />, href: "/profile" },
   ], []);
+
+  const userMenuItems = useMemo(() => [
+    { item: "Profile", icon: <FaRegUser />, href: "/profile" },
+    { item: "Sign Out", icon: <VscSignOut />, onClick: signOut },
+  ], [signOut]);
 
   const navbarStyle = useMemo(() => ({
     backgroundColor: getRoleColor(emulatedRole || ROLES.ADMIN),

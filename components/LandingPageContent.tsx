@@ -1,49 +1,45 @@
-// app/category/[key]/CategoryContent.tsx
-
+// components\LandingPageContent.tsx
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { useBooksByCategory } from '@/hooks/useBooksByCategory';
-import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
-import { Button, Input, Link, Slider } from '@nextui-org/react';
-import Image from 'next/image';
-import StarRating from '@/components/StarRating';
 import { addCartItem } from '@/stores/cartStore';
-import BookDetails from '@/components/BookDetails';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { IBookInventory } from '@/interfaces/IBookInventory';
-import { FaTimes } from 'react-icons/fa';
 import { BookCategory } from '@/interfaces/BookCategory';
+import { Button, Input, Link, Slider } from '@nextui-org/react';
+import { FaTimes } from 'react-icons/fa';
 import { fetchBookCategories } from '@/utils/bookCategoriesApi';
 import { FilterOptions } from '@/utils/fetchBooksByCategory ';
+import { IBookInventory } from '@/interfaces/IBookInventory';
+import { useCallback } from 'react';
+import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import BookDetails from '@/components/BookDetails';
+import Image from 'next/image';
+import StarRating from '@/components/StarRating';
 import { useUrlSync } from '@/hooks/useUrlSync';
 import BookPagination from '@/components/BookPagination';
 import ClearFiltersButton from '@/components/ClearFiltersButton';
 import { useCachedCategories } from '@/hooks/useCachedCategories';
 
-export default function CategoryContent({
-  params,
-}: {
-  params: { key: string };
-}) {
+export default function LandingPageContent() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const booksPerPage = 24;
-  const [currentPage, setCurrentPage] = useState(() => {
-    return Number(searchParams && searchParams.get('page')) || 1;
-  });
-
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
-  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
+  const { openFullScreenModal } = useFullScreenModal();
   const {
     categories,
     isLoading: isCategoriesLoading,
     error: categoriesError,
   } = useCachedCategories();
 
+  const booksPerPage = 24;
+  const [currentPage, setCurrentPage] = useState(() => {
+    return Number(searchParams && searchParams.get('page')) || 1;
+  });
+  
   const [filters, setFilters] = useState<FilterOptions>({});
   const searchQuery = searchParams ? searchParams.get('q') || '' : '';
 
@@ -64,7 +60,7 @@ export default function CategoryContent({
     currentPage,
     searchQuery,
   );
-
+  
   const updateURLParams = useCallback(
     (newFilters: FilterOptions) => {
       const params = new URLSearchParams(window.location.search);
@@ -135,6 +131,10 @@ export default function CategoryContent({
     router.push(pathname as string);
   };
 
+  const handleAddToCart = (book: IBookInventory) => {
+    addCartItem(book);
+  };
+
   const handlePriceFilterGo = () => {
     handleFilterChange('price', { min: priceRange[0], max: priceRange[1] });
   };
@@ -143,27 +143,23 @@ export default function CategoryContent({
     openFullScreenModal(<BookDetails bookId={book.id} />, `${book.title}`);
   };
 
-  const handleAddToCart = (book: IBookInventory) => {
-    addCartItem(book);
-  };
-
   const handlePageChange = useCallback(
     (newPage: number) => {
       setCurrentPage(newPage);
-
+  
       if (!searchParams) {
         return;
       }
-
+  
       const current = new URLSearchParams(Array.from(searchParams.entries()));
       current.set('page', newPage.toString());
       const search = current.toString();
       const query = search ? `?${search}` : '';
       router.push(`${pathname}${query}`);
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams]
   );
-
+  
   if (error) return <div>Error loading books: {error.message}</div>;
 
   return (
@@ -213,7 +209,11 @@ export default function CategoryContent({
             {[5, 4, 3, 2, 1].map((rating) => (
               <Link
                 key={rating}
-                className={`flex px-2 rounded-md hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${filters.rating_min === rating ? 'bg-success-400 text-white' : ''}`}
+                className={`flex px-2 rounded-md hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${
+                  filters.rating_min === rating
+                    ? 'bg-success-400 text-white'
+                    : ''
+                }`}
                 onClick={() => handleFilterChange('rating_min', rating)}
               >
                 <StarRating rating={rating} />
@@ -229,11 +229,13 @@ export default function CategoryContent({
               Availability
             </h3>
             <Link
-              className={`flex px-2 hover:underline rounded-lg hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${filters.in_stock ? 'bg-success text-white' : ''}`}
+              className={`flex px-2 hover:underline rounded-lg hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${
+                filters.in_stock ? 'bg-success text-white' : ''
+              }`}
               onClick={() => handleFilterChange('in_stock', !filters.in_stock)}
             >
               <span className="mr-2">Hide out of stock</span>
-              <span>{filters.in_stock && <FaTimes />}</span>
+              {filters.in_stock && <FaTimes />}
             </Link>
           </div>
 
@@ -245,7 +247,11 @@ export default function CategoryContent({
             {[80, 70, 60, 50, 40, 30, 20, 10].map((percent) => (
               <Link
                 key={percent}
-                className={`flex px-2 hover:underline hover:underline-offset-2 text-[0.9rem] cursor-pointer ${filters.discount_percentage_min === percent ? 'bg-success text-white' : ''}`}
+                className={`flex px-2 hover:underline hover:underline-offset-2 text-[0.9rem] cursor-pointer ${
+                  filters.discount_percentage_min === percent
+                    ? 'bg-success text-white'
+                    : ''
+                }`}
                 onClick={() =>
                   handleFilterChange('discount_percentage_min', percent)
                 }
@@ -307,7 +313,7 @@ export default function CategoryContent({
                   <span>{category.label}</span>
                 </Link>
               ))
-            )}{' '}
+            )}
           </div>
         </div>
       </div>

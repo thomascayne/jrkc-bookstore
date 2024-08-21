@@ -5,7 +5,7 @@ import InputButtonGroup from '@/components/InputButtonGroup';
 import PlaceholderImage from '@/components/PlaceholderImage';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import { useSidePanel } from '@/contexts/SidePanelContext';
-import { IBook } from '@/interfaces/IBook';
+import { IBookInventory } from '@/interfaces/IBookInventory';
 import {
   calculateDiscountedPrice,
   cartStore,
@@ -23,12 +23,13 @@ import {
 import { useStore } from '@tanstack/react-store';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { IoMdClose } from 'react-icons/io';
 
 interface CartSidePanelProps {
   currentPath: string;
+  onContinueShopping: () => void;
+  onGoToCart: () => void;
 }
 
 /**
@@ -39,17 +40,16 @@ interface CartSidePanelProps {
  * @param {CartSidePanelProps} currentPath - The current path of the application.
  * @return {JSX.Element} The JSX element representing the cart content.
  */
-const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
+const CartContent: React.FC<CartSidePanelProps> = ({ currentPath, onContinueShopping, onGoToCart }) => {
   const cartItems = useStore(cartStore, (state) => state.items);
   const totalPrice = useStore(cartStore, getTotal);
 
   const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
   const { closeRightPanel } = useSidePanel();
-  const router = useRouter();
 
   const handleGoToCart = () => {
     closeRightPanel();
-    router.push('/cart');
+    onGoToCart();
   };
 
   const handleQuantityChange = (book_id: string, quantity: number) => {
@@ -62,12 +62,10 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath }) => {
 
   const handleContinueShopping = () => {
     closeRightPanel();
-    if (currentPath !== '/cart') {
-      router.push(currentPath);
-    }
+    onContinueShopping();
   };
 
-  const handleBookClick = async (book: IBook) => {
+  const handleBookClick = async (book: IBookInventory) => {
     try {
       const bookTitle = `${book.title}`;
 

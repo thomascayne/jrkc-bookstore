@@ -1,12 +1,13 @@
 // components/CheckoutAccordion.tsx
 
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useStore } from "@tanstack/react-store";
-import { cartStore, getTotal, getCartItemCount } from "@/stores/cartStore";
-import { ICartItem } from "@/interfaces/ICart";
+import React, { useState, useEffect, useMemo } from 'react';
+import { useStore } from '@tanstack/react-store';
+import { cartStore, getTotal, getCartItemCount } from '@/stores/cartStore';
+import { ICustomerCartItem } from '@/interfaces/ICustomerCart';
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -15,19 +16,25 @@ import {
   Radio,
   RadioGroup,
   Tooltip,
-} from "@nextui-org/react";
-import { ShippingAddress } from "@/interfaces/ShippingAddress";
-import { BillingAddress } from "@/interfaces/BillingAddress";
-import { User } from "@supabase/supabase-js";
-import { createClient } from "@/utils/supabase/client";
+} from '@nextui-org/react';
+import { ShippingAddress } from '@/interfaces/ShippingAddress';
+import { BillingAddress } from '@/interfaces/BillingAddress';
+import { User } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/client';
 import {
   FaCheck,
   FaChevronDown,
   FaChevronUp,
   FaCopy,
   FaTimes,
-} from "react-icons/fa";
-import { generateRandomTestCardFromStripe } from "@/utils/getRandomTestCardsFromStripe";
+} from 'react-icons/fa';
+import { generateRandomTestCardFromStripe } from '@/utils/getRandomTestCardsFromStripe';
+import { Appearance, loadStripe, Stripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
+import CustomerPaymentProcessingModal from '@/components/checkout/CustomerPaymentProcessingModal';
+import { waitSomeTime } from '@/utils/wait-some-time';
+import CreditCardIcons from '@/components/CreditCardIcons';
 
 interface AccordionItemProps {
   children: React.ReactNode;
@@ -47,7 +54,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
   toggleOpen,
 }) => (
   <Card
-    className={`mb-4 flex w-full ${disabled ? "opacity-50" : ""}`}
+    className={`mb-4 flex w-full ${disabled ? 'opacity-50' : ''}`}
     shadow="md"
   >
     <CardHeader>
@@ -95,6 +102,8 @@ interface CheckoutAccordionProps {
   user: User | null;
 }
 
+const TAX_RATE = 0.065;
+
 const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
   const [stripMockCreditCard, setStripMockCreditCard] = useState<
     StripMockCreditCard[] | []
@@ -102,18 +111,32 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<StripMockCreditCard | null>(null);
   const [isPaymentMethod, setIsPaymentMethod] = useState(false);
-  const [openSection, setOpenSection] = useState<string | null>("cart");
+  const [isPaymentMethodSaved, setIsPaymentMethodSaved] = useState(false);
+  const [openSection, setOpenSection] = useState<string | null>('cart');
+  const [isLoading, setIsLoading] = useState(false);
+  const [stripePromise, setStripePromise] = useState<Stripe>();
   const cartItems = useStore(cartStore, (state) => state.items);
+  const { closeFullScreenModal, openFullScreenModal } = useFullScreenModal();
   const [showCopyToClipboardTooltip, setShowCopyToClipboardTooltip] =
     useState(false);
+  const subtotal = useStore(cartStore, getTotal);
 
-  const total = getTotal();
+  const taxAmount = useMemo(() => subtotal * TAX_RATE, [subtotal]);
+  const totalAmount = useMemo(() => subtotal + taxAmount, [subtotal, taxAmount]);
+  const payAmount = (totalAmount * 100).toFixed(0);
+
+  console.log("totalAmount: ", totalAmount.toFixed(2), (totalAmount * 100).toFixed(0));
+
+  const [mockCreditCard, setMockCreditCard] =
+    useState<StripMockCreditCard | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+
   const itemCount = getCartItemCount();
 
   const [shippingAddress, setShippingAddress] =
     useState<ShippingAddress | null>(null);
   const [billingAddress, setBillingAddress] = useState<BillingAddress | null>(
-    null
+    null,
   );
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState({
@@ -137,9 +160,9 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
     async function loadUserAddresses() {
       if (user) {
         const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
           .maybeSingle();
 
         if (profile) {
@@ -188,15 +211,16 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
     }
   }, [itemCount]);
 
-  const copyToClipboard = (card: StripMockCreditCard, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const cardInfo = `${card.number},${card.expMonth},${card.expYear},${card.cvc}`;
-    navigator.clipboard.writeText(cardInfo).then(() => {
-      setShowCopyToClipboardTooltip(true);
-      setTimeout(() => setShowCopyToClipboardTooltip(false), 6000);
-    });
+  const copyToClipboard = () => {
+    if (mockCreditCard) {
+      const cardInfo = `${mockCreditCard.number},${mockCreditCard.expMonth},${mockCreditCard.expYear},${mockCreditCard.cvc}`;
+      navigator.clipboard.writeText(cardInfo).then(() => {
+        setIsCopied(true);
+        setShowCopyToClipboardTooltip(true);
+        setTimeout(() => setShowCopyToClipboardTooltip(false), 6000);
+      });
+    }
   };
-
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -224,22 +248,86 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
     }
   };
 
-  const handlePaymentMethodSubmit = (method: string) => {
-    setPaymentMethod(method);
-    setOpenSections((prev) => ({
-      ...prev,
-      review: true,
-    }));
+  const handleClosePaymentProcessingModal = async () => {
+    await waitSomeTime(300);
+    closeFullScreenModal();
   };
+  const handlePlaceOrder = async () => {
+    const stripeInstance = await loadStripe(
+      `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`,
+    );
 
-  const handlePlaceOrder = () => {
-    // Implement order placement logic here
-    console.log("Placing order...");
+    if (!stripeInstance) {
+      console.error('Stripe Promise not initialized');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      setStripePromise(stripeInstance);
+
+      // Create PaymentIntent
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: Math.round(totalAmount * 100).toFixed(0), 
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment intent');
+      }
+
+      const { clientSecret } = await response.json();
+      const appearance: Appearance = {
+        theme: 'stripe',
+      };
+
+      const options = {
+        clientSecret,
+        appearance: appearance,
+        paymentMethodOrder: ['card'],
+      };
+
+      openFullScreenModal(
+        <Elements stripe={stripeInstance} options={options}>
+          <CustomerPaymentProcessingModal
+            onClose={() => {
+              handleClosePaymentProcessingModal();
+            }}
+            onReturnToCart={(returnvalue) => {
+              // Handle successful payment (e.g., clear cart, show confirmation)
+            }}
+            subtotal={subtotal}
+            taxAmount={taxAmount}
+            total={totalAmount}
+          />
+        </Elements>,
+        'Enter Payment Details',
+        {
+          centerHeaderContents: true,
+          disableEscape: true,
+          height: '700px',
+          showCloseButton: false,
+          showEscapeHint: false,
+          width: '500px',
+        },
+      );
+    } catch (error) {
+      console.error('Error loading Stripe:', error);
+      return;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     if (itemCount === 0) {
-      setOpenSection("cart");
+      setOpenSection('cart');
     }
   }, [itemCount]);
 
@@ -248,8 +336,7 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
    * and return a new card
    * */
   const generateMockCreditCard = () => {
-    const internalIds = stripMockCreditCard.map((card) => card.internalId);
-    const randomCard = generateRandomTestCardFromStripe(internalIds);
+    const randomCard = generateRandomTestCardFromStripe([]);
 
     const newCard: StripMockCreditCard = {
       brand: randomCard.brand,
@@ -262,12 +349,16 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
       number: randomCard.number,
     };
 
-    setStripMockCreditCard((prev) => [...prev, newCard]);
+    setMockCreditCard(newCard);
+    setIsCopied(false);
+    setIsPaymentMethodSaved(false);
   };
-  const handleSelectPaymentMethod = (card: StripMockCreditCard | undefined) => {
-    if (card) {
-      setSelectedPaymentMethod(card);
-    }
+
+  const handleSavePaymentMethod = () => {
+    setIsPaymentMethodSaved(true);
+    setPaymentMethod('credit_card');
+    setOpenSections((prev) => ({ ...prev, payment: false }));
+    toggleSection('review');
   };
 
   return (
@@ -281,21 +372,21 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
               title={`${
                 shippingAddress
                   ? `Deliver to ${shippingAddress?.shipping_first_name.toUpperCase()} ${shippingAddress?.shipping_last_name.toUpperCase()}`
-                  : "Add Shipping Address"
+                  : 'Add Shipping Address'
               }`}
-              toggleOpen={() => toggleSection("shipping")}
+              toggleOpen={() => toggleSection('shipping')}
               completed={!!shippingAddress}
             >
               <div className="flex flex-col px-4 min-h-20 mb-4">
                 <p>
-                  {shippingAddress?.shipping_first_name}{" "}
+                  {shippingAddress?.shipping_first_name}{' '}
                   {shippingAddress?.shipping_last_name}
                 </p>
                 <p>{shippingAddress?.shipping_street_address1}</p>
                 <p>{shippingAddress?.shipping_street_address2}</p>
                 <p>
-                  {shippingAddress?.shipping_city}{" "}
-                  {shippingAddress?.shipping_state}{" "}
+                  {shippingAddress?.shipping_city}{' '}
+                  {shippingAddress?.shipping_state}{' '}
                   {shippingAddress?.shipping_country}
                 </p>
                 <p>{shippingAddress?.shipping_phone}</p>
@@ -318,7 +409,7 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
               disabled={!shippingAddress}
               isOpen={openSections.billing}
               title="Billing Address"
-              toggleOpen={() => toggleSection("billing")}
+              toggleOpen={() => toggleSection('billing')}
             >
               <div className="flex flex-col px-4 min-h-20">
                 <p>
@@ -327,7 +418,7 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
                 <p>{billingAddress?.street_address1}</p>
                 <p>{billingAddress?.street_address2}</p>
                 <p>
-                  {billingAddress?.city} {billingAddress?.state}{" "}
+                  {billingAddress?.city} {billingAddress?.state}{' '}
                   {billingAddress?.zipcode}
                 </p>
                 <p>{billingAddress?.phone}</p>
@@ -345,10 +436,11 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
               </div>
             </AccordionItem>
             <AccordionItem
-              title="Payment"
+              title="Payment Method"
               isOpen={openSections.payment}
-              toggleOpen={() => toggleSection("payment")}
+              toggleOpen={() => toggleSection('payment')}
               disabled={!billingAddress || !shippingAddress}
+              completed={isPaymentMethodSaved}
             >
               <div className="flex flex-col px-4 min-h-20">
                 <div>
@@ -365,109 +457,93 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
                 </div>
 
                 <div className="flex flex-col mt-4">
-                  <RadioGroup
-                    value={selectedPaymentMethod?.internalId?.toString()}
-                    onValueChange={(value) =>
-                      handleSelectPaymentMethod(
-                        stripMockCreditCard.find(
-                          (card) => card.internalId.toString() === value
-                        )
-                      )
-                    }
-                  >
-                    {stripMockCreditCard.map((card, index) => (
-                      <div
-                        key={card.internalId}
-                        className="bg-gray-100 p-4 rounded-md mb-2"
-                      >
-                        <div className="flex radio-button-payment-wrapper items-center">
-                          <Radio 
-                            value={card.internalId.toString()}
-                            classNames={{
-                                base: "inline-flex m-0 hover:bg-yellow-50 transition-transform-background items-center justify-between transition-all duration-300 ease-in-out",
-                                label: "w-full cursor-pointer",
-                              }}
-                            
-                            >
-
-                            <label
-                              htmlFor={`card-${card.internalId}`}
-                              className="flex items-center py-0 pointer-events-none "
-
-                            >
-                              <span className="font-semibold mr-2">
-                                Card {index + 1}:
-                              </span>
-                              <span className="mr-4">
-                                Card Number: **** **** **** {card.last4}
-                              </span>
-                            </label>
-
-                            
-                          </Radio>
-                          {selectedPaymentMethod?.internalId ===
-                            card.internalId && (
-                            <Tooltip
-                              className="py-1 font-semibold text-white whitespace-nowrap"
-                              color="primary"
-                              content={`Payment method selected: ${card.brand} ${card.last4}`}
-                              isOpen={showCopyToClipboardTooltip}
-                              placement="top"
-                            >
-                              <button
-                                onClick={(e) => copyToClipboard(card, e)}
-                                className="text-blue-500 hover:text-blue-700 inline-block ml-2"
-                                title="Copy card details"
-                              >
-                                <FaCopy />
-                              </button>
-                            </Tooltip>
-                          )}
+                  {mockCreditCard && (
+                    <div className="bg-gray-100 p-4 rounded-md mb-4">
+                      <div className="flex items-start justify-start">
+                        <div className="flex">
+                          <CreditCardIcons cardType={mockCreditCard.brand} />
                         </div>
-                        <div className="mt-2 ml-8">
+                        <div className="ml-4 flex flex-col">
+                          <p>Card Number: {mockCreditCard.number}</p>
                           <p>
-                            Expiration: {card.expMonth}/{card.expYear}
+                            Expiry: {mockCreditCard.expMonth}/
+                            {mockCreditCard.expYear}
                           </p>
-                          <p>Brand: {card.brand}</p>
-                          <p>Name on Card: {card.name}</p>
+                          <p>CVC: {mockCreditCard.cvc}</p>
+                          <p>Name: {mockCreditCard.name}</p>
+                        </div>
+                        <div className="flex relative">
+                          <Tooltip
+                            className="p-4 font-semibold bg-green-600 text-white whitespace-nowrap"
+                            content={`Payment method copied to clipboard: ${mockCreditCard.brand} ${mockCreditCard.last4}`}
+                            isOpen={showCopyToClipboardTooltip}
+                          >
+                            <Button
+                              color="primary"
+                              onClick={copyToClipboard}
+                              className="px-2 flex"
+                              radius="md"
+                            >
+                              <FaCopy /> <span> Copy Card Info</span>
+                            </Button>
+                          </Tooltip>
                         </div>
                       </div>
-                    ))}
-                  </RadioGroup>
+                    </div>
+                  )}
                 </div>
               </div>
               <Divider />
               <div className="flex px-4 my-4 justify-center">
                 <input
                   className={`inline-block transition-all duration-200 ease-in-out bg-yellow-400 text-black hover:bg-yellow-500 py-2 px-10 rounded cursor-pointer ${
-                    !paymentMethod && !selectedPaymentMethod?.internalId
-                      ? "hover:cursor-not-allowed bg-yellow-200 hover:bg-yellow-200"
-                      : ""
+                    !isCopied ? 'opacity-50' : ''
                   }`}
                   type="button"
                   value="Save Payment Method"
-                  disabled={!paymentMethod && !selectedPaymentMethod}
-                  onClick={() => handlePaymentMethodSubmit("credit_card")}
+                  disabled={!isCopied}
+                  onClick={handleSavePaymentMethod}
                 />
               </div>
             </AccordionItem>
 
             <AccordionItem
-              completed={false}
+              completed={cartItems.length > 0}
               disabled={!paymentMethod}
               isOpen={openSections.review}
-              title="Review Order"
-              toggleOpen={() => toggleSection("review")}
+              title="Review Your Order"
+              toggleOpen={() => toggleSection('review')}
             >
-              {/* Add order review here */}
               <div className="flex flex-col px-4">
-                <p>Order summary goes here</p>
+                <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+                {cartItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center mb-2"
+                  >
+                    <div>
+                      <p className="font-medium">{item.book.title}</p>
+                      <p className="text-sm text-gray-600">
+                        Quantity: {item.quantity}
+                      </p>
+                    </div>
+                    <p className="font-medium">
+                      ${(item.book.list_price * item.quantity).toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+                <div className="flex justify-end w-full">
+                  <p className="font-medium">Total: ${totalAmount.toFixed(2)}</p>
+                </div>
               </div>
               <Divider className="mt-4" />
               <span className="flex justify-center my-4 w-full">
                 <input
                   onClick={handlePlaceOrder}
-                  className="inline-block transition-all duration-200 ease-in-out bg-yellow-400 text-black hover:bg-yellow-500 py-2 px-10 rounded cursor-pointer"
+                  className={`inline-block transition-all duration-200 ease-in-out bg-yellow-400 text-black hover:bg-yellow-500 py-2 px-10 rounded cursor-pointer ${
+                    !isCopied ? 'opacity-50' : ''
+                  }`}
+                  disabled={!isCopied || cartItems.length === 0}
                   id="place-order-accordion"
                   type="button"
                   value="Place order"
@@ -490,7 +566,7 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
           <Divider />
           <CardBody>
             <div className="flex flex-col w-full">
-              {cartItems.map((item: ICartItem) => (
+              {cartItems.map((item: ICustomerCartItem) => (
                 <div
                   key={item.book_id}
                   className="mb-2 px-3 flex justify-between"
@@ -502,25 +578,37 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
                 </div>
               ))}
               <Divider className="my-4" />
-              <div className="flex flex-col">
-                <p className="font-bold text-lg flex justify-between px-3">
+              <div className="flex flex-col mb-4">
+                <p className="flex justify-between px-3 font-semibold mb-3">
+                  <span>Subtotal:</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </p>
+                <p className="flex justify-between px-3">
+                  <span>Taxes ({TAX_RATE * 100}%):</span>
+                  <span>${taxAmount.toFixed(2)}</span>
+                </p>
+                <p className="flex justify-between px-3 mb-2">
                   <span>Free Shipping:</span>
                   <span>${(0).toFixed(2)}</span>
                 </p>
-                <p className="font-bold text-lg flex justify-between mt-4 px-3">
+                <p className="font-bold text-lg flex justify-between px-3">
                   <span>Order total:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>${totalAmount.toFixed(2)}</span>
                 </p>
               </div>
+              <Divider />
               {itemCount > 0 && (
-                <div className="flex mb-4 justify-center w-full">
+                <div className="flex mb-4 justify-center w-full mt-4">
                   <input
-                    className="mt-4 inline-block transition-all duration-200 ease-in-out bg-yellow-400 text-black hover:bg-yellow-500 py-2 px-20 rounded cursor-pointer"
+                    className={`inline-block transition-all duration-200 ease-in-out bg-yellow-400 text-black hover:bg-yellow-500 py-2 px-10 rounded cursor-pointer ${
+                      !isCopied ? 'opacity-50' : ''
+                    }`}
                     id="place-order-accordion"
                     type="button"
                     value="Place your order"
+                    disabled={!isCopied || cartItems.length === 0}
                     color="warning"
-                    onClick={() => setOpenSection("review")}
+                    onClick={() => setOpenSection('review')}
                   />
                 </div>
               )}

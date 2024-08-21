@@ -68,12 +68,25 @@ export function useUserProfile() {
         return updatedProfile as UserProfile
     }
 
+    const signOut = async () => {
+        const { error } = await supabase.auth.signOut()
+        if (error) {
+            console.log("Sign out error: ", error)
+            throw error
+        }
+
+        // Clear the user profile data from the cache
+        queryClient.setQueryData(['userProfile'], null)
+        
+        queryClient.invalidateQueries({ queryKey: ['userProfile'] })    }
+
     return { 
         access_token: data?.access_token ?? null, 
         error, 
         isLoading, 
         profile: data?.profile ?? null, 
         session: data?.session ?? null, 
-        updateProfile 
+        updateProfile,
+        signOut
     }
 }

@@ -214,22 +214,6 @@ export const initializeTransaction = async () => {
 
 };
 
-// export const removeItemit = (bookId: string) => {
-//     pointOfSaleStore.setState((state) => {
-//         if (!state.currentOrder) return state;
-
-//         const updatedItems = state.orderItems.filter(item => item.book_id !== bookId);
-//         const totalAmount = updatedItems.reduce((sum, item) => sum + item.price, 0);
-//         const updatedOrder: IOrder = {
-//             ...state.currentOrder,
-//             total_amount: totalAmount
-//         };
-
-//         const newState = { ...state, currentOrder: updatedOrder, orderItems: updatedItems };
-//         return newState;
-//     });
-// };
-
 export const removeItem = async (id: string) => {
     const { data, error } = await supabase.rpc('remove_order_item_marked_as_removed', {
         p_id: id,

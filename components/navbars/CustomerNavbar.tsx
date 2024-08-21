@@ -21,7 +21,7 @@ import {
 import { BiCategory } from 'react-icons/bi';
 import { FaRegUser } from 'react-icons/fa';
 import { User } from '@supabase/supabase-js';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { RiShoppingCart2Line } from 'react-icons/ri';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';
 import AppLogo from '@/components/AppLogo';
@@ -29,7 +29,6 @@ import ThemeSwitch, { Theme } from '@/components/ThemeSwitcher';
 import { Role, ROLES, getRoleColor } from '@/utils/roles';
 import RoleSwitcher from '@/components/RoleSwitcher';
 import { FaChevronDown } from 'react-icons/fa';
-import useSignOut from '@/hooks/useSignOut';
 import { fetchBookCategories } from '@/utils/bookCategoriesApi';
 import { BookCategory } from '@/interfaces/BookCategory';
 import CartIcon from '@/components/CartIcon';
@@ -38,6 +37,7 @@ import CartContent from '@/components/CartContent';
 import { useStore } from '@tanstack/react-store';
 import { cartStore, getCartItemCount } from '@/stores/cartStore';
 import SearchBar from '@/components/SearchBar';
+import { useUserProfileContext } from '@/contexts/UserProfileContext';
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -55,9 +55,11 @@ function CustomerNavbar({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>('light');
   const { openRightPanel } = useSidePanel();
-  const currentPath = usePathname();
+  const currentPath = usePathname() || '';
+  const pathname = usePathname();
   const router = useRouter();
-  const signOut = useSignOut();
+  const searchParams = useSearchParams();
+  const { signOut } = useUserProfileContext();
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
   const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
@@ -65,6 +67,12 @@ function CustomerNavbar({
 
   const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
   const cartItemCount = useStore(cartStore, getCartItemCount);
+
+  const getFullPath = useCallback(() => {
+    const urlWithParams = String(searchParams);
+    const fullPath = pathname + (urlWithParams ? `?${urlWithParams}` : '');
+    return fullPath;
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -156,23 +164,36 @@ function CustomerNavbar({
    * When the cart is empty, it redirects to the cart page.
    * or it opens the shopping cart panel.
    *
+   * @param {React.MouseEvent<HTMLAnchorElement>} e - The click event.
    * @return {void} No return value.
    */
-  const handleCartClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleCartClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
+    
+    const fullPath = getFullPath();
+    localStorage.setItem('lastVisitedPath', fullPath);
 
     if (cartItemCount === 0) {
       router.push('/cart');
     } else {
-      if (currentPath && currentPath !== '/cart') {
+      if (fullPath !== '/cart') {
         openRightPanel(
-          <CartContent currentPath={currentPath} />,
+          <CartContent 
+          currentPath={fullPath} 
+          onContinueShopping={() => {
+            const lastPath = localStorage.getItem('lastVisitedPath');
+            if (lastPath) {
+              router.push(lastPath);
+            }
+          }}
+          onGoToCart={() => router.push('/cart')} />,
           'w-full sm:w-[400px] md:w-[480px] lg:w-[560px] xl:w-[640px]',
           false,
         );
       }
     }
-  };
+
+  }, [cartItemCount, getFullPath, openRightPanel, router]);
 
   const handleSearch = (query: string) => {
     router.push(`/search?q=${encodeURIComponent(query)}`);
@@ -280,7 +301,7 @@ function CustomerNavbar({
            *    V
            */}
 
-          <NavbarItem className="hidden">
+          <NavbarItem className="hidden sm:flex">
             <Link
               color="foreground"
               href="#"
