@@ -3,7 +3,7 @@
 import { IBookInventory } from "@/interfaces/IBookInventory";
 
 export interface BookWithThumbnail extends IBookInventory {
-    thumbnail: string;
-    discountPercentage: number;
-    isPromotion: boolean;
-  }
+  thumbnail: string;
+  discountPercentage: number;
+  isPromotion: boolean;
+}

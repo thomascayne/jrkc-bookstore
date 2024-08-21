@@ -1,7 +1,7 @@
 // utils\bookFromSupabaseApi.ts
 import { createClient } from "@/utils/supabase/client";
 
-export async function fetchBookFromSupabase<IBook>(bookId: string) {
+export async function fetchBookFromSupabase<IBookInventory>(bookId: string) {
     const supabase = createClient();
 
     try {

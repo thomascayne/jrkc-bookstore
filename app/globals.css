@@ -168,3 +168,53 @@
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
+
+.filter-custom-select {
+  --size: 0.4rem;
+  
+  width: 100%;
+  position: relative;
+
+  & select {
+    appearance: none;
+    background-color: #fff;
+    border-radius: 0.25rem 0.25rem 0 0;
+    border: 1px solid #caced1;
+    color: #000;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.25rem;
+    width: 100%;
+  }
+  
+  & option {
+    padding: 2rem !important; 
+  }
+
+  &::before,
+  &::after {
+    --size: 0.3rem;
+    content: "";
+    position: absolute;
+    right: 1rem;
+    pointer-events: none;
+  }
+  
+  &::before {
+    border-left: var(--size) solid transparent;
+    border-right: var(--size) solid transparent;
+    border-bottom: var(--size) solid black;
+    top: 40%;
+  }
+  
+  &::after {
+    border-left: var(--size) solid transparent;
+    border-right: var(--size) solid transparent;
+    border-top: var(--size) solid black;
+    top: 55%;
+  }
+}
+
+svg[clip-path] {
+  clip-path: none !important;
+}

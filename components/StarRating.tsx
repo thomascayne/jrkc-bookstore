@@ -14,7 +14,7 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, maxRating = 5 }) => {
   const hasHalfStar = rating % 1 >= 0.5;
 
   return (
-    <div className="flex">
+    <div className="flex text-sm">
       {[...Array(maxRating)].map((_, index) => {
         if (index < fullStars) {
           return <FaStar key={index} className="text-yellow-400" />;

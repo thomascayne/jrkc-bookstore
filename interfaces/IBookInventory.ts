@@ -31,7 +31,8 @@ export interface IBookInventory {
     subtitle: string;
     thumbnail_image_link: string;
     title: string;
-    updatedAt: string;
+    updatedAt?: string;
     category_id_check: number
     category_label_check: string
+    is_featured?: boolean;
 }

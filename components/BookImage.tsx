@@ -3,14 +3,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import BookCoverPlaceholder from "./BookCoverPlaceholder";
-import { IBook } from "@/interfaces/IBook";
 import { GoogleBook } from "@/interfaces/GoogleBook";
 import BookDetailsSkeleton from "@/components/BookDetailsSkeleton";
+import { IBookInventory } from "@/interfaces/IBookInventory";
 
 interface BookImageProps {
   googleBook?: GoogleBook;
   size?: string;
-  supabaseBook?: IBook;
+  supabaseBook?: IBookInventory;
   useLargeImage?: boolean;
 }
 

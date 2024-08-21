@@ -1,17 +1,18 @@
-import { IBook } from '@/interfaces/IBook';
-// src/interfaces/ICart.ts
+// src/interfaces/ICustomerCart.ts
 
-export interface ICart {
+import { IBookInventory } from "./IBookInventory";
+
+export interface ICustomerCart {
     id: string;
     created_at: string;
-    items: ICartItem[];
+    items: ICustomerCartItem[];
     updated_at: string;
     user_id: string;
 }
-export interface ICartItem {
+export interface ICustomerCartItem {
     id: string;
     book_id: string;
-    book: IBook;
+    book: IBookInventory;
     cart_id: string;
     current_price: number;
     discount_percentage?: number;

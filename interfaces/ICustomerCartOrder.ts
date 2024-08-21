@@ -1,9 +1,10 @@
-import { IBook } from '@/interfaces/IBook';
+import { OrderStatus } from './IOrder';
+import { IBookInventory } from '@/interfaces/IBookInventory';
 
 export interface ICartOrder {
     id: string;
     user_id: string;
-    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    status: OrderStatus
     total_amount: number;
     created_at: string;
     updated_at: string;
@@ -13,7 +14,7 @@ export interface ICartOrder {
 export interface ICartOrderItem {
     id: string;
     book_id: string;
-    book: IBook;
+    book: IBookInventory;
     discount_percentage?: number;
     final_price: number;
     order_id: string;

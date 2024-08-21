@@ -14,4 +14,5 @@ export interface IOrderItem {
     price: number;
     quantity: number;
     status: 'cancelled' | 'damaged' | 'delivered' | 'pending' | 'processing' | 'refunded' | 'removed' | 'shipped';
+    subtotal?: number;
 }

@@ -157,6 +157,7 @@ export default function AuthNavbar({ initialUser }: AuthNavbarProps) {
 
   switch (activeRole) {
     case ROLES.ADMIN:
+      console.log("User is an admin");
       return <SystemAdminNavbar {...navbarProps} />;
     case ROLES.INVENTORY_MANAGER:
       return <InventoryManagerNavbar {...navbarProps} />;
