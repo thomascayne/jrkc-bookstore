@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useBooksByCategory } from '@/hooks/useBooksByCategory';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import { Button, Input, Link, Slider } from '@nextui-org/react';
@@ -31,9 +31,10 @@ export default function CategoryContent({
   const searchParams = useSearchParams();
 
   const booksPerPage = 24;
-  const page = searchParams ? Number(searchParams.get('page')) || 1 : 1;
+  const [currentPage, setCurrentPage] = useState(() => {
+    return Number(searchParams && searchParams.get('page')) || 1;
+  });
 
-  const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
@@ -48,22 +49,21 @@ export default function CategoryContent({
 
   useUrlSync(filters, setFilters);
 
-  const { displayedBooks, isLoading, error, totalBooks, isFetching, refetch } =
-    useBooksByCategory(booksPerPage, params.key, filters, page, searchQuery);
-  const totalPages = Math.ceil(totalBooks / booksPerPage);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categories = await fetchBookCategories();
-        setBookCategories(categories);
-      } catch (error) {
-        console.error('Error fetching book categories:', error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  const {
+    displayedBooks,
+    isLoading,
+    error,
+    totalBooks,
+    totalPages,
+    isFetching,
+    prefetchNextPage,
+  } = useBooksByCategory(
+    booksPerPage,
+    'all',
+    filters,
+    currentPage,
+    searchQuery,
+  );
 
   const updateURLParams = useCallback(
     (newFilters: FilterOptions) => {
@@ -89,7 +89,7 @@ export default function CategoryContent({
       });
 
       const newUrl = `${window.location.pathname}?${params.toString()}`;
-      router.push(newUrl, { scroll: false });
+      router.push(newUrl);
     },
     [router],
   );
@@ -147,14 +147,22 @@ export default function CategoryContent({
     addCartItem(book);
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (!searchParams) return;
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    current.set('page', newPage.toString());
-    const search = current.toString();
-    const query = search ? `?${search}` : '';
-    router.push(`${pathname}${query}`);
-  };
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setCurrentPage(newPage);
+
+      if (!searchParams) {
+        return;
+      }
+
+      const current = new URLSearchParams(Array.from(searchParams.entries()));
+      current.set('page', newPage.toString());
+      const search = current.toString();
+      const query = search ? `?${search}` : '';
+      router.push(`${pathname}${query}`);
+    },
+    [pathname, router, searchParams],
+  );
 
   if (error) return <div>Error loading books: {error.message}</div>;
 
@@ -315,9 +323,11 @@ export default function CategoryContent({
         <div className="mb-4 flex flex-colo items-center md:flex-row md:justify-between">
           <h1 className="text-3xl font-bold">JRKC Book Store</h1>
           <BookPagination
-            currentPage={page}
+            currentPage={currentPage}
             totalPages={totalPages}
             basePath={pathname as string}
+            onPageChange={handlePageChange}
+            onNextPageHover={prefetchNextPage}
           />
         </div>
 
@@ -326,83 +336,94 @@ export default function CategoryContent({
             No books found matching the current filters.
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
-            {displayedBooks.map((book, index) => (
-              <div
-                key={book.id}
-                className="flex flex-col h-full border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ease-in-out group opacity-0 animate-fade-in"
-                style={{
-                  animationDelay: `${index * 50}ms`,
-                  animationFillMode: 'forwards',
-                }}
-              >
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+              {displayedBooks.map((book, index) => (
                 <div
-                  className="relative aspect-[2/3] cursor-pointer px-2 pt-2 pb-0"
-                  onClick={() => handleBookClick(book)}
+                  key={book.id}
+                  className="flex flex-col h-full border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ease-in-out group opacity-0 animate-fade-in"
+                  style={{
+                    animationDelay: `${index * 50}ms`,
+                    animationFillMode: 'forwards',
+                  }}
                 >
-                  {book.thumbnail_image_link && (
-                    <div className="relative w-full h-full flex items-start justify-center">
-                      <div
-                        className="relative w-full"
-                        style={{ paddingBottom: '150%' }}
-                      >
-                        <Image
-                          alt={book.title}
-                          src={book.thumbnail_image_link}
-                          layout="fill"
-                          objectFit="contain"
-                          objectPosition="top"
-                          className="transition-transform rounded-tl rounded-tr duration-300 ease-in-out group-hover:scale-105"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {book.is_promotion && book.discount_percentage && (
-                    <div className="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-br z-10">
-                      {`${book.discount_percentage}% OFF`}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-grow p-2 flex flex-col justify-between">
-                  <div>
-                    <h2 className="text-sm font-normal line-clamp-2 mb-2">
-                      {book.title}
-                    </h2>
-                    <p className="text-xs text-gray-600 line-clamp-1">
-                      {book.authors}
-                    </p>
-                  </div>
-
-                  <div className="mt-auto">
-                    {book.average_rating && (
-                      <div className="flex items-center mb-2">
-                        <StarRating rating={book.average_rating} />
-                        <span className="ml-2 text-sm">
-                          {book.average_rating}
-                        </span>
-                      </div>
-                    )}
-                    {book.list_price && (
-                      <div className="text-sm">$ {book.list_price}</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="relative">
                   <div
-                    className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 cursor-pointer transform translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToCart(book);
-                    }}
+                    className="relative aspect-[2/3] cursor-pointer px-2 pt-2 pb-0"
+                    onClick={() => handleBookClick(book)}
                   >
-                    QUICK ADD
+                    {book.thumbnail_image_link && (
+                      <div className="relative w-full h-full flex items-start justify-center">
+                        <div
+                          className="relative w-full"
+                          style={{ paddingBottom: '150%' }}
+                        >
+                          <Image
+                            alt={book.title}
+                            src={book.thumbnail_image_link}
+                            layout="fill"
+                            objectFit="contain"
+                            objectPosition="top"
+                            className="transition-transform rounded-tl rounded-tr duration-300 ease-in-out group-hover:scale-105"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {book.is_promotion && book.discount_percentage && (
+                      <div className="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-br z-10">
+                        {`${book.discount_percentage}% OFF`}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-grow p-2 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-sm font-normal line-clamp-2 mb-2">
+                        {book.title}
+                      </h2>
+                      <p className="text-xs text-gray-600 line-clamp-1">
+                        {book.authors}
+                      </p>
+                    </div>
+
+                    <div className="mt-auto">
+                      {book.average_rating && (
+                        <div className="flex items-center mb-2">
+                          <StarRating rating={book.average_rating} />
+                          <span className="ml-2 text-sm">
+                            {book.average_rating}
+                          </span>
+                        </div>
+                      )}
+                      {book.list_price && (
+                        <div className="text-sm">$ {book.list_price}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div
+                      className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 cursor-pointer transform translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(book);
+                      }}
+                    >
+                      QUICK ADD
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            <div className="mt-4 flex w-full justify-end">
+              <BookPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                basePath={pathname as string}
+                onPageChange={handlePageChange}
+                onNextPageHover={prefetchNextPage}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>

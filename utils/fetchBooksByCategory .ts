@@ -51,11 +51,16 @@ export async function fetchBooksByCategory(
       sort_order: filters.sort_order || 'DESC'
     });
 
+
     if (booksError) throw booksError;
+
+    const totalBooks = books && books.length > 0 ? Number(books[0].total_count) : 0;
+
+    console.log('fetchBooksByCategory ******* books - totalBooks:', books);
 
     return {
       category: categoryKey || 'all',
-      totalBooks: count || 0,
+      totalBooks,
       books: books as IBookInventory[],
       isLoading: false,
       error: null,

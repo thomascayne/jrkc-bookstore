@@ -1,7 +1,7 @@
 // components\LandingPageContent.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useBooksByCategory } from '@/hooks/useBooksByCategory';
 import { addCartItem } from '@/stores/cartStore';
 import { BookCategory } from '@/interfaces/BookCategory';
@@ -26,7 +26,6 @@ export default function LandingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const { openFullScreenModal } = useFullScreenModal();
@@ -36,31 +35,32 @@ export default function LandingPageContent() {
     error: categoriesError,
   } = useCachedCategories();
 
-  const booksPerPage = 100;
-  const page = searchParams ? Number(searchParams.get('page')) || 1 : 1;
-
+  const booksPerPage = 24;
+  const [currentPage, setCurrentPage] = useState(() => {
+    return Number(searchParams && searchParams.get('page')) || 1;
+  });
+  
   const [filters, setFilters] = useState<FilterOptions>({});
   const searchQuery = searchParams ? searchParams.get('q') || '' : '';
 
   useUrlSync(filters, setFilters);
 
-  const { displayedBooks, isLoading, error, totalPages, isFetching } =
-    useBooksByCategory(booksPerPage, 'all', filters, page, searchQuery);
-  console.log("totalPages", totalPages);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categories = await fetchBookCategories();
-        setBookCategories(categories);
-      } catch (error) {
-        console.error('Error fetching book categories:', error);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
+  const {
+    displayedBooks,
+    isLoading,
+    error,
+    totalBooks,
+    totalPages,
+    isFetching,
+    prefetchNextPage,
+  } = useBooksByCategory(
+    booksPerPage,
+    'all',
+    filters,
+    currentPage,
+    searchQuery,
+  );
+  
   const updateURLParams = useCallback(
     (newFilters: FilterOptions) => {
       const params = new URLSearchParams(window.location.search);
@@ -85,7 +85,7 @@ export default function LandingPageContent() {
       });
 
       const newUrl = `${window.location.pathname}?${params.toString()}`;
-      router.push(newUrl, { scroll: false });
+      router.push(newUrl);
     },
     [router],
   );
@@ -143,15 +143,23 @@ export default function LandingPageContent() {
     openFullScreenModal(<BookDetails bookId={book.id} />, `${book.title}`);
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (!searchParams) return;
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    current.set('page', newPage.toString());
-    const search = current.toString();
-    const query = search ? `?${search}` : '';
-    router.push(`${pathname}${query}`);
-  };
-
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      setCurrentPage(newPage);
+  
+      if (!searchParams) {
+        return;
+      }
+  
+      const current = new URLSearchParams(Array.from(searchParams.entries()));
+      current.set('page', newPage.toString());
+      const search = current.toString();
+      const query = search ? `?${search}` : '';
+      router.push(`${pathname}${query}`);
+    },
+    [pathname, router, searchParams]
+  );
+  
   if (error) return <div>Error loading books: {error.message}</div>;
 
   return (
@@ -321,9 +329,11 @@ export default function LandingPageContent() {
         <div className="mb-4 flex flex-colo items-center md:flex-row md:justify-between">
           <h1 className="text-3xl font-bold">JRKC Book Store</h1>
           <BookPagination
-            currentPage={page}
+            currentPage={currentPage}
             totalPages={totalPages}
             basePath={pathname as string}
+            onPageChange={handlePageChange}
+            onNextPageHover={prefetchNextPage}
           />
         </div>
 
@@ -410,11 +420,13 @@ export default function LandingPageContent() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4 flex w-full justify-end">
               <BookPagination
-                currentPage={page}
+                currentPage={currentPage}
                 totalPages={totalPages}
                 basePath={pathname as string}
+                onPageChange={handlePageChange}
+                onNextPageHover={prefetchNextPage}
               />
             </div>
           </>

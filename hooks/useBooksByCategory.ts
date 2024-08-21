@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
-import { IBookInventory } from '@/interfaces/IBookInventory';
+import { useCallback, useMemo } from 'react';
 import { fetchBooksByCategory, FilterOptions } from '@/utils/fetchBooksByCategory ';
 
 export const useBooksByCategory = (
@@ -11,7 +10,6 @@ export const useBooksByCategory = (
   searchQuery: string
 ) => {
   const queryClient = useQueryClient();
-  const [currentBooks, setCurrentBooks] = useState<IBookInventory[]>([]);
   const queryKey = ['books', categoryKey, booksPerPage, filters, page, searchQuery];
 
   const query = useQuery({
@@ -20,26 +18,29 @@ export const useBooksByCategory = (
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  useEffect(() => {
-    if (query.data?.books) {
-      setCurrentBooks(query.data.books);
+  const totalBooks = query.data?.totalBooks || 0;
+  const totalPages = useMemo(() => Math.ceil(totalBooks / booksPerPage), [totalBooks, booksPerPage]);
+
+  const prefetchNextPage = useCallback(() => {
+    if (page < totalPages) {
+      const nextPage = page + 1;
+      const nextPageQueryKey = ['books', categoryKey, booksPerPage, filters, nextPage, searchQuery];
+      queryClient.prefetchQuery({
+        queryKey: nextPageQueryKey,
+        queryFn: () => fetchBooksByCategory(booksPerPage, categoryKey, filters, nextPage, searchQuery),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      });
     }
-  }, [query.data]);
-
-  const refetch = async () => {
-    await queryClient.invalidateQueries({ queryKey });
-    return query.refetch();
-  };
-
-  console.log("useBooksByCategory hook - totalBooks:", query.data?.totalBooks, "totalPages:", query.data?.totalPages);
+  }, [page, totalPages, categoryKey, booksPerPage, filters, searchQuery, queryClient]);
 
   return {
     category: query.data?.category || '',
-    displayedBooks: currentBooks,
-    totalBooks: query.data?.totalBooks || 0,
-    isLoading: query.isLoading,
+    displayedBooks: query.data?.books || [],
     error: query.error,
     isFetching: query.isFetching,
-    refetch,
+    isLoading: query.isLoading,
+    prefetchNextPage,
+    totalBooks,
+    totalPages,
   };
 };

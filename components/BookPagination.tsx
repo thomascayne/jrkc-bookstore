@@ -1,73 +1,107 @@
 import React from 'react';
-import Link from 'next/link';
+import {
+  FaChevronLeft,
+  FaChevronRight,
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight,
+} from 'react-icons/fa';
 
-interface PaginationProps {
+interface BookPaginationProps {
   currentPage: number;
   totalPages: number;
   basePath: string;
+  onPageChange: (page: number) => void;
+  onNextPageHover: () => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, basePath }) => {
-  console.log("totalPages", totalPages, "currentPage", currentPage);
+const BookPagination: React.FC<BookPaginationProps> = ({
+  currentPage,
+  totalPages,
+  basePath,
+  onPageChange,
+  onNextPageHover,
+}) => {
   if (totalPages <= 1) return null;
 
-  const pageNumbers = [];
-  const maxVisiblePages = 4;
+  const handlePageClick = (page: number) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    onPageChange(page);
+  };
 
-  for (let i = 1; i <= Math.min(maxVisiblePages, totalPages); i++) {
-    pageNumbers.push(i);
-  }
+  const renderPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-  if (totalPages > maxVisiblePages) {
-    if (currentPage > 3) {
-      pageNumbers[0] = 1;
-      pageNumbers[1] = '...';
-      for (let i = 2; i < maxVisiblePages - 1; i++) {
-        pageNumbers[i] = currentPage - Math.floor(maxVisiblePages / 2) + i;
-      }
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    if (currentPage < totalPages - 2) {
-      pageNumbers[maxVisiblePages - 2] = '...';
-      pageNumbers[maxVisiblePages - 1] = totalPages;
-    }
-  }
 
-  const getPageUrl = (page: number) => {
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set('page', page.toString());
-    return `${basePath}?${searchParams.toString()}`;
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(
+        <li
+          key={i}
+          className={`inline-block mx-1 ${i === currentPage ? 'font-bold' : ''}`}
+        >
+          <a
+            href="#"
+            onClick={handlePageClick(i)}
+            className={`px-2 py-2 border rounded ${i === currentPage ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'}`}
+          >
+            {i}
+          </a>
+        </li>,
+      );
+    }
+
+    return pageNumbers;
   };
 
   return (
-    <nav className="flex justify-end mt-4">
-      <ul className="flex items-center space-x-2">
-        <li>
-          <Link href={currentPage > 1 ? getPageUrl(currentPage - 1) : '#'} 
-                className={`px-2 py-1 ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-500 hover:text-blue-700'}`}>
-            &lt;&lt;
-          </Link>
+    <nav className="flex justify-center mt-4">
+      <ul className="flex items-center space-x-1">
+        <li className="flex">
+          <a
+            href="#"
+            onClick={handlePageClick(1)}
+            className={`px-2 py-1 border rounded ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+          >
+            <FaAngleDoubleLeft />
+          </a>
         </li>
-        {pageNumbers.map((number, index) => (
-          <li key={index}>
-            {number === '...' ? (
-              <span className="px-2 py-1">...</span>
-            ) : (
-              <Link href={getPageUrl(number as any)}
-                    className={`px-2 py-1 ${number === currentPage ? 'bg-blue-500 text-white' : 'text-blue-500 hover:text-blue-700'}`}>
-                {number}
-              </Link>
-            )}
-          </li>
-        ))}
-        <li>
-          <Link href={currentPage < totalPages ? getPageUrl(currentPage + 1) : '#'}
-                className={`px-2 py-1 ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-blue-500 hover:text-blue-700'}`}>
-            &gt;&gt;
-          </Link>
+        <li className="flex">
+          <a
+            href="#"
+            onClick={handlePageClick(Math.max(1, currentPage - 1))}
+            className={`px-2 py-1 border rounded ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+          >
+            <FaChevronLeft />
+          </a>
+        </li>
+        {renderPageNumbers()}
+        <li className="flex">
+          <a
+            href="#"
+            onClick={handlePageClick(Math.min(totalPages, currentPage + 1))}
+            onMouseEnter={onNextPageHover}
+            className={`px-2 py-1 border rounded ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+          >
+            <FaChevronRight />
+          </a>
+        </li>
+        <li className="flex">
+          <a
+            href="#"
+            onClick={handlePageClick(totalPages)}
+            className={`px-2 py-1 border rounded ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+          >
+            <FaAngleDoubleRight />
+          </a>
         </li>
       </ul>
     </nav>
   );
 };
 
-export default Pagination;
+export default BookPagination;
