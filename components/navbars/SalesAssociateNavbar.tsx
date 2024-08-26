@@ -1,6 +1,7 @@
 // components/SalesAssociateNavbar.tsx
 'use client';
 
+import { VscSignIn } from 'react-icons/vsc'; // Assuming it's from this library
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Navbar,
@@ -154,7 +155,7 @@ function SalesAssociateNavbar({
     </NavbarContent>
 
     <NavbarContent className="hidden sm:flex flex-grow gap-2 !mx-auto" justify='center'>
-      {roleMenuItems.map((item) => (
+      {menuItems.map((item) => (
         <NavbarItem key={item.item}>
           <Link
             color="foreground"
@@ -206,7 +207,7 @@ function SalesAssociateNavbar({
   </div>
 
   <NavbarMenu className="mt-6 flex flex-col sm:hidden">
-    {roleMenuItems.map((item, index) => (
+    {menuItems.map((item, index) => (
       <NavbarMenuItem key={`${item.item}-${index}`}>
         <Link
           color="foreground"
