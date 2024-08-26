@@ -4,8 +4,8 @@ import Loading from '@/components/Loading';
 interface SalesReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  startDate: string | null;  // Allow null
-  endDate: string | null;  // Allow null
+  startDate: string | null;
+  endDate: string | null;
   reportType: string;
 }
 
@@ -20,27 +20,26 @@ const SalesReportModal: React.FC<SalesReportModalProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Introduce a delay to simulate a loading time before data is displayed
     if (isOpen && startDate && endDate) {
       const loadSalesData = async () => {
         setIsLoading(true);
 
-        // Simulate network delay (e.g., 2 seconds)
+        // Simulate a delay to simulate network fetching/loading time
         await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Set hardcoded sales data for the selected report type
-        const data = getSalesData();
+        // Hardcoded sales data based on the selected report type
+        const data = getSalesData(reportType);
         setSalesData(data);
         setIsLoading(false);
       };
 
-      loadSalesData();
+      loadSalesData(); // Execute the function
     }
-  }, [isOpen, startDate, endDate]);
+  }, [isOpen, startDate, endDate, reportType]); // Updated dependencies
 
-  // Hardcoded book sales data for each report type
-  const getSalesData = () => {
-    switch (reportType) {
+  // Hardcoded book sales data for the selected report type
+  const getSalesData = (type: string) => {
+    switch (type) {
       case 'Daily Sales':
         return [
           { date: '2024-08-18', book_title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', isbn: '9780743273565', quantity_sold: 10, total_sales: 150 },
@@ -82,7 +81,7 @@ const SalesReportModal: React.FC<SalesReportModalProps> = ({
         </button>
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
-            <Loading /> {/* Loading spinner */}
+            <Loading />
           </div>
         ) : (
           <table className="table-auto w-full border-collapse rounded-lg overflow-hidden shadow-lg">

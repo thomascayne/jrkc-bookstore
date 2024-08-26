@@ -1,66 +1,92 @@
-// Directory: contexts/UserProfileContext.tsx
+// contexts/UserProfileContext.tsx
+'use client';
 
-"use client"; // Mark this as a client component
-
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { UserProfile } from '@/interfaces/UserProfile';
-import { supabaseClient } from '@/utils/supabase/serviceClient';
+import { createClient } from '@/utils/supabase/client';
+import { error } from 'console';
 
-interface UserProfileContextProps {
+interface UserProfileContextType {
+  error: unknown;
+  isLoading: boolean;
   profile: UserProfile | null;
-  sessionToken: string | null;
+  session_token: string | null;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>;
+  signOut: () => Promise<void>;
 }
 
-// Creating the context for user profile and session token
-const UserProfileContext = createContext<UserProfileContextProps | undefined>(undefined);
+const UserProfileContext = createContext<UserProfileContextType | null>(null);
 
-/**
- * Provider component for user profile context
- * It provides the current user's profile and session token to the rest of the app.
- */
-export const UserProfileProvider = ({ children }: { children: React.ReactNode }) => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const userProfileData = useUserProfile();
+  const [session_token, setSession_token] = React.useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUserProfileAndSession = async () => {
-      try {
-        // Fetch user details
-        const { data: userData, error: userError } = await supabaseClient.auth.getUser();
-        if (userError) {
-          throw userError;
-        }
-        setProfile(userData.user as UserProfile);
+    const supabaseClient = createClient();
 
-        // Fetch session details
-        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
-        if (sessionError) {
-          throw sessionError;
-        }
-        setSessionToken(sessionData.session?.access_token || null);
-      } catch (error) {
-        console.error('Failed to fetch user profile and session:', error);
-      }
+    const getSession = async () => {
+      const {
+        data: { session },
+      } = await supabaseClient.auth.getSession();
+      setSession_token(session?.access_token ?? null);
     };
+    getSession();
 
-    fetchUserProfileAndSession();
+    // Set up listener for auth state changes
+    const { data: authListener } = supabaseClient.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          setSession_token(null);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession_token(session?.access_token ?? null);
+        }
+      },
+    );
+
+    // Clean up the listener
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
+  const contextValue = React.useMemo(
+    () => ({ ...userProfileData, session_token }),
+    [session_token, userProfileData],
+  );
+
   return (
-    <UserProfileContext.Provider value={{ profile, sessionToken }}>
+    <UserProfileContext.Provider value={contextValue}>
       {children}
     </UserProfileContext.Provider>
   );
 };
 
-/**
- * Hook to use user profile context in functional components.
- */
 export const useUserProfileContext = () => {
   const context = useContext(UserProfileContext);
-  if (context === undefined) {
-    throw new Error('useUserProfileContext must be used within a UserProfileProvider');
+  if (context === null) {
+    console.warn(
+      'useUserProfileContext must be used within a UserProfileProvider',
+    );
+    return {
+      profile: null,
+      isLoading: false,
+      session_token: null,
+      error: null,
+      updateProfile: async () => {
+        throw new Error('useUserProfileContext must be used within a UserProfileProvider');
+      },
+      signOut: async () => {
+        throw new Error('useUserProfileContext must be used within a UserProfileProvider');
+      },
+    } as UserProfileContextType;
   }
   return context;
+};
+
+export const useSessionFromUserProfileContext = () => {
+  const { session_token } = useUserProfileContext();
+  return session_token;
 };
