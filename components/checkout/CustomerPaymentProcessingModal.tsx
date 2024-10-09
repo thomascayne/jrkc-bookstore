@@ -64,7 +64,6 @@ const CustomerPaymentProcessingModal: React.FC<
         }));
         console.error('Payment failed:', error.message);
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Payment successful, now finalize the cart items
         try {
 
           console.log('Payment successful:', paymentIntent);

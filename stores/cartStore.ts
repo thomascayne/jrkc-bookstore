@@ -433,17 +433,11 @@ export const finalizePaidCartItems = async (paymentDetails: { paymentMethod: str
 
         const currentCart = cart as ICustomerCart;
 
-        // 2. Verify the total amount
-        const cartTotal = currentCart.items.reduce((sum, item) => sum + (item.current_price * item.quantity), 0);
-        if (Math.abs(cartTotal - paymentDetails.totalPaid) > 0.01) {  // Allow for small float precision differences
-            throw new Error(`Payment amount mismatch: expected ${cartTotal}, got ${paymentDetails.totalPaid}`);
-        }
-
-        // 3. Create new order
+        // 2. Create new order
         const { data: order, error: orderError } = await supabase.rpc('insert_order', {
             p_user_id: paymentDetails.user_id, // Assuming you have the user object
             p_status: 'paid',
-            p_total_amount: cartTotal,
+            p_total_amount: paymentDetails.totalPaid,
             p_payment_method: paymentDetails.paymentMethod
         });
 
@@ -451,7 +445,7 @@ export const finalizePaidCartItems = async (paymentDetails: { paymentMethod: str
             throw new Error(`Error creating order: ${orderError.message}`);
         }
 
-        // 4. Move cart items to order_items
+        // 3. Move cart items to order_items
         const orderItems: Omit<ICartOrderItem, 'id' | 'book'>[] = currentCart.items.map(item => ({
             book_id: item.book_id,
             order_id: order.id,
@@ -461,7 +455,7 @@ export const finalizePaidCartItems = async (paymentDetails: { paymentMethod: str
             quantity: item.quantity,
         }));
 
-        // Insert order items
+        // 4. Insert order items
         const { data: insertedOrderItems, error: insertError } = await supabase.rpc('insert_order_items', {
             p_order_items: orderItems
         });
