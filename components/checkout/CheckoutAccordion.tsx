@@ -121,12 +121,8 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
     useState(false);
   const subtotal = useStore(cartStore, getTotal);
 
-  const taxAmount = useMemo(() => subtotal * TAX_RATE, [subtotal]);
-  const totalAmount = useMemo(() => subtotal + taxAmount, [subtotal, taxAmount]);
-  const payAmount = (totalAmount * 100).toFixed(0);
-
-  console.log("totalAmount: ", totalAmount.toFixed(2), (totalAmount * 100).toFixed(0));
-
+  const taxAmount = subtotal * TAX_RATE;
+  const totalAmount = subtotal + taxAmount;
   const [mockCreditCard, setMockCreditCard] =
     useState<StripMockCreditCard | null>(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -252,6 +248,7 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
     await waitSomeTime(300);
     closeFullScreenModal();
   };
+
   const handlePlaceOrder = async () => {
     const stripeInstance = await loadStripe(
       `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`,
@@ -274,10 +271,11 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: Math.round(totalAmount * 100).toFixed(0), 
+          amount: totalAmount, 
         }),
       });
 
+      console.log("stripe payment: ", response);
       if (!response.ok) {
         throw new Error('Failed to create payment intent');
       }
@@ -324,6 +322,10 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
       setIsLoading(false);
     }
   };
+
+  const handleReturnFromMakingPaymentCart = () => {
+    
+  }
 
   useEffect(() => {
     if (itemCount === 0) {

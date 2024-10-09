@@ -454,7 +454,7 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
                     shadow="lg"
                     key={book.id}
                     className="relative p-2 border-transparent border hover:border-blue-400 cursor-pointer w-[150px] h-[220px] flex flex-col transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl"
-                    onMouseDown={(e) => {
+                    onMouseDown={(e: React.MouseEvent) => {
                       addToRegister(book, e);
                     }}
                   >
