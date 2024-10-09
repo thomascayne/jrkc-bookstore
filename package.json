@@ -50,6 +50,7 @@
     "embla-carousel-react": "^8",
     "framer-motion": "^11.3.18",
     "geist": "^1",
+    "jrkc-bookstore": "file:",
     "libphonenumber-js": "^1.11.5",
     "lodash": "^4.17.21",
     "next": "14.2.5",
