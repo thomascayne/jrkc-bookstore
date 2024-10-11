@@ -53,7 +53,7 @@
     "jrkc-bookstore": "file:",
     "libphonenumber-js": "^1.11.5",
     "lodash": "^4.17.21",
-    "next": "14.2.5",
+    "next": "14.2.15",
     "next-auth": "^4.24.7",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
