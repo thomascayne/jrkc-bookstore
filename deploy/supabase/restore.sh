@@ -3,9 +3,7 @@
 set -eu
 
 scriptDirectory=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-repositoryDirectory=$(CDPATH= cd -- "$scriptDirectory/../.." && pwd)
 runtimeDirectory=${JRKC_SUPABASE_HOME:-"$HOME/jrkc-supabase"}
-backupPath=${1:-"$repositoryDirectory/db_cluster-15-08-2026@16-44-26.backup.gz"}
 postgresImageVersion=15.8.1.085
 supabaseCliSha256=5b3031cb297d51b25be4c284e4c852254460ec722ec221d3b81b07d55acfd158
 supabaseCliVersion=2.116.0
@@ -13,6 +11,13 @@ supabaseCliPath="$runtimeDirectory/tools/supabase"
 restoreMarkerPath="$runtimeDirectory/.jrkc-restore.sha256"
 recoveryProjectId=jrkc-bookstore-recovery
 recoveryProjectDirectory=''
+
+if [ "$#" -ne 1 ]; then
+  printf 'Usage: sh deploy/supabase/restore.sh /secure/path/to/backup.gz\n' >&2
+  exit 1
+fi
+
+backupPath=$1
 
 cleanupRecovery() {
   if [ -n "$recoveryProjectDirectory" ] && [ -d "$recoveryProjectDirectory" ]; then

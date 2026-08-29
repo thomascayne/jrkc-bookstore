@@ -69,7 +69,15 @@ The health endpoint returns HTTP `204`. The image is a multi-stage Next.js stand
 
 ## Caddy and Cloudflare
 
-Merge `deploy/Caddyfile.bookstore` into the Oracle host's active Caddy configuration, validate it, and reload Caddy. Keep the existing Cloudflare `bookstore.thomascayne.com` proxied A record pointing at `129.146.115.86`. Cloudflare SSL/TLS should use Full (strict) once Caddy has a valid origin certificate.
+From the JRKC repository checkout on Oracle, install the bookstore site without overwriting other Caddy domains:
+
+```bash
+sudo sh deploy/configure-oracle-caddy.sh
+```
+
+The script installs `deploy/Caddyfile.bookstore` as `/etc/caddy/sites-enabled/jrkc-bookstore.caddy`, adds one top-level sites import when required, validates the complete active Caddy configuration, reloads Caddy, and restores the previous configuration if validation or reload fails.
+
+Keep the existing Cloudflare `bookstore.thomascayne.com` proxied A record pointing at the Oracle host. Cloudflare SSL/TLS should use Full (strict) once Caddy has a valid origin certificate.
 
 ## Staging isolation
 
@@ -108,23 +116,17 @@ The setup process performs all of the following:
 
 ### Restore the downloaded cluster
 
-The downloaded `db_cluster-15-08-2026@16-44-26.backup.gz` is a valid gzip-compressed PostgreSQL cluster SQL dump. Its SHA-256 digest at inspection time was `7D02F2233F47AC4BC153D7A626CC77A2383E33A037A6EF7E3FF2AF2CD56A2857`. It contains Supabase roles, Auth identities, encrypted password hashes, RLS policies, functions, triggers, extensions, and bookstore data.
+The downloaded database archive is a gzip-compressed PostgreSQL cluster SQL dump containing the Supabase roles, schemas, policies, functions, triggers, Auth identities, and bookstore records required for recovery. Keep the archive outside Git and pass its private Oracle filesystem path to the restore command.
 
 Do not feed the raw cluster SQL directly into the production database. It contains managed Supabase roles and internal schemas that conflict with an already initialized self-hosted stack. The restore script first loads the cluster into a disposable official Supabase PostgreSQL 15 recovery container, uses Supabase CLI filtering to create portable role/schema/data dumps, and then imports those dumps into production in a single transaction with triggers disabled for the data phase.
 
 Run the one-time restore:
 
 ```bash
-sh deploy/supabase/restore.sh
+sh deploy/supabase/restore.sh /secure/path/to/jrkc-backup.gz
 ```
 
-The restore is guarded by the source backup's SHA-256 digest and refuses to import over a production database that already contains profiles. Re-running it with the same completed backup performs verification rather than duplicating rows. The verified source counts are:
-
-- `auth.users`: 7
-- `public.profiles`: 7
-- `public.inventory`: 1,461
-- RLS policies: 47
-- RLS-enabled tables: 44
+The restore calculates the source backup's SHA-256 digest locally, records the completed digest in the private Supabase runtime directory, and refuses to import over a production database that already contains profiles. Re-running it with the same completed backup performs verification rather than duplicating rows. Expected and restored table counts are calculated during recovery and are never stored in the repository.
 
 After the restore, existing users retain their email/password identities because `auth.users.encrypted_password` is present. Existing hosted Supabase access and refresh tokens are not reusable because the self-hosted deployment generates a new JWT secret; users must sign in again. New signups are handled by the self-hosted Auth service and inserted into `auth.users`. An idempotent post-restore database patch adds insert-time triggers for auto-confirmed accounts so corresponding `public.profiles` and `public.user_roles` rows are created immediately. All three records are retained in the persistent PostgreSQL data directory across container restarts and application deployments.
 
