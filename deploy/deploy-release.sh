@@ -78,6 +78,7 @@ git checkout --detach "$releaseCommit"
 
 export BOOKSTORE_HOST_PORT=$hostPort
 export BOOKSTORE_IMAGE_TAG=$releaseCommit
+export BOOKSTORE_ENV_FILE=$environmentFile
 
 docker compose \
   --project-name "$composeProject" \
