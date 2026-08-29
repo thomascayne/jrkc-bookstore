@@ -7,7 +7,6 @@ import { User } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProfileAddress from "@/app/profile/ProfileAddress";
 import ProfileAdminPanel from "@/app/profile/ProfileAdminPanel";
-import AuthNavbar from "@/components/navbars/AuthNavbar";
 import ProfilePersonalInformation from "@/app/profile/ProfilePersonalInformation";
 import ProfileOrderHistory from "@/app/profile/ProfileOrderHistory";
 
@@ -102,31 +101,27 @@ export default function ProfilePage() {
   const visibleTabs = tabs.filter((tab) => tab.isVisible(userRoles));
 
   return (
-    <>
-      <AuthNavbar initialUser={user} />
-
-      <div className="profile-page-container container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Profile</h1>
-        <div className="flex mb-4 border-b border-gray-200 dark:border-gray-600 pb-1">
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab.key}
-              className={`mx-2 p-2 ${
-                activeTab === tab.key
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 dark:text-black"
-              }`}
-              onClick={() => handleTabChange(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-        {visibleTabs.map(
-          (tab) =>
-            activeTab === tab.key && <tab.component key={tab.key} user={user} />
-        )}
+    <div className="profile-page-container container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Profile</h1>
+      <div className="flex mb-4 border-b border-gray-200 dark:border-gray-600 pb-1">
+        {visibleTabs.map((tab) => (
+          <button
+            key={tab.key}
+            className={`mx-2 p-2 ${
+              activeTab === tab.key
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 dark:text-black"
+            }`}
+            onClick={() => handleTabChange(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
-    </>
+      {visibleTabs.map(
+        (tab) =>
+          activeTab === tab.key && <tab.component key={tab.key} user={user} />
+      )}
+    </div>
   );
 }

@@ -16,7 +16,7 @@ import {
   Button,
   Select,
   SelectItem,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import BookDetails from '@/components/BookDetails';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import { IBookInventory } from '@/interfaces/IBookInventory';
@@ -256,7 +256,7 @@ const InventoryPage = () => {
           }
         >
           {categories.map((category) => (
-            <SelectItem key={category.id} value={category.id.toString()}>
+            <SelectItem key={category.id.toString()}>
               {category.label}
             </SelectItem>
           ))}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@tanstack/react-store";
 import { cartStore } from "@/stores/cartStore";
-import { Skeleton } from "@nextui-org/react";
+import { Skeleton } from "@heroui/react";
 
 export default function CartLoadingSkeleton() {
   return (

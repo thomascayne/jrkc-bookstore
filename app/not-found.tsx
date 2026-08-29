@@ -2,7 +2,7 @@
 
 "use client";
 
-import { Card, CardBody, CardHeader } from "@nextui-org/react";
+import { Card, CardBody, CardHeader } from "@heroui/react";
 import Link from "next/link";
 
 export default function NotFound() {

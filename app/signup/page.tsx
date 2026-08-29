@@ -1,24 +1,16 @@
 // app/signup/page.tsx
 
-import AuthNavbar from "@/components/navbars/AuthNavbar";
-import { createClient } from "@/utils/supabase/server";
 import SignUpForm from "@/app/signup/SignUpForm";
 
-export default async function SignUpPage() {
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.getUser();
-
+export default function SignUpPage() {
   return (
-    <>
-      <AuthNavbar initialUser={data.user} />
-      <section className="signup-page-wrapper flex flex-grow flex-col items-center justify-center">
-        <div className="sign-up-form-wrapper w-full max-w-md px-8 pt-8 pb-12 mt-[-6rem] border border-gray-400 rounded-md">
-          <h1 className="text-2xl font-bold mb-6 text-center">
-            Create an Account
-          </h1>
-          <SignUpForm />
-        </div>
-      </section>
-    </>
+    <section className="signup-page-wrapper flex min-h-full w-full flex-1 items-center justify-center px-4 py-10 sm:px-6">
+      <div className="sign-up-form-wrapper w-full max-w-md rounded-md border border-gray-400 px-8 pb-12 pt-8">
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          Create an Account
+        </h1>
+        <SignUpForm />
+      </div>
+    </section>
   );
 }

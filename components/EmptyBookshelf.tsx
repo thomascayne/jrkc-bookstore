@@ -1,7 +1,9 @@
+'use client';
+
 // components/EmptyBookshelf.tsx
 
 import React from "react";
-import { Card, CardHeader, CardBody } from "@nextui-org/react";
+import { Card, CardHeader, CardBody } from "@heroui/react";
 import Link from "next/link";
 
 interface Book {

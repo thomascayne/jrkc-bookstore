@@ -5,7 +5,7 @@
 import React, { useState, useEffect, FormEvent } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { FaChevronUp, FaPencilAlt, FaPlus } from "react-icons/fa";
-import { Button, Card, Input } from "@nextui-org/react";
+import { Button, Card, Input } from "@heroui/react";
 import { User } from "@supabase/supabase-js";
 import { BillingAddress } from "../../interfaces/BillingAddress";
 import { ShippingAddress } from "@/interfaces/ShippingAddress";

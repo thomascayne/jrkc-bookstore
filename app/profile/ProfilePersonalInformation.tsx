@@ -5,8 +5,7 @@
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { User } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
-import { Input } from "@nextui-org/input";
-import { Button, Card, CardBody, CardHeader } from "@nextui-org/react";
+import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
 import { createClient } from "@/utils/supabase/client";
 import useSignOut from "@/hooks/useSignOut";
 import {
@@ -97,12 +96,7 @@ export default function ProfilePersonalInformation({ user }: PersonalInfoProps) 
     const { isValid, formattedNumber, text } = validateAndFormatPhone(phone);
 
     if (!isValid) {
-      setPhoneMessage(
-        { isValid, formattedNumber, text } || {
-          isValid: false,
-          error: "Please enter a valid phone number.",
-        }
-      );
+      setPhoneMessage({ isValid, formattedNumber, text });
       return;
     }
 

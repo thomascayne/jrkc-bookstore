@@ -1,3 +1,5 @@
+'use client';
+
 import PointOfSaleRegister from '@/components/point-of-sale/PointOfSaleRegister';
 import { usePointOfSaleStore } from '@/hooks/usePointOfSaleStore';
 import {
@@ -6,7 +8,7 @@ import {
   Modal,
   ModalBody,
   ModalFooter,
-} from '@nextui-org/react';
+} from '@heroui/react';
 // components/point-of-sale/PointOfSaleOverlay.tsx
 
 import React, { useState } from 'react';

@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         });
     }
 
-    const supabase = createClient()  // maybe switch to ClientSide Client
+    const supabase = await createClient()
 
     let responseMessage: string = ''
     let successfulResponses: boolean = true

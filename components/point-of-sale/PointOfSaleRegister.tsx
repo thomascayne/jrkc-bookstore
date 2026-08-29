@@ -10,7 +10,7 @@ import {
   Divider,
   Badge,
   Tooltip,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import {
   FaSearch,
   FaTrash,

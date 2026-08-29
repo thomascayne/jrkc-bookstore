@@ -1,3 +1,5 @@
+'use client';
+
 import {
   getDropdownRoles,
   getRoleColor,
@@ -12,7 +14,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-} from "@nextui-org/react";
+} from "@heroui/react";
 import { User } from "@supabase/supabase-js";
 import React from "react";
 import { FaChevronDown } from "react-icons/fa";

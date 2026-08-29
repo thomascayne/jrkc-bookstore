@@ -4,7 +4,7 @@
 
 import { Line } from 'react-chartjs-2';
 import { BookWithThumbnail } from '@/interfaces/BookWithThumbnail';
-import { Card, CardHeader, CardBody, Divider } from '@nextui-org/react';
+import { Card, CardHeader, CardBody, Divider } from '@heroui/react';
 import {
   Chart as ChartJS,
   CategoryScale,

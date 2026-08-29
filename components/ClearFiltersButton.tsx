@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useMemo } from 'react';
-import { Link } from "@nextui-org/react";
+import { Link } from "@heroui/react";
 import { FaTimes } from "react-icons/fa";
 import { FilterOptions } from '@/utils/fetchBooksByCategory '; // Adjust the import path as needed
 

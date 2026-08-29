@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useBooksByCategory } from '@/hooks/useBooksByCategory';
 import { addCartItem } from '@/stores/cartStore';
 import { BookCategory } from '@/interfaces/BookCategory';
-import { Button, Input, Link, Slider } from '@nextui-org/react';
+import { Button, Input, Link, Slider } from '@heroui/react';
 import { FaTimes } from 'react-icons/fa';
 import { fetchBookCategories } from '@/utils/bookCategoriesApi';
 import { FilterOptions } from '@/utils/fetchBooksByCategory ';

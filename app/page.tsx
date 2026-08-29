@@ -3,7 +3,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { Spinner } from "@nextui-org/react";
+import { Spinner } from "@heroui/react";
 import LandingPageContent from '@/components/LandingPageContent';
 
 export default function Index() {

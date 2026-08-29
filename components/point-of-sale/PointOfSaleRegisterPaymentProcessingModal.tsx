@@ -1,3 +1,5 @@
+'use client';
+
 // components/point-of-sale/PointOfSaleRegisterPaymentProcessingModal.tsx
 
 import CreditCardIcons from '@/components/CreditCardIcons';
@@ -6,7 +8,7 @@ import { IStripTestCardNumber } from '@/interfaces/IStripTestCardNumber';
 import { CardType } from '@/utils/creditCardUtils';
 import { generateRandomTestCardFromStripe } from '@/utils/getRandomTestCardsFromStripe';
 import { createStripePaymentIntent } from '@/utils/stripe-payment-helper';
-import { Button, Card, Input, Tooltip } from '@nextui-org/react';
+import { Button, Card, Input, Tooltip } from '@heroui/react';
 import {
   PaymentElement,
   useElements,
