@@ -36,16 +36,16 @@ The application container is never published directly to the internet. Docker bi
 - Ports `80` and `443` open for Caddy
 - Port `3100` closed publicly; it is loopback-only in `compose.yaml`
 
-The production environment must define these browser-visible build values:
+The production environment must define these two browser-visible Supabase values:
+
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`
+
+The following integrations are optional. Google Books uses its public volumes endpoint without a key when no override is supplied. Stripe checkout remains unavailable until both Stripe keys are configured:
 
 - `NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY`
 - `NEXT_PUBLIC_GOOGLE_BOOKS_API_URL`
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SUPABASE_URL`
-
-It must also define the server-only values already used by the application:
-
 - `STRIPE_SECRET_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `CRON_SECRET`
@@ -84,7 +84,7 @@ Keep the existing Cloudflare `bookstore.thomascayne.com` proxied A record pointi
 Staging must be a separate Compose project and bind to port `3101`. It must be deployed only from code that reached the `staging` branch through a pull request:
 
 ```bash
-BOOKSTORE_HOST_PORT=3101 docker compose --project-name jrkc-bookstore-staging --env-file .env.staging up --detach --build
+BOOKSTORE_ENV_FILE=.env.staging BOOKSTORE_HOST_PORT=3101 docker compose --project-name jrkc-bookstore-staging --env-file .env.staging up --detach --build
 ```
 
 Production and staging must use different environment files, Supabase projects or schemas, Stripe keys, container project names, and Caddy hostnames. Never deploy a local working branch directly over either environment.

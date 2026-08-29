@@ -1,6 +1,7 @@
 // hooks/useBookFetch.ts
 
 import { GoogleBook } from '@/interfaces/GoogleBook';
+import { createGoogleBooksUrl } from '@/utils/googleBooks';
 import { useState, useEffect } from 'react';
 
 export function useBookFetch(category: { key: string; label: string }) {
@@ -11,15 +12,12 @@ export function useBookFetch(category: { key: string; label: string }) {
         const fetchBooks = async () => {
             setIsLoading(true);
 
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-            const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
-
             try {
-                const response = await fetch(
-                    `${apiUrl}?q=subject:${encodeURIComponent(
-                        category.label
-                    )}&orderBy=relevance&maxResults=12&key=${apiKey}`
-                );
+                const response = await fetch(createGoogleBooksUrl('', {
+                    maxResults: 12,
+                    orderBy: 'relevance',
+                    q: `subject:${category.label}`,
+                }));
 
                 const data = await response.json();
                 const fetchedItems = data.items || [];

@@ -19,6 +19,8 @@
     }
   ],
   "description": "Bookstore Management System for CTU University",
+  "projectContext": "A collaborative college project created for the Colorado Technical University curriculum. It is educational team work, not the individual professional work of any one contributor.",
+  "repositoryUrl": "https://github.com/thomascayne/jrkc-bookstore",
   "engines": {
     "node": ">=24.0.0 <25"
   },
