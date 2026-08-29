@@ -12,7 +12,7 @@ services:
     cap_drop:
       - ALL
     env_file:
-      - path: .env.production
+      - path: ${BOOKSTORE_ENV_FILE:-.env.production}
         required: true
     environment:
       HOSTNAME: 0.0.0.0
