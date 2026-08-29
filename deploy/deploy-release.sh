@@ -37,6 +37,15 @@ case "$releaseBranch" in
     ;;
 esac
 
+case "${releaseBranch}:${environmentFile}" in
+  main:.env.production|staging:.env.staging) ;;
+  *)
+    printf 'Environment file %s is not valid for branch %s.\n' \
+      "$environmentFile" "$releaseBranch" >&2
+    exit 1
+    ;;
+esac
+
 case "$hostPort" in
   *[!0-9]*|'')
     printf 'Host port must be numeric.\n' >&2
@@ -56,8 +65,20 @@ if [ ! -f "$environmentFile" ]; then
   exit 1
 fi
 
-if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+unexpectedUntrackedFiles=$(git ls-files \
+  --others \
+  --exclude-standard \
+  -- \
+  . \
+  ":(exclude)${environmentFile}")
+
+if ! git diff --quiet || \
+  ! git diff --cached --quiet || \
+  [ -n "$unexpectedUntrackedFiles" ]; then
   printf 'Deployment checkout contains uncommitted files; refusing to overwrite it.\n' >&2
+  if [ -n "$unexpectedUntrackedFiles" ]; then
+    printf 'Unexpected untracked files:\n%s\n' "$unexpectedUntrackedFiles" >&2
+  fi
   exit 1
 fi
 
