@@ -11,6 +11,8 @@ JRKC Bookstore is a Next.js application using React, TypeScript, Supabase Auth a
 - Do not commit, push, merge, reset, clean, or stash without explicit user approval for that exact operation.
 - Preserve unrelated working-tree changes and stage files explicitly after review.
 - Never commit environment files, keys, certificates, database dumps, or generated build output.
+- Run `npm run hooks:install` in every clone. The tracked pre-push hook blocks direct pushes to `staging` and `main`.
+- Promotion is working branch -> pull request to `staging` -> pull request from `staging` to `main`; deployments must originate from the corresponding merged pull request.
 
 ## Application rules
 

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+
+while read -r localReference localCommit remoteReference remoteCommit; do
+  case "$remoteReference" in
+    refs/heads/main|refs/heads/staging)
+      protectedBranch=${remoteReference#refs/heads/}
+
+      printf '%s\n' \
+        "Direct pushes to ${protectedBranch} are blocked by JRKC Bookstore policy." \
+        "Required flow: working branch -> pull request to staging -> pull request from staging to main." \
+        "Push the current working branch, then use GitHub pull requests for promotion." >&2
+      exit 1
+      ;;
+  esac
+done
+
+exit 0

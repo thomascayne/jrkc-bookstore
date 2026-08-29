@@ -38,11 +38,13 @@
     "docker:config": "node scripts/docker-compose.mjs config",
     "docker:port": "node scripts/docker-compose.mjs port",
     "docker:up": "node scripts/docker-compose.mjs up",
+    "hooks:install": "node scripts/install-git-hooks.mjs",
     "lint": "eslint . --max-warnings=0",
     "major-update": "node update-version.mjs major",
     "minor-update": "node update-version.mjs minor",
     "patch-update": "node update-version.mjs patch",
     "start": "next start",
+    "test:branch-policy": "node --test scripts/branch-policy.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
