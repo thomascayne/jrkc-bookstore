@@ -19,7 +19,7 @@ import {
   CardHeader,
   Divider,
   Input,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import PlaceholderImage from '@/components/PlaceholderImage';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import BookDetails from '@/components/BookDetails';
@@ -118,12 +118,8 @@ const CartPage = () => {
     );
   }
 
-  const handleContinueShopping = (
-    e:
-      | React.MouseEvent<HTMLAnchorElement>
-      | React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    e.preventDefault();
+  const handleContinueShopping = (event: { preventDefault(): void }) => {
+    event.preventDefault();
 
     const lastVisitedPath = localStorage.getItem('lastVisitedPath') || '/';
     router.push(lastVisitedPath);
@@ -211,7 +207,7 @@ const CartPage = () => {
               </p>
               <Link
                 href="#"
-                className="[&:important]:px-0 hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
+                className="px-0! hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
                 onClick={(e) => {
                   e.preventDefault();
                   removeItem(item.book_id);

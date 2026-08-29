@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Divider } from '@nextui-org/react';
+import { Button, Divider } from '@heroui/react';
 import { v4 as uuidv4 } from 'uuid';
 import { IBookInventory } from '@/interfaces/IBookInventory';
 import { IOrderItem } from '@/interfaces/IOrderItem';

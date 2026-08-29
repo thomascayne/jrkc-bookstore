@@ -16,7 +16,7 @@ import {
   Radio,
   RadioGroup,
   Tooltip,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import { ShippingAddress } from '@/interfaces/ShippingAddress';
 import { BillingAddress } from '@/interfaces/BillingAddress';
 import { User } from '@supabase/supabase-js';
@@ -35,6 +35,7 @@ import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import CustomerPaymentProcessingModal from '@/components/checkout/CustomerPaymentProcessingModal';
 import { waitSomeTime } from '@/utils/wait-some-time';
 import CreditCardIcons from '@/components/CreditCardIcons';
+import { getStripePublishableKey } from '@/utils/stripeConfig';
 
 interface AccordionItemProps {
   children: React.ReactNode;
@@ -250,9 +251,13 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
   };
 
   const handlePlaceOrder = async () => {
-    const stripeInstance = await loadStripe(
-      `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`,
-    );
+    const stripePublishableKey = getStripePublishableKey();
+    if (!stripePublishableKey) {
+      console.warn('Stripe test payments are not configured for this deployment.');
+      return;
+    }
+
+    const stripeInstance = await loadStripe(stripePublishableKey);
 
     if (!stripeInstance) {
       console.error('Stripe Promise not initialized');

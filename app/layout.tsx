@@ -31,7 +31,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -55,7 +55,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="body-it-self flex flex-col pt-[75px] min-h-screen">
+      <body className="body-it-self flex min-h-screen flex-col">
         <TanstackQueryClientProvider>
           <UserProfileProvider>
             <FullScreenModalProvider>

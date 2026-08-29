@@ -1,7 +1,9 @@
+'use client';
+
 // components/checkout/ShippingAddressForm.tsx
 
 import React from "react";
-import { Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
+import { Card, CardBody, CardHeader, Divider } from "@heroui/react";
 import { UserProfile } from "@/interfaces/UserProfile";
 
 interface ShippingAddressFormProps {

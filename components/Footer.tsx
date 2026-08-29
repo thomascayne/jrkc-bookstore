@@ -1,24 +1,33 @@
+'use client';
+
 import AppLogo from "@/components/AppLogo";
 
 // components/Footer.tsx
 
 import * as packageInfo from "../package.json";
-import { Link } from "@nextui-org/react";
+import { Link } from "@heroui/react";
 
 export default function Footer() {
   const authors = packageInfo?.authors || [];
+  const projectContext = packageInfo?.projectContext || '';
+  const repositoryUrl = packageInfo?.repositoryUrl || '';
   const version = packageInfo?.version || "";
 
   return (
-    <footer className="w-full border-t  border-gray-300 dark:border-gray-600 p-8 gap-2 flex flex-col justify-center text-center">
-      <p>&mdash; Powered by &mdash;</p>
-      <ul className="flex justify-center flex-col sm:flex-row ">
+    <footer className="flex w-full flex-col items-center gap-4 border-t border-gray-300 p-8 text-center dark:border-gray-600">
+      {projectContext ? (
+        <p className="max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300">
+          {projectContext}
+        </p>
+      ) : null}
+      <p className="font-semibold">Created collaboratively by</p>
+      <ul className="flex flex-col justify-center sm:flex-row">
         {authors.map((author) => (
           <li
             key={author.name}
-            className="sm:[&:not(:last-child)]:border-r sm:[&:not(:first-child)]:ml-4 border-gray-300 dark:border-gray-600"
+            className="border-gray-300 dark:border-gray-600 sm:[&:not(:first-child)]:ml-4 sm:[&:not(:last-child)]:border-r"
           >
-            <span className="font-bold mr-2 sm:mr-4 whitespace-nowrap">
+            <span className="mr-2 whitespace-nowrap font-bold sm:mr-4">
               {author.name}
             </span>
           </li>
@@ -27,17 +36,20 @@ export default function Footer() {
       <p className="text-xs sm:text-sm">
         &copy; {new Date().getFullYear()} JRKC Bookstore.
       </p>
-      <div className="mt-2 flex justify-center items-center gap-2">
+      <div className="mt-2 flex items-center justify-center gap-2">
         <AppLogo width={80} height={24} />
         <Link
-          href="https://github.com/thomascayne/jrkc-bookstore"
+          className="cursor-pointer"
+          href={repositoryUrl}
+          rel="noreferrer"
           target="_blank"
         >
-          {version && (
+          {version ? (
             <span className="flex items-end">
-              <span>v</span>
-              <span className="text-lg">{version}</span>
+              View source&nbsp;v<span className="text-lg">{version}</span>
             </span>
+          ) : (
+            'View source'
           )}
         </Link>
       </div>

@@ -35,7 +35,7 @@ import { User } from "@supabase/supabase-js";
  * ```
  */
 export async function updateAfterEmailConfirmation(user: User) {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     try {
         const { error: profileError } = await supabase

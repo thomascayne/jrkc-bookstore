@@ -1,0 +1,17 @@
+.git
+.github
+.next
+.vercel
+coverage
+docs
+node_modules
+
+.env
+.env.*
+!.env.example
+
+*.log
+*.pem
+Dockerfile*
+compose*.yaml
+compose*.yml

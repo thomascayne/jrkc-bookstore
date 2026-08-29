@@ -1,0 +1,37 @@
+services:
+  bookstore:
+    build:
+      args:
+        NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY: ${NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY:-}
+        NEXT_PUBLIC_GOOGLE_BOOKS_API_URL: ${NEXT_PUBLIC_GOOGLE_BOOKS_API_URL:-https://www.googleapis.com/books/v1/volumes}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?NEXT_PUBLIC_SUPABASE_ANON_KEY is required}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
+      context: .
+      target: runner
+    cap_drop:
+      - ALL
+    env_file:
+      - path: ${BOOKSTORE_ENV_FILE:-.env.production}
+        required: true
+    environment:
+      HOSTNAME: 0.0.0.0
+      NODE_ENV: production
+      PORT: 3100
+    image: jrkc-bookstore:${BOOKSTORE_IMAGE_TAG:-local}
+    init: true
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m
+    ports:
+      - 127.0.0.1:${BOOKSTORE_HOST_PORT:-3100}:3100
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    tmpfs:
+      - /app/.next/cache:mode=0755,uid=1001,gid=1001
+      - /tmp:mode=1777

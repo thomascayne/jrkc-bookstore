@@ -7,7 +7,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { Input } from "@nextui-org/react";
+import { Input } from "@heroui/react";
 
 export default function SignUpForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -84,7 +84,7 @@ export default function SignUpForm() {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -94,6 +94,13 @@ export default function SignUpForm() {
 
     if (error) {
       setErrorMessage("Unable to create account. Please try again.");
+      return;
+    }
+
+    if (data.session) {
+      setSuccessMessage("Account created. You are now signed in.");
+      router.push("/");
+      router.refresh();
       return;
     }
 

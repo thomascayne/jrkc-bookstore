@@ -11,10 +11,17 @@
 
 # next.js
 /.next/
+/.next-validation/
 /out/
 
 # production
 /build
+
+# database backups and restore material
+*.backup
+*.backup.gz
+*.dump
+*.sql.gz
 
 # misc
 .DS_Store
@@ -29,6 +36,7 @@ yarn-error.log*
 .env*.local
 .env*.development
 .env*.production
+.env*.staging
 
 # vercel
 .vercel

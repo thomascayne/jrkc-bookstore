@@ -4,7 +4,7 @@
 
 import { useSidePanel } from "@/contexts/SidePanelContext";
 import { waitSomeTime } from "@/utils/wait-some-time";
-import { Card, CardBody, CardFooter, CardHeader } from "@nextui-org/react";
+import { Card, CardBody, CardFooter, CardHeader } from "@heroui/react";
 import React, { useEffect, useState } from "react";
 import { IoMdClose } from "react-icons/io";
 

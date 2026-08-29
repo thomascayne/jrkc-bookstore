@@ -12,7 +12,7 @@ import {
   NavbarMenuToggle,
   Link,
   Button,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import { User } from '@supabase/supabase-js';
 import {
   FaCashRegister,
@@ -129,7 +129,7 @@ function SalesAssociateNavbar({
 
   return (
 <Navbar
-  className="py-1 fixed top-0 left-0 right-0 z-50 shadow-lg"
+  className="fixed top-0 left-0 right-0 z-50 h-[var(--app-navbar-height)] py-1 shadow-lg"
   isBordered
   isMenuOpen={isMenuOpen}
   maxWidth="full"

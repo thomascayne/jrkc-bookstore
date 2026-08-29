@@ -10,7 +10,7 @@ import {
   Divider,
   Badge,
   Tooltip,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import {
   FaSearch,
   FaTrash,
@@ -37,6 +37,7 @@ import { Appearance, loadStripe } from '@stripe/stripe-js';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import Image from 'next/image';
 import { CardType } from '@/utils/creditCardUtils';
+import { getStripePublishableKey } from '@/utils/stripeConfig';
 
 interface TooltipState {
   minus: string;
@@ -288,7 +289,13 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
   }, []);
 
   const handleProceedToPayment = async (amount: number) => {
-    const stripe = await loadStripe(`${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`);
+    const stripePublishableKey = getStripePublishableKey();
+    if (!stripePublishableKey) {
+      console.warn('Stripe test payments are not configured for this deployment.');
+      return;
+    }
+
+    const stripe = await loadStripe(stripePublishableKey);
     
     if (!stripe) {
       console.error('Stripe Promise not initialized');

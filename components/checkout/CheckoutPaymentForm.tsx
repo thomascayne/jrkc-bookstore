@@ -1,3 +1,5 @@
+'use client';
+
 // components\checkout\PaymentForm.tsx
 
 import React, { useEffect, useState } from "react";
@@ -9,7 +11,7 @@ import {
   Radio,
   Select,
   SelectItem,
-} from "@nextui-org/react";
+} from "@heroui/react";
 import CreditCardIcons from "@/components/CreditCardIcons";
 
 import { createClient } from "@/utils/supabase/client";
@@ -22,7 +24,6 @@ import {
   generateMockCreditCard,
 } from "@/utils/creditCardUtils";
 import { IPaymentMethod } from "@/interfaces/IPaymentMethod";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   CardElement,
   Elements,
@@ -100,8 +101,6 @@ export default function CheckoutPaymentForm({
     e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
-
-    const stripeKey = await loadStripe(`${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`);
 
     if (!user) return;
 
@@ -222,8 +221,7 @@ export default function CheckoutPaymentForm({
                 >
                   {Array.from({ length: 12 }, (_, i) => (
                     <SelectItem
-                      key={i + 1}
-                      value={(i + 1).toString().padStart(2, "0")}
+                      key={(i + 1).toString().padStart(2, "0")}
                     >
                       {(i + 1).toString().padStart(2, "0")}
                     </SelectItem>
@@ -236,8 +234,7 @@ export default function CheckoutPaymentForm({
                 >
                   {Array.from({ length: 10 }, (_, i) => (
                     <SelectItem
-                      key={new Date().getFullYear() + i}
-                      value={(new Date().getFullYear() + i).toString()}
+                      key={(new Date().getFullYear() + i).toString()}
                     >
                       {new Date().getFullYear() + i}
                     </SelectItem>

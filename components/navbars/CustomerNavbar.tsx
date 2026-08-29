@@ -17,7 +17,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Badge,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import { BiCategory } from 'react-icons/bi';
 import { FaRegUser } from 'react-icons/fa';
 import { User } from '@supabase/supabase-js';
@@ -38,6 +38,7 @@ import { useStore } from '@tanstack/react-store';
 import { cartStore, getCartItemCount } from '@/stores/cartStore';
 import SearchBar from '@/components/SearchBar';
 import { useUserProfileContext } from '@/contexts/UserProfileContext';
+import { createGoogleBooksUrl } from '@/utils/googleBooks';
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -61,9 +62,11 @@ function CustomerNavbar({
   const searchParams = useSearchParams();
   const { signOut } = useUserProfileContext();
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-  const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
-  const url = `${apiUrl}?q=subject:fiction&orderBy=relevance&maxResults=40&key=${apiKey}`;
+  const url = createGoogleBooksUrl('', {
+    maxResults: 40,
+    orderBy: 'relevance',
+    q: 'subject:fiction',
+  });
 
   const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
   const cartItemCount = useStore(cartStore, getCartItemCount);
@@ -164,11 +167,11 @@ function CustomerNavbar({
    * When the cart is empty, it redirects to the cart page.
    * or it opens the shopping cart panel.
    *
-   * @param {React.MouseEvent<HTMLAnchorElement>} e - The click event.
+   * @param event - The click event.
    * @return {void} No return value.
    */
-  const handleCartClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
+  const handleCartClick = useCallback((event: { preventDefault(): void }) => {
+    event.preventDefault();
     
     const fullPath = getFullPath();
     localStorage.setItem('lastVisitedPath', fullPath);
@@ -201,7 +204,7 @@ function CustomerNavbar({
 
   return (
     <Navbar
-      className="fixed top-0 left-0 right-0 w-full z-50 shadow-lg"
+      className="fixed top-0 left-0 right-0 z-50 h-[var(--app-navbar-height)] w-full shadow-lg"
       isBordered
       isMenuOpen={isMenuOpen}
       maxWidth="full"

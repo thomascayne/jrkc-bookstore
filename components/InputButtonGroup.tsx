@@ -1,6 +1,8 @@
+'use client';
+
 // components/InputButtonGroup.tsx
 
-import { Button, ButtonGroup, Input, Tooltip } from "@nextui-org/react";
+import { Button, ButtonGroup, Input, Tooltip } from "@heroui/react";
 import React, { useEffect, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa";
 

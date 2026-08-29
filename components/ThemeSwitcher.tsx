@@ -1,11 +1,11 @@
 // components/ThemeSwitcher.tsx
 
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { FaMoon, FaSun } from "react-icons/fa";
+import { useEffect, useState } from 'react';
+import { FaMoon, FaSun } from 'react-icons/fa';
 
-export type Theme = "dark" | "light";
+export type Theme = 'dark' | 'light';
 
 interface ThemeSwitcherProps {
   onThemeChange: (theme: Theme) => void;
@@ -19,33 +19,37 @@ export default function ThemeSwitch({
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
-    applyTheme(theme);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const storedTheme = localStorage.getItem('theme');
+    const resolvedTheme: Theme =
+      storedTheme === 'dark' || storedTheme === 'light'
+        ? storedTheme
+        : document.documentElement.classList.contains('dark')
+          ? 'dark'
+          : 'light';
 
-  const applyTheme = (selectedTheme: Theme) => {
-    if (selectedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-
-    onThemeChange(selectedTheme);
-
-    localStorage.setItem("theme", selectedTheme);
-  };
+    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+    setTheme(resolvedTheme);
+    onThemeChange(resolvedTheme);
+  }, [onThemeChange]);
 
   const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    localStorage.setItem('theme', newTheme);
     setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    applyTheme(newTheme);
+    onThemeChange(newTheme);
   };
 
   return (
     <div>
-      <button className="m-2" onClick={toggleTheme}>
-        {theme === "light" ? <FaMoon /> : <FaSun />}
+      <button
+        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+        className="m-2"
+        onClick={toggleTheme}
+        type="button"
+      >
+        {theme === 'light' ? <FaMoon /> : <FaSun />}
       </button>
     </div>
   );

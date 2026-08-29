@@ -1,6 +1,8 @@
+'use client';
+
 // components\BookCardSkeleton.tsx
 
-import { Card, Skeleton } from '@nextui-org/react';
+import { Card, Skeleton } from '@heroui/react';
 
 export const BookCardSkeleton = () => (
   <Card className="relative p-2 w-[150px] h-[220px] flex flex-col">
