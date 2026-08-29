@@ -1,3 +1,5 @@
+'use client';
+
 // components/NavbarLoadingSkeleton.tsx
 import AppLogo from "@/components/AppLogo";
 import {
@@ -5,14 +7,14 @@ import {
   NavbarBrand,
   NavbarContent,
   Skeleton,
-} from "@nextui-org/react";
+} from "@heroui/react";
 import React from "react";
 
 export default function NavbarLoadingSkeleton() {
   return (
     <Navbar
       isBordered
-      className="py-1 fixed top-0 left-0 right-0 z-50"
+      className="fixed top-0 left-0 right-0 z-50 h-[var(--app-navbar-height)] py-1"
       maxWidth="full"
     >
       <NavbarBrand>

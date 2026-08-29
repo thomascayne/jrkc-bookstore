@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 const { STRIPE_SECRET_KEY } = process.env;
 
 const stripe = new Stripe(`${STRIPE_SECRET_KEY}`, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2026-08-26.dahlia',
 });
 
 export async function POST(req: Request) {

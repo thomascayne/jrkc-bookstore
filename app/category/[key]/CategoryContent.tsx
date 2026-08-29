@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 import { useBooksByCategory } from '@/hooks/useBooksByCategory';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
-import { Button, Input, Link, Slider } from '@nextui-org/react';
+import { Button, Input, Link, Slider } from '@heroui/react';
 import Image from 'next/image';
 import StarRating from '@/components/StarRating';
 import { addCartItem } from '@/stores/cartStore';

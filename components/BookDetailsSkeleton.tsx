@@ -1,7 +1,9 @@
+'use client';
+
 // components/BookDetailsSkeleton.tsx
 
 import React from "react";
-import { Skeleton } from "@nextui-org/react";
+import { Skeleton } from "@heroui/react";
 
 const BookDetailsSkeleton: React.FC = () => {
   return (

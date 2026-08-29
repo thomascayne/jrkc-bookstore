@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardBody } from '@nextui-org/react';
+import { Card, CardBody } from '@heroui/react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import {

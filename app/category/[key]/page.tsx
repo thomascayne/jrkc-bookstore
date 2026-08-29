@@ -1,7 +1,5 @@
 // app/category/[key]/page.tsx
 
-import AuthNavbar from "@/components/navbars/AuthNavbar";
-import { createClient } from "@/utils/supabase/server";
 import { Suspense } from "react";
 
 import CategoryContent from "./CategoryContent";
@@ -9,23 +7,15 @@ import CategoryContent from "./CategoryContent";
 export default async function CategoryPage({
   params,
 }: {
-  params: { key: string };
+  params: Promise<{ key: string }>;
 }) {
-  const supabase = createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+  const resolvedParams = await params;
 
   return (
-    <>
-      <AuthNavbar initialUser={user} />
-
-      <div className="CategoryPage flex-1 w-full flex flex-col items-center min-h-[100%]">
-        <Suspense>
-          <CategoryContent params={params} />
-        </Suspense>
-      </div>
-    </>
+    <div className="CategoryPage flex min-h-full w-full flex-1 flex-col items-center">
+      <Suspense>
+        <CategoryContent params={resolvedParams} />
+      </Suspense>
+    </div>
   );
 }

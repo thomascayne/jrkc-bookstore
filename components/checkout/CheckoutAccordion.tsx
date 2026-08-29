@@ -16,7 +16,7 @@ import {
   Radio,
   RadioGroup,
   Tooltip,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import { ShippingAddress } from '@/interfaces/ShippingAddress';
 import { BillingAddress } from '@/interfaces/BillingAddress';
 import { User } from '@supabase/supabase-js';

@@ -24,11 +24,11 @@ function incrementVersion(version, releaseType) {
     
     switch (releaseType) {
         case 'major':
-            return `${major + 1}.0.00`;
+            return `${major + 1}.0.0`;
         case 'minor':
-            return `${major}.${minor + 1}.00`;
+            return `${major}.${minor + 1}.0`;
         case 'patch':
-            const newPatch = (patch + 1).toString().padStart(2, '0');
+            const newPatch = patch + 1;
             return `${major}.${minor}.${newPatch}`;
         default:
             throw new Error('Invalid release type');

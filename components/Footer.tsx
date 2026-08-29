@@ -1,9 +1,11 @@
+'use client';
+
 import AppLogo from "@/components/AppLogo";
 
 // components/Footer.tsx
 
 import * as packageInfo from "../package.json";
-import { Link } from "@nextui-org/react";
+import { Link } from "@heroui/react";
 
 export default function Footer() {
   const authors = packageInfo?.authors || [];

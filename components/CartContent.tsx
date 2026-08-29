@@ -1,3 +1,5 @@
+'use client';
+
 // components/CartContent.tsx
 
 import BookDetails from '@/components/BookDetails';
@@ -19,7 +21,7 @@ import {
   CardBody,
   CardFooter,
   CardHeader,
-} from '@nextui-org/react';
+} from '@heroui/react';
 import { useStore } from '@tanstack/react-store';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -182,7 +184,7 @@ const CartContent: React.FC<CartSidePanelProps> = ({ currentPath, onContinueShop
                         />
                         <Link
                           href="#"
-                          className="[&:important]:px-0 hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
+                          className="px-0! hover:underline text-red-500 hover:text-red-900 text-sm transition-all duration-200 ease-in-out"
                           onClick={(e) => {
                             e.preventDefault();
                             removeItem(item.book_id);

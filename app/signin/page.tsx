@@ -1,23 +1,14 @@
 // app/signin/page.tsx
 
-import AuthNavbar from "@/components/navbars/AuthNavbar";
-import { createClient } from "@/utils/supabase/client";
-import SignInForm from "@/app/signin/SignInForm";
+import SignInForm from '@/app/signin/SignInForm';
 
-export default async function SignInPage() {
-  const supabase = createClient();
-
-  const { data, error } = await supabase.auth.getUser();
-
+export default function SignInPage() {
   return (
-    <>
-      <AuthNavbar initialUser={data.user} />
-      <div className="signin-page-wrapper flex flex-col flex-grow items-center justify-center">
-        <div className="signin-form-wrapper w-full max-w-md px-8 mt-[-6rem]">
-          <h1 className="text-2xl font-bold mb-6 text-center">Sign In</h1>
-          <SignInForm />
-        </div>
+    <section className="signin-page-wrapper flex min-h-full w-full flex-1 items-center justify-center px-4 py-10 sm:px-6">
+      <div className="signin-form-wrapper w-full max-w-md">
+        <h1 className="mb-6 text-center text-2xl font-bold">Sign In</h1>
+        <SignInForm />
       </div>
-    </>
+    </section>
   );
 }

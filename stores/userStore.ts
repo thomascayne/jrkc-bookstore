@@ -6,16 +6,14 @@ const supabase = createClient();
 
 export const userStore = {
   async getUserPaymentMethods(): Promise<IPaymentMethod[]> {
-    const { data, error } = await supabase
-      .rpc('get_user_payment_methods')
-      .returns<IPaymentMethod[]>();
+    const { data, error } = await supabase.rpc('get_user_payment_methods');
 
     if (error) {
       console.error('Error fetching user payment methods:', error);
       return [];
     }
 
-    return data || [];
+    return Array.isArray(data) ? (data as IPaymentMethod[]) : [];
   },
 
   async addPaymentMethod(paymentMethod: IPaymentMethod): Promise<boolean> {

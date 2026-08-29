@@ -7,7 +7,7 @@ import { SubmitButton } from '@/components/submit-button';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Input } from '@nextui-org/react';
+import { Input } from '@heroui/react';
 import {
   PasswordValidationResult,
   validatePassword,

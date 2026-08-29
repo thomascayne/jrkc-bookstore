@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { Card, Button, Modal, Table, ModalHeader, ModalBody, TableHeader, TableColumn, TableRow, TableBody, TableCell } from "@nextui-org/react";
+import { Card, Button, Modal, Table, ModalHeader, ModalBody, TableHeader, TableColumn, TableRow, TableBody, TableCell } from "@heroui/react";
 import { IOrder } from "@/interfaces/IOrder";
 
 interface OrderHistoryProps {

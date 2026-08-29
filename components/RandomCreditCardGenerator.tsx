@@ -1,7 +1,9 @@
+'use client';
+
 // components/RandomCreditCardGenerator.tsx
 import React, { useState } from 'react';
 import { IStripTestCardNumber } from '@/interfaces/IStripTestCardNumber';
-import { Card, Button, Input } from '@nextui-org/react';
+import { Card, Button, Input } from '@heroui/react';
 import CreditCardIcons from '@/components/CreditCardIcons';
 import { generateRandomTestCardFromStripe } from '@/utils/getRandomTestCardsFromStripe';
 

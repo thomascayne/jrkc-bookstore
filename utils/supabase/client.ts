@@ -1,15 +1,25 @@
-// utils/supabase/client.ts
-// https://github.com/vercel/next.js/blob/canary/examples/with-supabase/utils/supabase/client.ts
+import { createBrowserClient } from '@supabase/ssr';
 
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-// Environment variables for Supabase
-export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+function requireSupabaseEnvironment() {
+  if (!supabaseAnonKey || !supabaseUrl) {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required.',
+    );
+  }
 
-// Server-side Supabase client
-export const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey);
+  return { supabaseAnonKey, supabaseUrl };
+}
 
-// Client-side Supabase client
-export const createClient = () => createPagesBrowserClient();
+export const createClient = () => {
+  const environment = requireSupabaseEnvironment();
+
+  return createBrowserClient(
+    environment.supabaseUrl,
+    environment.supabaseAnonKey,
+  );
+};
+
+export const supabase = createClient();

@@ -1,8 +1,10 @@
+'use client';
+
 import { ICustomerCartItem } from "@/interfaces/ICustomerCart";
 import { IPaymentMethod } from "@/interfaces/IPaymentMethod";
 import { UserProfile } from "@/interfaces/UserProfile";
-import { Card, CardBody, Divider, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
-import { CardHeader } from "@nextui-org/react";
+import { Card, CardBody, Divider, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react";
+import { CardHeader } from "@heroui/react";
 import React from "react";
 
 interface OrderSummaryProps {

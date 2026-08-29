@@ -1,8 +1,10 @@
+'use client';
+
 // components/CustomerPaymentProcessingModal.tsx
 
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { finalizePaidCartItems } from '@/stores/cartStore';
-import { Button } from '@nextui-org/react';
+import { Button } from '@heroui/react';
 import {
   PaymentElement,
   useElements,
