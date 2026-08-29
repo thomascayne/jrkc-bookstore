@@ -53,7 +53,6 @@ jobs:
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_ci_placeholder
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
       NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:8000
-      NODE_ENV: production
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -65,7 +64,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm ci --include=dev --no-audit --no-fund
 
       - name: Type-check
         run: npm run typecheck
@@ -74,6 +73,8 @@ jobs:
         run: npm run lint
 
       - name: Build
+        env:
+          NODE_ENV: production
         run: npm run build
 
       - name: Audit dependencies
