@@ -1,66 +1,133 @@
-# JRKC Bookstore Management System - CTU
+# JRKC Bookstore Management System
 
-## DEMO
+JRKC Bookstore is a collaborative college project created by Joshua Castillo,
+Ricky Holder, Javon Kelley, and Thomas Cayne as part of the Colorado Technical
+University curriculum. It is preserved as an educational team project and
+should not be represented as the individual professional work of any one
+contributor.
 
-   Vercel: <https://jrkc-bookstore.vercel.app>
+The application combines a customer storefront with inventory, checkout,
+point-of-sale, sales reporting, role-aware navigation, and Supabase-backed
+identity and data access. Stripe integration is limited to test-payment
+workflows.
 
-### TODO
+- Deployment target: <https://bookstore.thomascayne.com>
+- Source: <https://github.com/thomascayne/jrkc-bookstore>
+- Production deployment guide: [docs/001-oracle-docker-deployment.md](docs/001-oracle-docker-deployment.md)
+- CI/CD and branch policy: [docs/002-ci-cd-branch-governance.md](docs/002-ci-cd-branch-governance.md)
 
-- Landing page
+## Contributors and project context
 
-## Local Setup and Development
-
-This project is designed for local development and demonstration purposes. Follow these steps to set up and run the JRKC Bookstore Management System locally:
-
-1. **Clone the Repository:**
-
-   ```bash
-   git clone [YOUR_REPOSITORY_URL]
-   cd hrkc-bookstore-management-system
-
-2. **Install Dependencies:**
-
-   ```bash
-    npm install
-
-3. **Environment Configuration:**
-
-   - Rename `.env.local.example` to `.env.local`
-   - Update the following variables in `.env.local`:
-  
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY=[INSERT YOUR GOOGLE BOOKS API KEY]
-   NEXT_PUBLIC_GOOGLE_BOOKS_API_URL=[INSERT GOOGLE BOOKS API URL]
-
-4. Run the Development Server:
-
-   ```bash
-   npm run dev
-
-## Technologies Used
-
-- NEXT.js - <https://nextjs.org/>
-- React - <https://react.dev/>
-- NextUI - <https://nextui.org>
-- Supabase - <https://supabase.com>
-- Mookoon - <https://mockoon.com/mock-samples/category/payment/>
-
-The application should now be running on <https://localhost:3000>
-
-## FOR CONTRIBUTORS LISTED BELOW
-
-- Please follow the coding standards of the project: industries best practices
-- submit pull requests in a separate branch instead of pushing to the main branch.
-
----
-
-This project is developed as part of the CTU curriculum and is intended for educational purposes only.
-
-Powered by the following:
+The project was developed collaboratively by:
 
 - Joshua Castillo
 - Ricky Holder
 - Javon Kelley
 - Thomas Cayne
+
+The repository is public so the implementation can be reviewed and deployed
+for educational or portfolio demonstrations. Public visibility alone does not
+replace a software license. Anyone redistributing or adapting the project must
+follow the license and permissions published by the repository owners.
+
+## Technology
+
+- Next.js 16 and React 19
+- TypeScript
+- HeroUI and Tailwind CSS
+- Supabase Auth and Postgres data APIs
+- Stripe test payments
+- Docker Compose and Caddy deployment on Oracle Cloud
+
+## Local development
+
+Requirements:
+
+- Node.js 24
+- npm 11 or newer
+- A Supabase project or compatible self-hosted Supabase deployment
+
+Clone and install the locked dependencies:
+
+```bash
+git clone https://github.com/thomascayne/jrkc-bookstore.git
+cd jrkc-bookstore
+npm ci
+```
+
+Create an ignored `.env.local` containing the two required variables:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-endpoint.example
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anonymous-key
+```
+
+Start development:
+
+```bash
+npm run dev
+```
+
+Next.js starts from its framework default port, `3000`. The zero-dependency
+development launcher selects the next available port when `3000` is already in
+use and prints the selected URL.
+
+## Optional integrations
+
+The core application requires only the Supabase URL and anonymous key. These
+variables enable additional integrations:
+
+| Variable | Purpose | Required |
+| --- | --- | --- |
+| `NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY` | Raises Google Books API quota for catalog enrichment | No |
+| `NEXT_PUBLIC_GOOGLE_BOOKS_API_URL` | Overrides the default Google Books volumes endpoint | No |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Enables client-side Stripe test-payment elements | No |
+| `STRIPE_SECRET_KEY` | Enables server-side Stripe test PaymentIntents | No |
+| `SUPABASE_SERVICE_ROLE_KEY` | Enables trusted server-only Supabase operations | No for browsing and authentication |
+| `CRON_SECRET` | Protects the optional keep-alive endpoint | No |
+| `CRON_SCHEDULE` | Configures an external keep-alive schedule | No |
+
+Never expose `STRIPE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, database
+passwords, JWT secrets, or private keys through a `NEXT_PUBLIC_` variable.
+
+## Docker deployment
+
+Create an ignored `.env.production` with the two required Supabase variables,
+plus any optional integrations you intend to enable. Then run:
+
+```bash
+npm run docker:build
+npm run docker:up
+npm run docker:port
+```
+
+The production container listens on Oracle loopback port `3100` by default.
+Set `BOOKSTORE_HOST_PORT=3101` for an isolated staging deployment. PostgreSQL
+must remain private; Caddy or another TLS reverse proxy should be the only
+public entry point.
+
+## Validation
+
+```bash
+npm run test:branch-policy
+npm run typecheck
+npm run lint
+npm run build
+npm audit --audit-level=moderate
+```
+
+## Contribution workflow
+
+Install the tracked Git hooks in every clone:
+
+```bash
+npm run hooks:install
+```
+
+Changes follow this promotion path:
+
+```text
+working branch -> pull request -> staging -> pull request -> main
+```
+
+Direct pushes to `staging` and `main` are blocked by the tracked pre-push hook.
