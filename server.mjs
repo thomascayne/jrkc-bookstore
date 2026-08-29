@@ -1,26 +1,32 @@
-// server.mjs
-
 import { createServer } from 'https';
-import { parse } from 'url';
-import next from 'next';
 import fs from 'fs';
+import next from 'next';
 import path from 'path'; // <-- Importing the 'path' module
+import { parse } from 'url';
+
+import { findAvailablePort } from './scripts/detect-port.mjs';
 
 const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
+const preferredPort = Number.parseInt(process.env.PORT ?? '3000', 10);
+const port = await findAvailablePort(preferredPort);
+const app = next({ dev, hostname: 'localhost', port });
 const handle = app.getRequestHandler();
 
-const httpsOptions = {
-  key: fs.readFileSync(path.join(process.cwd(), './localhost-key.pem')),
-  cert: fs.readFileSync(path.join(process.cwd(), './localhost.pem')),
-};
+await app.prepare();
 
-app.prepare().then(() => {
-  createServer(httpsOptions, (req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
-  }).listen(3001, (err) => {
-    if (err) throw err;
-    console.log('> Ready on https://localhost:3001');
-  });
+createServer(
+  {
+    cert: fs.readFileSync(path.join(process.cwd(), 'localhost.pem')),
+    key: fs.readFileSync(path.join(process.cwd(), 'localhost-key.pem')),
+  },
+  (request, response) => {
+    const parsedUrl = parse(request.url ?? '/', true);
+    handle(request, response, parsedUrl);
+  },
+).listen(port, '127.0.0.1', (error) => {
+  if (error) {
+    throw error;
+  }
+
+  console.log(`> Ready on https://localhost:${port}`);
 });
