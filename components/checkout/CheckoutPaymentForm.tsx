@@ -24,7 +24,6 @@ import {
   generateMockCreditCard,
 } from "@/utils/creditCardUtils";
 import { IPaymentMethod } from "@/interfaces/IPaymentMethod";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   CardElement,
   Elements,
@@ -102,8 +101,6 @@ export default function CheckoutPaymentForm({
     e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
-
-    const stripeKey = await loadStripe(`${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`);
 
     if (!user) return;
 

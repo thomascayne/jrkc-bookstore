@@ -38,6 +38,7 @@ import { useStore } from '@tanstack/react-store';
 import { cartStore, getCartItemCount } from '@/stores/cartStore';
 import SearchBar from '@/components/SearchBar';
 import { useUserProfileContext } from '@/contexts/UserProfileContext';
+import { createGoogleBooksUrl } from '@/utils/googleBooks';
 
 interface CustomerNavbarProps {
   emulatedRole: Role | null;
@@ -61,9 +62,11 @@ function CustomerNavbar({
   const searchParams = useSearchParams();
   const { signOut } = useUserProfileContext();
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY;
-  const apiUrl = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_API_URL;
-  const url = `${apiUrl}?q=subject:fiction&orderBy=relevance&maxResults=40&key=${apiKey}`;
+  const url = createGoogleBooksUrl('', {
+    maxResults: 40,
+    orderBy: 'relevance',
+    q: 'subject:fiction',
+  });
 
   const [bookCategories, setBookCategories] = useState<BookCategory[]>([]);
   const cartItemCount = useStore(cartStore, getCartItemCount);
