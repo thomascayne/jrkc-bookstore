@@ -4,6 +4,8 @@ import test from 'node:test';
 import {
   catalogFiltersFromSearchParams,
   catalogSearchParamsWithFilters,
+  exactRatingRange,
+  matchesExactRating,
   withCatalogFilter,
 } from '../utils/catalogFilters.ts';
 
@@ -25,4 +27,31 @@ test('star rating selections remain numeric through URL synchronization', () => 
 
 test('selecting the active star rating clears that filter', () => {
   assert.deepEqual(withCatalogFilter({ rating_min: 5 }, 'rating_min', 5), {});
+});
+
+test('customer rating selections use exact star buckets', () => {
+  assert.deepEqual(exactRatingRange(1), {
+    maximumExclusive: 2,
+    minimum: 1,
+  });
+  assert.deepEqual(exactRatingRange(5), { minimum: 5 });
+  assert.equal(matchesExactRating(1.5, 1), true);
+  assert.equal(matchesExactRating(3, 1), false);
+  assert.equal(matchesExactRating(5, 1), false);
+  assert.equal(matchesExactRating(2, 2), true);
+  assert.equal(matchesExactRating(2.5, 2), true);
+  assert.equal(matchesExactRating(3, 2), false);
+  assert.equal(matchesExactRating(5, 5), true);
+  assert.equal(matchesExactRating(4.5, 5), false);
+});
+
+test('invalid customer ratings are discarded during URL synchronization', () => {
+  assert.deepEqual(
+    catalogFiltersFromSearchParams(new URLSearchParams('rating_min=6')),
+    {},
+  );
+  assert.deepEqual(
+    catalogFiltersFromSearchParams(new URLSearchParams('rating_min=2.5')),
+    {},
+  );
 });

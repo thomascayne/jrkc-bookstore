@@ -59,30 +59,28 @@ export const addCartItem = async (
   book: IBookInventory,
   quantity: number = 1,
 ) => {
-  try {
-    if (book.catalog_source === 'google') {
-      throw new Error('Catalog-only books use the local cart.');
-    }
+  if (book.catalog_source !== 'google') {
+    try {
+      const cart = await apiRequest<{
+        authenticated: boolean;
+        items: ICustomerCartItem[];
+      }>('/api/cart');
+      authenticatedCart = cart.authenticated;
 
-    const cart = await apiRequest<{
-      authenticated: boolean;
-      items: ICustomerCartItem[];
-    }>('/api/cart');
-    authenticatedCart = cart.authenticated;
-
-    if (authenticatedCart) {
-      const response = await apiRequest<{ items: ICustomerCartItem[] }>(
-        '/api/cart',
-        {
-          body: JSON.stringify({ book_id: book.id, quantity }),
-          method: 'POST',
-        },
-      );
-      setItems(response.items);
-      return;
+      if (authenticatedCart) {
+        const response = await apiRequest<{ items: ICustomerCartItem[] }>(
+          '/api/cart',
+          {
+            body: JSON.stringify({ book_id: book.id, quantity }),
+            method: 'POST',
+          },
+        );
+        setItems(response.items);
+        return;
+      }
+    } catch (error) {
+      ApplicationLogError('addCartItem', 'database cart unavailable', error);
     }
-  } catch (error) {
-    ApplicationLogError('addCartItem', 'database cart unavailable', error);
   }
 
   cartStore.setState((state) => {
@@ -99,7 +97,7 @@ export const addCartItem = async (
             book,
             book_id: book.id,
             cart_id: 'local_cart',
-            current_price: book.list_price,
+            current_price: calculateDiscountedPrice(book),
             id: `local_${Date.now()}`,
             quantity,
           },

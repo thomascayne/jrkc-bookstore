@@ -8,7 +8,6 @@ import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import { Button, Input, Link, Slider } from '@heroui/react';
 import Image from 'next/image';
 import StarRating from '@/components/StarRating';
-import { addCartItem } from '@/stores/cartStore';
 import BookDetails from '@/components/BookDetails';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { IBookInventory } from '@/interfaces/IBookInventory';
@@ -105,10 +104,6 @@ export default function CategoryContent({
     openFullScreenModal(<BookDetails bookId={book.id} />, `${book.title}`);
   };
 
-  const handleAddToCart = (book: IBookInventory) => {
-    addCartItem(book);
-  };
-
   const handlePageChange = useCallback(
     (newPage: number) => {
       const current = new URLSearchParams(
@@ -126,11 +121,13 @@ export default function CategoryContent({
     <div className="flex w-full flex-col md:flex-row">
       {/* Filters column */}
       <aside className="sidebarfilter-area w-full box-border border-divider bg-content1 p-4 text-foreground transition-transform-background md:w-[200px] md:border-r">
-        <h2 className="text-xl font-bold mb-4">Filters</h2>
-        <ClearFiltersButton
-          filters={filters}
-          onClearFilters={clearAllFilters}
-        />
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Filters</h2>
+          <ClearFiltersButton
+            filters={filters}
+            onClearFilters={clearAllFilters}
+          />
+        </div>
 
         <div className="space-y-4">
           {/* Price Filter */}
@@ -350,15 +347,14 @@ export default function CategoryContent({
                       <div className="mb-1 flex h-4 items-center">
                         {book.average_rating ? (
                           <>
-                          <StarRating rating={book.average_rating} />
-                          <span className="ml-2 text-sm">
-                            {book.average_rating}
-                          </span>
+                            <StarRating rating={book.average_rating} />
+                            <span className="ml-2 text-sm">
+                              {book.average_rating}
+                            </span>
                           </>
                         ) : null}
                       </div>
                       <div className="h-5 line-clamp-1 text-sm">
-                        {book.catalog_source === 'google' ? 'Demo: ' : ''}
                         {book.is_promotion ? (
                           <>
                             <span className="mr-1 text-gray-500 line-through">
@@ -370,18 +366,6 @@ export default function CategoryContent({
                           <span>${book.price.toFixed(2)}</span>
                         )}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <div
-                      className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 cursor-pointer transform translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(book);
-                      }}
-                    >
-                      QUICK ADD
                     </div>
                   </div>
                 </div>

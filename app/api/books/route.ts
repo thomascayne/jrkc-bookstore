@@ -7,6 +7,7 @@ import {
   gte,
   gt,
   ilike,
+  lt,
   lte,
   or,
 } from 'drizzle-orm';
@@ -16,6 +17,7 @@ import { fetchGoogleBook, fetchGoogleCatalog } from '@/catalog/google-books';
 import { serializeBook } from '@/db/book';
 import { getDatabase } from '@/db/client';
 import { bookCategories, books } from '@/db/schema';
+import { exactRatingRange } from '@/utils/catalogFilters';
 
 function optionalNumber(value: string | null) {
   if (value === null || value.trim() === '') return null;
@@ -52,6 +54,7 @@ async function databaseCatalog(parameters: URLSearchParams) {
   const minimumPrice = optionalNumber(parameters.get('priceMin'));
   const maximumPrice = optionalNumber(parameters.get('priceMax'));
   const minimumRating = optionalNumber(parameters.get('ratingMin'));
+  const ratingRange = exactRatingRange(minimumRating);
   const minimumRatingsCount = optionalNumber(parameters.get('ratingsCountMin'));
 
   if (categoryKey && categoryKey !== 'all') {
@@ -74,8 +77,11 @@ async function databaseCatalog(parameters: URLSearchParams) {
   }
   if (minimumPrice !== null) conditions.push(gte(books.price, minimumPrice));
   if (maximumPrice !== null) conditions.push(lte(books.price, maximumPrice));
-  if (minimumRating !== null) {
-    conditions.push(gte(books.averageRating, minimumRating));
+  if (ratingRange) {
+    conditions.push(gte(books.averageRating, ratingRange.minimum));
+    if (ratingRange.maximumExclusive !== undefined) {
+      conditions.push(lt(books.averageRating, ratingRange.maximumExclusive));
+    }
   }
   if (minimumRatingsCount !== null) {
     conditions.push(gte(books.ratingsCount, minimumRatingsCount));

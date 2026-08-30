@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { FaTimes } from 'react-icons/fa';
+import { FaArrowRotateLeft } from 'react-icons/fa6';
 
 import type { FilterOptions } from '@/utils/catalogFilters';
 
@@ -24,18 +24,16 @@ const ClearFiltersButton: React.FC<ClearFiltersButtonProps> = ({
     );
   }, [filters]);
 
-  if (!hasActiveFilters) {
-    return null;
-  }
-
   return (
     <button
       type="button"
       onClick={onClearFilters}
-      className="mb-4 flex w-full cursor-pointer items-center rounded border border-divider px-4 py-2 text-small text-foreground transition-colors hover:bg-default-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      aria-label="Clear all filters"
+      className="flex size-8 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-default-200 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      disabled={!hasActiveFilters}
+      title={hasActiveFilters ? 'Clear all filters' : 'No active filters'}
     >
-      <span>Clear Filters</span>
-      <FaTimes className="ml-2" />
+      <FaArrowRotateLeft aria-hidden="true" />
     </button>
   );
 };

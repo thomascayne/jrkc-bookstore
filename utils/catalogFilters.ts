@@ -13,6 +13,11 @@ export interface FilterOptions {
   sort_order?: CatalogSortOrder;
 }
 
+export interface ExactRatingRange {
+  maximumExclusive?: number;
+  minimum: number;
+}
+
 const catalogFilterParameterNames = [
   'author',
   'discount_percentage_min',
@@ -40,6 +45,37 @@ function isCatalogSortBy(value: string | null): value is CatalogSortBy {
 
 function isCatalogSortOrder(value: string | null): value is CatalogSortOrder {
   return value === 'ASC' || value === 'DESC';
+}
+
+export function exactRatingRange(
+  selectedRating: number | null | undefined,
+): ExactRatingRange | null {
+  if (
+    selectedRating === null ||
+    selectedRating === undefined ||
+    !Number.isInteger(selectedRating) ||
+    selectedRating < 1 ||
+    selectedRating > 5
+  ) {
+    return null;
+  }
+
+  return selectedRating === 5
+    ? { minimum: selectedRating }
+    : { maximumExclusive: selectedRating + 1, minimum: selectedRating };
+}
+
+export function matchesExactRating(
+  bookRating: number,
+  selectedRating: number | null | undefined,
+) {
+  const range = exactRatingRange(selectedRating);
+  if (!range) return true;
+  return (
+    bookRating >= range.minimum &&
+    (range.maximumExclusive === undefined ||
+      bookRating < range.maximumExclusive)
+  );
 }
 
 export function catalogFiltersFromSearchParams(
@@ -73,7 +109,7 @@ export function catalogFiltersFromSearchParams(
       min: priceMinimum,
     };
   }
-  if (ratingMinimum !== undefined && ratingMinimum >= 0) {
+  if (exactRatingRange(ratingMinimum)) {
     filters.rating_min = ratingMinimum;
   }
   if (ratingsCountMinimum !== undefined && ratingsCountMinimum >= 0) {

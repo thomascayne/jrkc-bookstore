@@ -4,6 +4,7 @@ import type { BookCategory } from '@/interfaces/BookCategory';
 import type { GoogleBook } from '@/interfaces/GoogleBook';
 import type { IBookInventory } from '@/interfaces/IBookInventory';
 import { bookCategories } from '@/utils/bookCategories';
+import { matchesExactRating } from '@/utils/catalogFilters';
 import { createGoogleBooksUrl } from '@/utils/googleBooks';
 
 interface CatalogFilters {
@@ -171,9 +172,8 @@ function filterAndSortBooks(books: IBookInventory[], filters: CatalogFilters) {
     if (filters.maximumPrice !== null && filters.maximumPrice !== undefined) {
       if (book.price > filters.maximumPrice) return false;
     }
-    if (filters.minimumRating !== null && filters.minimumRating !== undefined) {
-      if (book.average_rating < filters.minimumRating) return false;
-    }
+    if (!matchesExactRating(book.average_rating, filters.minimumRating))
+      return false;
     if (
       filters.minimumRatingsCount !== null &&
       filters.minimumRatingsCount !== undefined
