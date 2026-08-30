@@ -39,11 +39,6 @@ cat > "$caddySiteSource" <<'CADDY_SITE'
 bookstore.thomascayne.com {
 	encode zstd gzip
 
-	@supabase path /auth/v1/* /functions/v1/* /graphql/v1 /graphql/v1/* /realtime/v1/* /rest/v1/* /storage/v1/*
-	handle @supabase {
-		reverse_proxy 127.0.0.1:8000
-	}
-
 	handle {
 		reverse_proxy 127.0.0.1:3100
 	}
@@ -102,5 +97,4 @@ rollbackRequired=0
 
 printf 'Configured https://%s through Caddy.\n' "$bookstoreDomain"
 printf 'Next.js upstream: http://127.0.0.1:3100\n'
-printf 'Supabase API upstream: http://127.0.0.1:8000\n'
 printf 'Installed site file: %s\n' "$caddySiteTarget"
