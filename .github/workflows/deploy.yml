@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - staging
 
 permissions:
   contents: read
@@ -52,12 +51,12 @@ jobs:
       - quality
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      name: production
     env:
-      COMPOSE_PROJECT: ${{ github.ref_name == 'main' && 'jrkc-bookstore-production' || 'jrkc-bookstore-staging' }}
+      COMPOSE_PROJECT: jrkc-bookstore-production
       DEPLOYMENT_PATH: ${{ vars.ORACLE_DEPLOYMENT_PATH }}
-      DEPLOY_ENV_FILE: ${{ github.ref_name == 'main' && '.env.production' || '.env.staging' }}
-      HOST_PORT: ${{ github.ref_name == 'main' && '3100' || '3101' }}
+      DEPLOY_ENV_FILE: .env.production
+      HOST_PORT: 3100
       ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
       ORACLE_KNOWN_HOSTS: ${{ secrets.ORACLE_KNOWN_HOSTS }}
       ORACLE_SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}

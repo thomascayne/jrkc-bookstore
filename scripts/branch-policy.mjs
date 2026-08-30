@@ -1,20 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-const protectedBranches = new Set(['main', 'staging']);
+const protectedBranches = new Set(['main']);
 
 export function assertPullRequestFlow(baseBranch, headBranch) {
   if (!baseBranch || !headBranch) {
     throw new Error('Pull-request base and head branches are required.');
   }
 
-  if (baseBranch === 'main' && headBranch !== 'staging') {
-    throw new Error('Pull requests into main must originate from staging.');
-  }
-
-  if (baseBranch === 'staging' && protectedBranches.has(headBranch)) {
+  if (baseBranch === 'main' && protectedBranches.has(headBranch)) {
     throw new Error(
-      'Pull requests into staging must originate from a working branch, not main or staging.',
+      'Pull requests into main must originate from a working branch.',
     );
   }
 
@@ -29,14 +25,7 @@ export function assertDeploymentSource(targetBranch, pullRequests) {
       return false;
     }
 
-    if (targetBranch === 'main') {
-      return pullRequest.head?.ref === 'staging';
-    }
-
-    return (
-      targetBranch === 'staging' &&
-      !protectedBranches.has(pullRequest.head?.ref)
-    );
+    return targetBranch === 'main' && !protectedBranches.has(pullRequest.head?.ref);
   });
 
   if (!authorizedPullRequest) {

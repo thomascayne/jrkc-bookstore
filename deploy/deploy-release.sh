@@ -30,15 +30,15 @@ if [ "${#releaseCommit}" -ne 40 ]; then
 fi
 
 case "$releaseBranch" in
-  main|staging) ;;
+  main) ;;
   *)
-    printf 'Release branch must be main or staging.\n' >&2
+    printf 'Release branch must be main.\n' >&2
     exit 1
     ;;
 esac
 
 case "${releaseBranch}:${environmentFile}" in
-  main:.env.production|staging:.env.staging) ;;
+  main:.env.production) ;;
   *)
     printf 'Environment file %s is not valid for branch %s.\n' \
       "$environmentFile" "$releaseBranch" >&2
