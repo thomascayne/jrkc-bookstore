@@ -55,6 +55,13 @@ health response identify that commit, PostgreSQL answers through the
 application connection pool, and the category and book APIs return nonempty
 catalog results.
 
+The workflow uploads the release script to a unique temporary path on Oracle
+before executing it and removes that file afterward. It never streams the
+script into the standard input of the remote shell. This ensures the complete
+script exists on Oracle before execution and prevents the SSH input transport
+or a child process from ending the release after image creation but before
+container replacement.
+
 Required production environment configuration:
 
 | Kind | Name | Purpose |

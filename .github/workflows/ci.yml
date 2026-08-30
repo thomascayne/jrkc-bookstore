@@ -49,6 +49,9 @@ jobs:
       - name: Test deployment runtime verification
         run: npm run test:deployment-runtime
 
+      - name: Test deployment script transport
+        run: npm run test:deployment-transport
+
       - name: Test Stripe portfolio mode
         run: npm run test:stripe-mode
 
