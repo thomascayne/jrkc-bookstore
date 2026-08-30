@@ -132,18 +132,6 @@ function synchronizeDatabaseCredentials(
   environmentFiles,
   commandEnvironment,
 ) {
-  const synchronizationScript = `
-psql \\
-  --username "$POSTGRES_USER" \\
-  --dbname postgres \\
-  --set=ON_ERROR_STOP=1 \\
-  --set=app_password="$POSTGRES_APP_PASSWORD" \\
-  --set=owner_password="$POSTGRES_PASSWORD" <<'SQL'
-ALTER ROLE jrkc_app WITH PASSWORD :'app_password';
-ALTER ROLE jrkc_owner WITH PASSWORD :'owner_password';
-SQL
-`;
-
   runCompose(
     ['up', '--detach', '--wait', 'database'],
     false,
@@ -151,7 +139,13 @@ SQL
     commandEnvironment,
   );
   runCompose(
-    ['exec', '-T', 'database', 'sh', '-ec', synchronizationScript],
+    [
+      'exec',
+      '-T',
+      'database',
+      'sh',
+      '/usr/local/bin/synchronize-bookstore-credentials',
+    ],
     false,
     environmentFiles,
     commandEnvironment,

@@ -13,9 +13,15 @@ The application binds to `127.0.0.1:3100`. Caddy terminates public TLS for
 PostgreSQL is attached only to an internal Docker network and publishes no host
 port.
 
-## Required private configuration
+## Private configuration
 
-The ignored `/home/ubuntu/jrkc-bookstore/.env.production` requires:
+Production stores its private configuration in the ignored
+`/home/ubuntu/jrkc-bookstore/.env.production` file. The deployment creates this
+file when it does not exist and generates each missing PostgreSQL password
+with 256 bits of randomness. Existing nonempty values are preserved, and the
+file is always restricted to mode `0600`.
+
+The resulting private file contains:
 
 ```dotenv
 POSTGRES_OWNER_PASSWORD=a-long-random-bootstrap-password
@@ -29,7 +35,13 @@ only the access needed by the bookstore. The Next.js and migration containers
 connect as `jrkc_app`, never as the bootstrap superuser.
 
 Optional catalog and Stripe variables are documented in the repository README.
-Environment files must remain mode `0600` and outside Git.
+The release starts PostgreSQL by itself before migrations, synchronizes the
+passwords of the existing `jrkc_owner` and `jrkc_app` roles with the private
+file, and then starts the migration and application services. This makes the
+bootstrap safe for both a new database and an existing persistent volume.
+
+Environment files remain mode `0600` and outside Git. Database credentials do
+not need to be added to GitHub Actions secrets.
 
 ## Persistence
 
@@ -48,9 +60,9 @@ associated merged pull request, reruns CI, connects to Oracle by the configured
 SSH identity, checks out the exact verified commit, validates Compose, builds
 the images, applies migrations, and waits for the application health check.
 
-The remote checkout must already contain its ignored `.env.production` file.
-The workflow never transmits database or integration secrets from the public
-repository.
+The workflow never transmits database credentials from GitHub or the public
+repository. Optional integration values can be added directly to the ignored
+Oracle environment file and are preserved by future deployments.
 
 ## Backups
 

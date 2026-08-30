@@ -29,6 +29,7 @@ services:
     volumes:
       - bookstore-postgres-data:/var/lib/postgresql
       - ./deploy/postgres/initialize-database.sh:/docker-entrypoint-initdb.d/10-initialize-bookstore.sh:ro
+      - ./deploy/postgres/synchronize-database-credentials.sh:/usr/local/bin/synchronize-bookstore-credentials:ro
 
   migrate:
     build:

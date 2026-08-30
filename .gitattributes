@@ -2,3 +2,4 @@
 .github/workflows/*.yml text eol=lf
 deploy/*.sh text eol=lf
 deploy/postgres/*.sh text eol=lf
+scripts/*.sh text eol=lf

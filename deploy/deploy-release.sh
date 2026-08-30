@@ -60,11 +60,6 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ ! -f "$environmentFile" ]; then
-  printf 'Required deployment environment file is missing: %s\n' "$environmentFile" >&2
-  exit 1
-fi
-
 unexpectedUntrackedFiles=$(git ls-files \
   --others \
   --exclude-standard \
@@ -97,6 +92,8 @@ fi
 
 git checkout --detach "$releaseCommit"
 
+sh deploy/ensure-deployment-environment.sh "$environmentFile"
+
 export BOOKSTORE_HOST_PORT=$hostPort
 export BOOKSTORE_IMAGE_TAG=$releaseCommit
 export BOOKSTORE_ENV_FILE=$environmentFile
@@ -110,6 +107,16 @@ docker compose \
   --project-name "$composeProject" \
   --env-file "$environmentFile" \
   build
+
+docker compose \
+  --project-name "$composeProject" \
+  --env-file "$environmentFile" \
+  up --detach --wait database
+
+docker compose \
+  --project-name "$composeProject" \
+  --env-file "$environmentFile" \
+  exec -T database sh /usr/local/bin/synchronize-bookstore-credentials
 
 docker compose \
   --project-name "$composeProject" \
