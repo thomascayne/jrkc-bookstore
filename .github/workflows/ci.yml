@@ -40,6 +40,9 @@ jobs:
       - name: Test branch policy
         run: npm run test:branch-policy
 
+      - name: Test deployment environment bootstrap
+        run: sh scripts/deployment-environment.test.sh
+
   validation:
     name: Validate application
     needs: branch-policy
