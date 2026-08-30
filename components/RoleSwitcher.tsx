@@ -7,7 +7,7 @@ import {
   Role,
 } from "@/utils/roles";
 // app/components/RoleSwitcher.tsx
-import { createClient } from "@/utils/supabase/client";
+import { apiRequest } from "@/utils/apiClient";
 import {
   Button,
   Dropdown,
@@ -15,7 +15,7 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/react";
-import { User } from "@supabase/supabase-js";
+import type { AppUser as User } from "@/auth/types";
 import React from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { FaPlay, FaStop } from "react-icons/fa";
@@ -32,21 +32,14 @@ export default function RoleSwitcher({
   onRoleChange,
 }: RoleSwitcherProps) {
   const handleRoleChange = async (key: string) => {
-    const supabase = createClient();
-    if (key === "stop") {
-      await supabase
-        .from("profiles")
-        .update({ emulating_role: null })
-        .eq("id", user?.id);
+    if (!user) return;
 
-      onRoleChange(null);
-    } else {
-      await supabase
-        .from("profiles")
-        .update({ emulating_role: key })
-        .eq("id", user?.id);
-      onRoleChange(key as Role);
-    }
+    const role = key === "stop" ? null : (key as Role);
+    await apiRequest("/api/profile", {
+      body: JSON.stringify({ emulating_role: role }),
+      method: "PATCH",
+    });
+    onRoleChange(role);
   };
 
   const dropdownRoles = getDropdownRoles();

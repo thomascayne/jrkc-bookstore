@@ -3,21 +3,21 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import type { AppUser } from "@/auth/types";
+import { apiRequest } from "@/utils/apiClient";
 import { waitSomeTime } from "@/utils/wait-some-time";
 
 export default function EmailChangeConfirmed() {
   const router = useRouter();
-  const supabase = createClient();
   const [message, setMessage] = useState("");
   const [shouldRedirect, setShouldRedirect] = useState(false);
   const [redirectPath, setRedirectPath] = useState("");
 
   useEffect(() => {
     const checkEmailChange = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await apiRequest<{ user: AppUser | null }>(
+        "/api/auth/session",
+      );
 
       if (user) {
         setMessage("Your email has been successfully updated. Redirecting...");
@@ -36,8 +36,8 @@ export default function EmailChangeConfirmed() {
       setShouldRedirect(true);
     };
 
-    checkEmailChange();
-  }, [supabase]);
+    void checkEmailChange();
+  }, []);
 
   useEffect(() => {
     if (shouldRedirect && redirectPath) {

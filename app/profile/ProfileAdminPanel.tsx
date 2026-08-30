@@ -1,9 +1,9 @@
 // app/profile/AdminPanel.tsx
 "use client";
 
-import { User } from "@supabase/supabase-js";
+import type { AppUser as User } from "@/auth/types";
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { apiRequest } from "@/utils/apiClient";
 import {
   BarChart,
   Bar,
@@ -21,30 +21,25 @@ interface AdminPanelProps {
 
 export default function ProfileAdminPanel({ user }: AdminPanelProps) {
   const [userCount, setUserCount] = useState<number>(0);
-  const [recentUsers, setRecentUsers] = useState<any[]>([]);
-  const supabase = createClient();
+  const [recentUsers, setRecentUsers] = useState<
+    Array<{ created_at: string; email: string; id: string }>
+  >([]);
+  const [newUsersThisMonth, setNewUsersThisMonth] = useState(0);
 
   useEffect(() => {
     async function fetchAdminData() {
-      // Fetch total user count
-      const { count } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true });
-
-      setUserCount(count || 0);
-
-      // Fetch 5 most recent users
-      const { data: recentUsersData } = await supabase
-        .from("profiles")
-        .select("id, email, created_at")
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      setRecentUsers(recentUsersData || []);
+      const result = await apiRequest<{
+        newThisMonth: number;
+        recentUsers: Array<{ created_at: string; email: string; id: string }>;
+        total: number;
+      }>("/api/admin/users");
+      setUserCount(result.total);
+      setNewUsersThisMonth(result.newThisMonth);
+      setRecentUsers(result.recentUsers);
     }
 
-    fetchAdminData();
-  }, [supabase]);
+    void fetchAdminData();
+  }, []);
 
   // Sample data for the chart
   const data = [
@@ -67,7 +62,7 @@ export default function ProfileAdminPanel({ user }: AdminPanelProps) {
         </div>
         <div className="dark:text-white dark:border-gray-200 dark:border-1 p-6 rounded-lg shadow-all-sides">
           <h3 className="text-xl font-semibold mb-2">New Users (This Month)</h3>
-          <p className="text-3xl font-bold">153</p>
+          <p className="text-3xl font-bold">{newUsersThisMonth}</p>
         </div>
         <div className="dark:text-white dark:border-gray-200 dark:border-1 p-6 rounded-lg shadow-all-sides">
           <h3 className="text-xl font-semibold mb-2">Active Users</h3>

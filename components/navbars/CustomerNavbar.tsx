@@ -20,7 +20,7 @@ import {
 } from '@heroui/react';
 import { BiCategory } from 'react-icons/bi';
 import { FaRegUser } from 'react-icons/fa';
-import { User } from '@supabase/supabase-js';
+import type { AppUser as User } from '@/auth/types';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { RiShoppingCart2Line } from 'react-icons/ri';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';

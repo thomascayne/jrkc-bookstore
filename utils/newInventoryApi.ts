@@ -1,75 +1,58 @@
-// utils\supabase\inventoryApi.ts
-
-import { BookCategory } from '@/interfaces/BookCategory';
-import { IBookInventory } from '@/interfaces/IBookInventory';
-import { InventoryItem } from '@/interfaces/inventoryItem';
-import { supabase } from '@/utils/supabase/client';
+import type { BookCategory } from '@/interfaces/BookCategory';
+import type { IBookInventory } from '@/interfaces/IBookInventory';
+import { apiRequest } from '@/utils/apiClient';
 
 interface BookWithCategory extends IBookInventory {
-    category_name: string;
+  category_name: string;
 }
 
-
 export const fetchInventory = async (): Promise<BookWithCategory[]> => {
-    const { data, error } = await supabase
-        .rpc('rls_fetch_inventory');
-
-    if (error) {
-        console.error('Error fetching inventory:', error);
-        throw error;
-    }
-
-    return data || [];
+  const { inventory } = await apiRequest<{ inventory: IBookInventory[] }>(
+    '/api/inventory',
+  );
+  return inventory.map((book) => ({
+    ...book,
+    category_name: book.category?.label ?? '',
+  }));
 };
 
-// Fetch all categories from the database
 export const fetchCategories = async (): Promise<BookCategory[]> => {
-    const { data, error } = await supabase
-        .rpc('get_categories')
-        .select();
-
-    if (error) {
-        throw new Error(error.message);
-    }
-    return data;
+  const { categories } = await apiRequest<{ categories: BookCategory[] }>(
+    '/api/categories',
+  );
+  return categories;
 };
 
-// Add a new book to the inventory
 export const addBookToInventory = async (
-    book_id: string,
-    quantity: number,
-    price: number,
-    categoryId: string,
-    title: string
-) => {
-    const { data, error } = await supabase.rpc('add_book_to_inventory', {
-        p_book_id: book_id,
-        p_quantity: quantity,
-        p_price: price,
-        p_category_id: categoryId,
-        p_title: title
-    });
+  book_id: string,
+  quantity: number,
+  price: number,
+  categoryId: string,
+  title: string,
+) =>
+  apiRequest('/api/inventory', {
+    body: JSON.stringify({
+      book_id,
+      category_id: Number(categoryId),
+      price,
+      quantity,
+      title,
+    }),
+    method: 'POST',
+  });
 
-    if (error) {
-        throw new Error(error.message);
-    }
-    return data;
+export const updateInventoryQuantity = async (id: string, quantity: number) => {
+  await apiRequest('/api/inventory', {
+    body: JSON.stringify({ id, quantity }),
+    method: 'PATCH',
+  });
+  return true;
 };
 
-// Update the quantity of an existing book in the inventory
-export const updateInventoryQuantity = async (id: string, quantity: number) => {
-    const { error } = await supabase.rpc('update_inventory_quantity', {
-        p_book_id: id,
-        p_new_quantity: quantity
-      });
-      return !error;
-  };
-
-// Update the price of an existing book in the inventory
 export const updateBookPrice = async (id: string, price: number) => {
-    const { error } = await supabase.rpc('update_book_price', {
-        p_book_id: id,
-        p_new_price: price
-      });
-      return !error;
-  };
+  await apiRequest('/api/inventory', {
+    body: JSON.stringify({ id, price }),
+    method: 'PATCH',
+  });
+  return true;
+};

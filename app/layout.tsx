@@ -9,7 +9,7 @@ import SidePanel from '@/components/SidePanel';
 import { FullScreenModalProvider } from '@/contexts/FullScreenModalContext';
 import { SidePanelProvider } from '@/contexts/SidePanelContext';
 import TanstackQueryClientProvider from '@/providers/TanstackQueryClientProvider';
-import { createClient } from '@/utils/supabase/server';
+import { getCurrentUser } from '@/auth/session';
 import { GeistSans } from 'geist/font/sans';
 import { Metadata } from 'next';
 import PageTracker from '@/components/PageTracker';
@@ -31,10 +31,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   return (
     <html

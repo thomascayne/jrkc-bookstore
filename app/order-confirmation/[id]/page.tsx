@@ -3,38 +3,42 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import {useSearchParams } from "next/navigation";
-import { ICartOrder } from "@/interfaces/ICustomerCartOrder";
+import { useParams } from "next/navigation";
+import type { IOrder } from "@/interfaces/IOrder";
+import { apiRequest } from "@/utils/apiClient";
 
-const supabase = createClient();
+interface OrderDetails {
+  items: Array<{
+    book_id: string | null;
+    id: string;
+    price: number;
+    quantity: number;
+    subtotal: number;
+  }>;
+  order: IOrder;
+}
 
 export default function OrderConfirmationPage() {
-  const searchParams = useSearchParams();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
 
-  const id = searchParams?.get("id") as string;
-
-  const [order, setOrder] = useState<ICartOrder>();
+  const [details, setDetails] = useState<OrderDetails>();
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, order_items(*, books(*))")
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching order:", error);
-      } else {
-        setOrder(data);
-      }
+    const fetchOrder = async (orderId: string) => {
+      setDetails(
+        await apiRequest<OrderDetails>(
+          `/api/orders?id=${encodeURIComponent(orderId)}`,
+        ),
+      );
     };
 
-    fetchOrder();
+    if (id) fetchOrder(id);
   }, [id]);
 
-  if (!order) return <div>Loading...</div>;
+  if (!details) return <div>Loading...</div>;
+
+  const { items, order } = details;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -45,10 +49,9 @@ export default function OrderConfirmationPage() {
 
       <h2 className="text-xl font-bold mt-4 mb-2">Items:</h2>
       <ul>
-        {order.items.map((item) => (
+        {items.map((item) => (
           <li key={item.id}>
-            {item.book.title} - Quantity: {item.quantity} - Price: $
-            {item.book.retail_price * item.quantity}
+            {item.book_id} - Quantity: {item.quantity} - Price: ${item.subtotal}
           </li>
         ))}
       </ul>

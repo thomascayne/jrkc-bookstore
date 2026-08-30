@@ -401,7 +401,10 @@ export default function LandingPageContent() {
                         </div>
                       )}
                       {book.list_price && (
-                        <div className="text-sm">$ {book.list_price}</div>
+                        <div className="text-sm">
+                          {book.catalog_source === 'google' ? 'Demo: ' : ''}$
+                          {book.list_price}
+                        </div>
                       )}
                     </div>
                   </div>

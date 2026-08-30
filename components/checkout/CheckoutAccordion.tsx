@@ -19,8 +19,9 @@ import {
 } from '@heroui/react';
 import { ShippingAddress } from '@/interfaces/ShippingAddress';
 import { BillingAddress } from '@/interfaces/BillingAddress';
-import { User } from '@supabase/supabase-js';
-import { createClient } from '@/utils/supabase/client';
+import type { AppUser as User } from '@/auth/types';
+import type { UserProfile } from '@/interfaces/UserProfile';
+import { apiRequest } from '@/utils/apiClient';
 import {
   FaCheck,
   FaChevronDown,
@@ -144,8 +145,6 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
     review: false,
   });
 
-  const supabase = createClient();
-
   useEffect(() => {
     // check if stripMockCreditCard is empty and set isPaymentMethod to false else set it to true
     stripMockCreditCard && stripMockCreditCard.length === 0
@@ -156,11 +155,9 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
   useEffect(() => {
     async function loadUserAddresses() {
       if (user) {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+        const { profile } = await apiRequest<{ profile: UserProfile | null }>(
+          '/api/profile',
+        );
 
         if (profile) {
           setBillingAddress({
@@ -192,8 +189,8 @@ const CheckoutAccordion: React.FC<CheckoutAccordionProps> = ({ user }) => {
       }
     }
 
-    loadUserAddresses();
-  }, [supabase, user]);
+    void loadUserAddresses();
+  }, [user]);
 
   useEffect(() => {
     if (itemCount === 0) {

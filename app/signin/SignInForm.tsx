@@ -1,7 +1,7 @@
 // app/signin/SignInForm.tsx
 'use client';
 
-import { createClient } from '@/utils/supabase/client';
+import type { AppUser } from '@/auth/types';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { SubmitButton } from '@/components/submit-button';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import {
 } from '@/utils/passwordChecker';
 import { initializeCart } from '@/stores/cartStore';
 import { getRedirectUrl } from '@/utils/getRedirectUrl';
+import { apiRequest } from '@/utils/apiClient';
 
 export default function SignInForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -30,20 +31,17 @@ export default function SignInForm() {
     useState<PasswordValidationResult>();
 
   const router = useRouter();
-  const supabase = createClient();
-
   useEffect(() => {
     const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await apiRequest<{ user: AppUser | null }>(
+        '/api/auth/session',
+      );
       if (user) {
-        // User is already signed in, redirect them
         router.push(getRedirectUrl());
       }
     };
-    checkUser();
-  }, [router, supabase.auth]);
+    void checkUser();
+  }, [router]);
 
   const verifyEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,36 +68,29 @@ export default function SignInForm() {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setErrorMessage('Incorrect email or password. Please try again.');
-    } else {
+    try {
+      await apiRequest<{ ok: true }>('/api/auth/signin', {
+        body: JSON.stringify({ email, password }),
+        method: 'POST',
+      });
+      const { user } = await apiRequest<{ user: AppUser | null }>(
+        '/api/auth/session',
+      );
       setSuccessMessage('Signed in successfully. Redirecting...');
 
       // Initialize the cart after successful sign-in
       await initializeCart();
 
       // Get the roles from user metadata
-      const roles = user?.app_metadata?.roles || [];
+      const roles = user?.app_metadata.roles || [];
 
       // Determine where to redirect based on roles
       let redirectPath = getRedirectUrl() || '/';
 
-      console.log('------------------------', redirectPath, roles);
-
       // Only users with a single USER role can be customers
       if (roles.length === 1 && roles[0] === 'USER') {
-        console.log('------------------------>>>', roles);
         // Check if there's an intended action in localStorage
         const intendedAction = localStorage.getItem('intendedAction');
-        console.log("intendedAction: ", intendedAction);
         
         if (intendedAction === 'checkout') {
           redirectPath = '/checkout';
@@ -112,6 +103,13 @@ export default function SignInForm() {
       }
 
       router.push(redirectPath);
+      router.refresh();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Incorrect email or password. Please try again.',
+      );
     }
   };
 

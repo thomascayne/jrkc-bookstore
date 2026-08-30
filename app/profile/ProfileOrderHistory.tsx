@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { apiRequest } from "@/utils/apiClient";
+import type { AppUser as User } from "@/auth/types";
 import { Card, Button, Modal, Table, ModalHeader, ModalBody, TableHeader, TableColumn, TableRow, TableBody, TableCell } from "@heroui/react";
 import { IOrder } from "@/interfaces/IOrder";
 
@@ -26,7 +26,6 @@ export default function ProfileOrderHistory({ user }: OrderHistoryProps) {
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const supabase = createClient();
   const ordersPerPage = 10;
 
   useEffect(() => {
@@ -38,46 +37,26 @@ export default function ProfileOrderHistory({ user }: OrderHistoryProps) {
   async function fetchOrders() {
     if (!user) return;
 
-    const { data, error } = await supabase.rpc('get_user_orders', {
-      p_user_id: user.id
-    });
-
-    if (error) {
-      console.error("Error fetching orders:", error);
-    } else {
-      setOrders(data || []);
-    }
+    const { orders } = await apiRequest<{ orders: IOrder[] }>("/api/orders");
+    setOrders(orders);
   }
 
   async function fetchTotalOrders() {
     if (!user) return;
 
-    const { data, error } = await supabase.rpc('get_user_orders_count', {
-      p_user_id: user.id
-    });
-
-    if (error) {
-      console.error("Error fetching total orders:", error);
-    } else {
-      setTotalOrders(data || 0);
-    }
+    const { orders } = await apiRequest<{ orders: IOrder[] }>("/api/orders");
+    setTotalOrders(orders.length);
   }
 
   async function fetchOrderDetails(orderId: string) {
     if (!user) return;
 
-    const { data, error } = await supabase.rpc('get_order_details', {
-      p_order_id: orderId,
-      p_user_id: user.id
-    });
-
-    if (error) {
-      console.error("Error fetching order details:", error);
-    } else {
-      setSelectedOrder(data[0]);
-      setOrderItems(data);
-      setIsModalOpen(true);
-    }
+    const response = await apiRequest<{ order: IOrder; items: OrderItem[] }>(
+      `/api/orders?id=${encodeURIComponent(orderId)}`,
+    );
+    setSelectedOrder(response.order);
+    setOrderItems(response.items);
+    setIsModalOpen(true);
   }
 
   return (

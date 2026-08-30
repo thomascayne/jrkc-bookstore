@@ -6,7 +6,8 @@ import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardBody } from '@heroui/react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
+import type { AppUser } from '@/auth/types';
+import { apiRequest } from '@/utils/apiClient';
 import {
   FaBook,
   FaCalculator,
@@ -26,26 +27,24 @@ interface DashboardProps {
 
 const SalesDashboardPage = ({}: DashboardProps) => {
   const router = useRouter();
-  const supabase = createClient();
-
   useEffect(() => {
     const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { user } = await apiRequest<{ user: AppUser | null }>(
+        '/api/auth/session',
+      );
 
-      if (!session) {
+      if (!user) {
         router.push('/signin');
         return;
       }
 
-      if (!session.user.app_metadata.roles.includes('SALES_ASSOCIATE')) {
+      if (!user.app_metadata.roles.includes('SALES_ASSOCIATE')) {
         router.push('/unauthorized');
       }
     };
 
-    checkUser();
-  }, [router, supabase.auth]);
+    void checkUser();
+  }, [router]);
 
   return (
     <div className="container mx-auto p-4">

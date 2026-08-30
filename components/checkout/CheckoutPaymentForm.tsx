@@ -14,8 +14,8 @@ import {
 } from "@heroui/react";
 import CreditCardIcons from "@/components/CreditCardIcons";
 
-import { createClient } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import type { AppUser as User } from "@/auth/types";
+import { userStore } from "@/stores/userStore";
 import { FaPlus } from "react-icons/fa";
 import {
   CardType,
@@ -55,8 +55,6 @@ export default function CheckoutPaymentForm({
 
   const stripe = useStripe();
   const elements = useElements();
-  const supabase = createClient();
-
   useEffect(() => {
     setIsFormValid(nameOnCard.length >= 3);
   }, [nameOnCard]);
@@ -65,10 +63,7 @@ export default function CheckoutPaymentForm({
     async function fetchPaymentMethods() {
       if (!user) return;
 
-      const { data, error } = await supabase
-        .from("payment_methods")
-        .select("*")
-        .eq("user_id", user.id);
+      const data = await userStore.getUserPaymentMethods();
 
       if (data) {
         setPaymentMethods(data);
@@ -77,13 +72,13 @@ export default function CheckoutPaymentForm({
           const defaultMethod =
             data.find((method) => method.is_default) || data[0];
           setSelectedPaymentMethodId(defaultMethod.id);
-          onPaymentMethodSelect(defaultMethod.id);
+          onPaymentMethodSelect(defaultMethod);
         }
       }
     }
 
     fetchPaymentMethods();
-  }, [user, supabase, onPaymentMethodSelect]);
+  }, [user, onPaymentMethodSelect]);
 
   const convertToStripePaymentMethod = (
     paymentInfo: Partial<IPaymentMethod>

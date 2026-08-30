@@ -1,10 +1,10 @@
 // components/AuthNavbar.tsx
 'use client';
 
-import { createClient } from '@/utils/supabase/client';
+import type { AppUser as User } from '@/auth/types';
 import { ROLES, Role } from '@/utils/roles';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { apiRequest } from '@/utils/apiClient';
 import CustomerNavbar from '@/components/navbars/CustomerNavbar';
 import InventoryManagerNavbar from '@/components/navbars/InventoryManagerNavbar';
 import SalesAssociateNavbar from '@/components/navbars/SalesAssociateNavbar';
@@ -19,10 +19,6 @@ interface AuthState {
   userRoles: Role[];
   loading: boolean;
   emulatedRole: Role | null;
-}
-
-function useSupabaseClient() {
-  return useMemo(() => createClient(), []);
 }
 
 // Custom hook for debounced loading state
@@ -48,8 +44,6 @@ export default function AuthNavbar({ initialUser }: AuthNavbarProps) {
 
   const debouncedLoading = useDebouncedLoading(authState.loading, 300);
 
-  const supabase = useSupabaseClient();
-
   const fetchUserData = useCallback(async (user: User | null) => {
     if (!user) {
       setAuthState(prev => ({
@@ -64,12 +58,9 @@ export default function AuthNavbar({ initialUser }: AuthNavbarProps) {
 
     try {
       const roles = user.app_metadata?.roles || [ROLES.USER];
-      
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('emulating_role')
-        .eq('id', user.id)
-        .single();
+      const { profile: profileData } = await apiRequest<{
+        profile: { emulating_role?: Role | null } | null;
+      }>('/api/auth/session');
 
       setAuthState(prev => ({
         ...prev,
@@ -82,31 +73,18 @@ export default function AuthNavbar({ initialUser }: AuthNavbarProps) {
       console.error('Error fetching user data:', error);
       setAuthState(prev => ({ ...prev, loading: false }));
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    // Only fetch initial user data if there's an initial user
     if (initialUser) {
-      fetchUserData(initialUser);
+      void fetchUserData(initialUser);
+    } else {
+      setAuthState((previousState) => ({
+        ...previousState,
+        loading: false,
+      }));
     }
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) {
-        const user = session?.user ?? null;
-        setAuthState(prev => ({ ...prev, user, loading: true }));
-        fetchUserData(user);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, [supabase, initialUser, fetchUserData]);
+  }, [initialUser, fetchUserData]);
 
   
   const handleRoleChange = (role: Role | null) => {

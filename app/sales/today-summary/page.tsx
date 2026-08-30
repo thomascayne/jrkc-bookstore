@@ -16,7 +16,7 @@ import {
   Legend,
   PointElement,
 } from 'chart.js';
-import { createClient } from '@/utils/supabase/client';
+import { apiRequest } from '@/utils/apiClient';
 import { motion } from 'framer-motion';
 import Loading from '@/components/Loading';
 import React, { useEffect, useState } from 'react';
@@ -46,88 +46,27 @@ const TodaySalesSummaryPage: React.FC = () => {
   >([]);
   const [comparisonToYesterday, setComparisonToYesterday] = useState<number>(0);
 
-  const supabase = createClient();
-
   useEffect(() => {
     fetchTodaySummary();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchTodaySummary = async () => {
     setIsLoading(true);
 
-    // Fetch today's sales summary
-    function getDBDayRange(localDate: Date): { start: string; end: string } {
-      // Convert local date to UTC
-      const utcDate = new Date(
-        localDate.getTime() + localDate.getTimezoneOffset() * 60000,
-      );
-
-      // Subtract one day to align with the database's "today"
-      utcDate.setUTCDate(utcDate.getUTCDate() - 1);
-
-      // Set time to start of day (00:00:00)
-      utcDate.setUTCHours(0, 0, 0, 0);
-
-      const startOfDay = utcDate
-        .toISOString()
-        .replace('T', ' ')
-        .replace('Z', '+00');
-
-      // Set time to end of day (23:59:59.999999)
-      utcDate.setUTCHours(23, 59, 59, 999);
-
-      const endOfDay = utcDate
-        .toISOString()
-        .replace('T', ' ')
-        .replace('Z', '+00');
-
-      return { start: startOfDay, end: endOfDay };
-    }
-
-    const localDate = new Date(); // This will use your local time
-    const { start: dbStartTimestamp, end: dbEndTimestamp } =
-      getDBDayRange(localDate);
-
-    const { data: salesSummary, error: salesError } = await supabase.rpc(
-      'get_today_sales_summary',
-      { p_date: dbStartTimestamp },
-    );
-
-    if (salesError) {
-      console.error('Error fetching sales summary:', salesError);
-      // Handle the error appropriately, e.g., show an error message to the user
-    } else {
-      setTodaySales(salesSummary[0].total_sales);
-      setTodayOrders(salesSummary[0].total_orders);
-      setAverageOrderValue(salesSummary[0].average_order_value);
-      setComparisonToYesterday(salesSummary[0].comparison_to_yesterday);
-    }
-
-    // Fetch top selling books
-    const { data: topBooks, error: topBooksError } = await supabase.rpc(
-      'get_top_selling_books_today',
-      { p_date: dbStartTimestamp, limit_num: 5 },
-    );
-
-    if (topBooksError) {
-      console.error('Error fetching top selling books:', topBooksError);
-      // Handle the error appropriately
-    } else {
-      setTopSellingBooks(topBooks);
-    }
-
-    // Fetch sales by hour
-    const { data: hourlyData, error: hourlyError } = await supabase.rpc(
-      'get_sales_by_hour_today',
-    );
-
-    if (hourlyError) {
-      console.error('Error fetching hourly sales data:', hourlyError);
-      // Handle the error appropriately
-    } else {
-      setSalesByHour(hourlyData);
-    }
+    const summary = await apiRequest<{
+      averageOrderValue: number;
+      comparisonToYesterday: number;
+      salesByHour: Array<{ hour: number; sales: number }>;
+      todayOrders: number;
+      todaySales: number;
+      topSellingBooks: BookWithThumbnail[];
+    }>('/api/sales/summary');
+    setTodaySales(summary.todaySales);
+    setTodayOrders(summary.todayOrders);
+    setAverageOrderValue(summary.averageOrderValue);
+    setComparisonToYesterday(summary.comparisonToYesterday);
+    setTopSellingBooks(summary.topSellingBooks);
+    setSalesByHour(summary.salesByHour);
 
     setIsLoading(false);
   };

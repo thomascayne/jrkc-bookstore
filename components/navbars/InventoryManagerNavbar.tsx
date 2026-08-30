@@ -12,7 +12,7 @@ import {
   NavbarMenuToggle,
   Link,
 } from '@heroui/react';
-import { User } from '@supabase/supabase-js';
+import type { AppUser as User } from '@/auth/types';
 import {
   FaBoxes,
   FaFileInvoice,

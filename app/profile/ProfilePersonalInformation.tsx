@@ -3,10 +3,10 @@
 "use client";
 
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { User } from "@supabase/supabase-js";
+import type { AppUser as User } from "@/auth/types";
 import { useState, useEffect } from "react";
 import { Button, Card, CardBody, CardHeader, Input } from "@heroui/react";
-import { createClient } from "@/utils/supabase/client";
+import { apiRequest } from "@/utils/apiClient";
 import useSignOut from "@/hooks/useSignOut";
 import {
   PasswordValidationResult,
@@ -27,8 +27,6 @@ interface PersonalInfoProps {
 export default function ProfilePersonalInformation({ user }: PersonalInfoProps) {
   const router = useRouter();
   const signOut = useSignOut();
-  const supabase = createClient();
-
   const [confirmPassword, setConfirmPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [email, setEmail] = useState(user?.email || "");
@@ -52,22 +50,21 @@ export default function ProfilePersonalInformation({ user }: PersonalInfoProps) 
 
   useEffect(() => {
     async function fetchUserProfile() {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user?.id)
-        .maybeSingle();
+      if (!user) return;
+      const { profile: data } = await apiRequest<{
+        profile: UserProfile | null;
+      }>("/api/profile");
 
       if (data) {
-        setFirstName(data.first_name);
-        setLastName(data.last_name);
+        setFirstName(data.first_name || "");
+        setLastName(data.last_name || "");
         setPhone(data?.phone || "");
         setProfileData(data);
       }
     }
 
-    fetchUserProfile();
-  }, [user, supabase]);
+    void fetchUserProfile();
+  }, [user]);
 
   useEffect(() => {
     setIsEmailChanged(email !== user?.email);
@@ -101,14 +98,12 @@ export default function ProfilePersonalInformation({ user }: PersonalInfoProps) 
     }
 
     // Update phone in auth.users
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ phone: formattedNumber })
-      .eq("id", user?.id)
-      .select("*")
-      .maybeSingle();
-
-    if (profileError) {
+    try {
+      await apiRequest("/api/profile", {
+        body: JSON.stringify({ phone: formattedNumber }),
+        method: "PATCH",
+      });
+    } catch {
       setPhoneMessage({
         isValid: false,
         text: "Failed to update phone number in profile. Please try again.",
@@ -129,25 +124,24 @@ export default function ProfilePersonalInformation({ user }: PersonalInfoProps) 
   const handlePersonalInfoUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({ first_name: firstName, last_name: lastName })
-      .eq("id", user?.id)
-      .select("*")
-      .maybeSingle();
-
-    if (error) {
+    try {
+      const { profile: data } = await apiRequest<{ profile: UserProfile }>(
+        "/api/profile",
+        {
+          body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+          method: "PATCH",
+        },
+      );
+      setProfileData(data);
+      setFirstName(data.first_name || "");
+      setLastName(data.last_name || "");
+      setNameMessage("Personal information updated successfully.");
+      waitSomeTime(9000);
+      setNameMessage("");
+    } catch {
       setNameMessage(
         "Failed to update personal information. Please try again."
       );
-    } else {
-      setProfileData(data);
-      setFirstName(data.first_name);
-      setLastName(data.last_name);
-      setNameMessage("Personal information updated successfully.");
-
-      waitSomeTime(9000);
-      setNameMessage("");
     }
   };
 
@@ -155,24 +149,23 @@ export default function ProfilePersonalInformation({ user }: PersonalInfoProps) 
     e.preventDefault();
     if (!isPasswordValid) return;
 
-    const { data, error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
-
-    if (error) {
-      setPasswordMessage({
-        isValid: false,
-        message: "Failed to update password. Please try again.",
+    try {
+      await apiRequest("/api/account", {
+        body: JSON.stringify({ currentPassword, newPassword }),
+        method: "PATCH",
       });
-    } else {
       setPasswordMessage({
         isValid: false,
         message: "Password updated successfully. Please sign in again.",
       });
-
       waitSomeTime(3000);
-      signOut();
       router.push("/signin");
+      router.refresh();
+    } catch {
+      setPasswordMessage({
+        isValid: false,
+        message: "Failed to update password. Please try again.",
+      });
     }
   };
 
@@ -184,21 +177,16 @@ export default function ProfilePersonalInformation({ user }: PersonalInfoProps) 
       return;
     }
 
-    const { data, error } = await supabase.auth.updateUser({
-      email: email,
-    });
-
-    if (error) {
-      setEmailMessage("Failed to update email. Please try again.");
-    } else {
+    try {
+      await apiRequest("/api/account", {
+        body: JSON.stringify({ email }),
+        method: "PATCH",
+      });
       setIsEmailChanged(false);
-      setEmailMessage(
-        "Email update request sent. Please check your new email. You will need to confirm your new email before you can sign in."
-      );
-
-      waitSomeTime(3000);
-      signOut();
-      router.push("/signin");
+      setEmailMessage("Email updated successfully.");
+      router.refresh();
+    } catch {
+      setEmailMessage("Failed to update email. Please try again.");
     }
   };
 

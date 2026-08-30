@@ -1,19 +1,17 @@
-// contexts/UserProfileContext.tsx
 'use client';
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
+
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { UserProfile } from '@/interfaces/UserProfile';
-import { createClient } from '@/utils/supabase/client';
-import { error } from 'console';
+import type { UserProfile } from '@/interfaces/UserProfile';
 
 interface UserProfileContextType {
   error: unknown;
   isLoading: boolean;
   profile: UserProfile | null;
   session_token: string | null;
-  updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>;
   signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>;
 }
 
 const UserProfileContext = createContext<UserProfileContextType | null>(null);
@@ -22,39 +20,12 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const userProfileData = useUserProfile();
-  const [session_token, setSession_token] = React.useState<string | null>(null);
-
-  useEffect(() => {
-    const supabaseClient = createClient();
-
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabaseClient.auth.getSession();
-      setSession_token(session?.access_token ?? null);
-    };
-    getSession();
-
-    // Set up listener for auth state changes
-    const { data: authListener } = supabaseClient.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          setSession_token(null);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setSession_token(session?.access_token ?? null);
-        }
-      },
-    );
-
-    // Clean up the listener
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
   const contextValue = React.useMemo(
-    () => ({ ...userProfileData, session_token }),
-    [session_token, userProfileData],
+    () => ({
+      ...userProfileData,
+      session_token: userProfileData.session ? 'cookie-session' : null,
+    }),
+    [userProfileData],
   );
 
   return (
@@ -67,21 +38,9 @@ export const UserProfileProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useUserProfileContext = () => {
   const context = useContext(UserProfileContext);
   if (context === null) {
-    console.warn(
+    throw new Error(
       'useUserProfileContext must be used within a UserProfileProvider',
     );
-    return {
-      profile: null,
-      isLoading: false,
-      session_token: null,
-      error: null,
-      updateProfile: async () => {
-        throw new Error('useUserProfileContext must be used within a UserProfileProvider');
-      },
-      signOut: async () => {
-        throw new Error('useUserProfileContext must be used within a UserProfileProvider');
-      },
-    } as UserProfileContextType;
   }
   return context;
 };

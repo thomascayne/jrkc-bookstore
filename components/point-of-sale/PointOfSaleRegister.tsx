@@ -250,16 +250,19 @@ const PointOfSaleRegister: React.FC<PointOfSaleRegisterProps> = ({
       currentOrder.id
     ) {
       setReturningFromPayment(true);
-      const { success, error } = await closeOutRegisterWithPayment(
+      const closeResult = await closeOutRegisterWithPayment(
         currentOrder.id,
         currentOrder.transaction_id,
         paymentMethod,
       );
 
-      if (success) {
+      if (closeResult.success) {
         clearTransaction();
       } else {
-        console.error('Error closing out register:', error);
+        console.error(
+          'Error closing out register:',
+          'error' in closeResult ? closeResult.error : 'Unknown error',
+        );
       }
     } else {
       setReturningFromPayment(false);

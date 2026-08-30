@@ -1,12 +1,9 @@
 // app/confirm/page.tsx
 
-import { createClient } from "@/utils/supabase/server";
+import { getCurrentUser } from "@/auth/session";
 
 export default async function Confirm() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (user) return null;
 
@@ -17,11 +14,8 @@ export default async function Confirm() {
       </h1>
       <h2 className="font-bold">Thank you for signing up to JRKC Bookstore</h2>
       <div className="text-center">
-        <p className="mb-4">We sent you a confirmation email.</p>
-        <p className="font-semibold text-red-500">
-          Please click on the link in the email.
-        </p>
-        <p>If you have not received it, please check your spam folder.</p>
+        <p className="mb-4">Your account is ready.</p>
+        <p className="font-semibold">You can now sign in.</p>
       </div>
     </div>
   );
