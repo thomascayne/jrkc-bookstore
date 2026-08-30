@@ -1,3 +1,7 @@
+import { stripeTestPublishableKey } from '@/utils/stripeTestMode';
+
 export function getStripePublishableKey() {
-  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim() || null;
+  return stripeTestPublishableKey(
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+  );
 }

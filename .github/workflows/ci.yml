@@ -46,6 +46,12 @@ jobs:
       - name: Test deployment environment bootstrap
         run: sh scripts/deployment-environment.test.sh
 
+      - name: Test deployment runtime verification
+        run: npm run test:deployment-runtime
+
+      - name: Test Stripe portfolio mode
+        run: npm run test:stripe-mode
+
       - name: Test Docker resource isolation
         run: sh scripts/docker-isolation.test.sh
 

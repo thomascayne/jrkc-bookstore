@@ -4,22 +4,11 @@
   "private": true,
   "title": "JRKC Bookstore",
   "appName": "JRKC Bookstore Management System",
-  "authors": [
-    {
-      "name": "Joshua Castillo"
-    },
-    {
-      "name": "Ricky Holder"
-    },
-    {
-      "name": "Javon Kelley"
-    },
-    {
-      "name": "Thomas Cayne"
-    }
-  ],
-  "description": "Bookstore Management System for CTU University",
-  "projectContext": "A collaborative college project created for the Colorado Technical University curriculum. It is educational team work, not the individual professional work of any one contributor.",
+  "author": {
+    "name": "Thomas Cayne"
+  },
+  "description": "Full-stack college portfolio project designed, developed, tested, documented, and deployed by Thomas Cayne",
+  "projectContext": "Selected by Thomas Cayne from professor-provided options for a five-week Colorado Technical University group project. Thomas completed the entire software development lifecycle and delivered the fully working application.",
   "repositoryUrl": "https://github.com/thomascayne/jrkc-bookstore",
   "engines": {
     "node": ">=24.0.0 <25"
@@ -51,6 +40,8 @@
     "start": "next start",
     "test:branch-policy": "node --test scripts/branch-policy.test.mjs",
     "test:catalog-filters": "node --test scripts/catalog-filters.test.mjs",
+    "test:deployment-runtime": "sh scripts/deployment-runtime.test.sh",
+    "test:stripe-mode": "node --test scripts/stripe-test-mode.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
