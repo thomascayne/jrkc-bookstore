@@ -1,9 +1,9 @@
 // app/profile/page.tsx
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
+import type { AppUser as User } from "@/auth/types";
+import { apiRequest } from "@/utils/apiClient";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProfileAddress from "@/app/profile/ProfileAddress";
 import ProfileAdminPanel from "@/app/profile/ProfileAdminPanel";
@@ -52,47 +52,26 @@ export default function ProfilePage() {
 
   const activeTab = searchParams?.get("tab") || tabs[0].key;
   const router = useRouter();
-  const supabase = createClient();
-
   useEffect(() => {
     async function getUserAndRole() {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const { user: authenticatedUser } = await apiRequest<{
+          user: User | null;
+        }>("/api/auth/session");
 
-        if (!session) {
-          console.log("User is not authenticated");
+        if (!authenticatedUser) {
+          router.push("/signin");
           return;
         }
 
-        setUser(session.user);
-
-        if (session.user) {
-          const { data: userData, error: userError } = await supabase
-            .from("user_roles")
-            .select("roles")
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          if (userError) {
-            console.error("Error fetching user role:", userError);
-          }
-
-          // Check if user is an admin
-          // Set user role
-          if (userData && userData.roles) {
-            setUserRoles(userData.roles);
-          } else {
-            setUserRoles(["USER"]); // Default role if no roles are set
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
+        setUser(authenticatedUser);
+        setUserRoles(authenticatedUser.app_metadata.roles);
+      } catch {
+        router.push("/signin");
       }
     }
-    getUserAndRole();
-  }, [supabase]);
+    void getUserAndRole();
+  }, [router]);
 
   const handleTabChange = (tab: string) => {
     router.push(`/profile?tab=${tab}`);

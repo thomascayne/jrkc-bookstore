@@ -1,33 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
 import { ICartOrder } from "@/interfaces/ICustomerCartOrder";
-
-const supabase = createClient();
+import { apiRequest } from "@/utils/apiClient";
 
 export default function CheckoutOrderHistory() {
   const [orders, setOrders] = useState<ICartOrder[]>([]);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("id", user.id)
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("Error fetching orders:", error);
-        } else {
-          setOrders(data as ICartOrder[]);
-        }
-      }
+      const { orders } = await apiRequest<{ orders: ICartOrder[] }>(
+        "/api/orders",
+      );
+      setOrders(orders);
     };
 
-    fetchOrders();
+    void fetchOrders();
   }, []);
 
   return (

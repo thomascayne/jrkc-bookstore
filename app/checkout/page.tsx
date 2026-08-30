@@ -3,21 +3,20 @@
 "use client";
 
 import CheckoutAccordion from "@/components/checkout/CheckoutAccordion";
-import { createClient } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import type { AppUser as User } from "@/auth/types";
+import { apiRequest } from "@/utils/apiClient";
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 
 export default function CheckoutCheckoutPage() {
   const [user, setUser] = useState<User | null>(null);
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { user } = await apiRequest<{ user: User | null }>(
+        "/api/auth/session",
+      );
 
       if (!user) {
         router.push('/signin');
@@ -30,21 +29,11 @@ export default function CheckoutCheckoutPage() {
         router.push('/');
         return;
       }
+      setUser(user);
     };
 
-    checkAuthStatus();
-  }, [router, supabase.auth]);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-      setUser(session.user);
-    };
-    getUser();
-  }, [supabase.auth]);
+    void checkAuthStatus();
+  }, [router]);
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -1,98 +1,79 @@
-# JRKC Bookstore CI/CD and Branch Governance
+# CI/CD and branch governance
 
-## Required promotion path
+## Promotion path
 
-Every change must follow one direction:
+The repository uses one protected release branch:
 
 ```text
-working branch -> pull request -> staging -> pull request -> main
+working branch -> pull request -> main -> production
 ```
 
-- Working branches may target `staging`.
-- `main` and `staging` may not target `staging`.
-- Only `staging` may target `main`.
-- A push event on `staging` or `main` is deployable only when GitHub associates the commit with a merged pull request that follows these rules.
-- There is no manual deployment event that can bypass this promotion path.
+Development must start from `main` on a `feat/`, `fix/`, `ci/`, `docs/`, or
+other clearly named working branch. `main` is changed only by a reviewed pull
+request. A merged pull request is also the only authorized production
+deployment source.
 
-## Local Git-hook enforcement
+## Local protection
 
-Enable the tracked hooks for each clone:
+Run `npm run hooks:install` in every clone. This configures
+`core.hooksPath=.githooks`. The tracked `pre-push` hook rejects any direct push
+or deletion targeting `refs/heads/main`. It does not prevent pushing a working
+branch for review.
 
-```bash
-npm run hooks:install
-git config --local --get core.hooksPath
-```
-
-The configured value must be `.githooks`. The `pre-push` hook rejects updates and deletions targeting `refs/heads/staging` or `refs/heads/main`. Push the working branch instead and create a pull request.
-
-Git hooks are clone-local controls. They cannot stop a push made from a different clone, the GitHub UI, an administrator token, or an API client. The GitHub Actions authorization job is therefore an independent second control: an unauthorized protected-branch push fails policy validation and cannot run the deployment job. Without GitHub branch protection, the invalid Git ref would still exist and must be repaired manually; Actions cannot safely rewrite branch history.
+Local hooks are a guardrail, not a substitute for review. Do not bypass the
+hook with `--no-verify`.
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs for working-branch pushes and pull requests targeting `staging` or `main`. It performs:
+`.github/workflows/ci.yml` runs on working-branch pushes, pull requests into
+`main`, and reusable workflow calls. It:
 
-1. Branch-direction policy tests.
-2. Locked dependency installation with Node.js 24.
-3. TypeScript validation.
-4. ESLint validation with zero warnings.
-5. A production Next.js build.
-6. An npm vulnerability audit at moderate severity.
-7. Dockerfile static validation.
-8. Docker Compose configuration validation.
+1. tests the branch policy;
+2. installs the lockfile with development dependencies;
+3. type-checks strict TypeScript;
+4. runs ESLint with zero warnings;
+5. builds the production Next.js application;
+6. audits dependencies at moderate severity;
+7. validates the Dockerfile and Compose configuration.
 
-The workflow grants only read access to repository contents. Official GitHub actions are pinned to verified immutable release commits rather than floating major-version tags.
+CI uses placeholder PostgreSQL passwords only to render Compose configuration.
+It does not connect to production, create a database, or receive Oracle secrets.
 
 ## Deployment authorization
 
-`.github/workflows/deploy.yml` listens only for pushes to `staging` and `main`. Before opening an SSH connection it:
+`.github/workflows/deploy.yml` listens only for a push to `main`. GitHub
+normally emits that event after a pull request is merged. Before SSH access, the
+workflow queries GitHub for pull requests associated with the exact commit and
+requires a merged working-branch pull request whose base is `main`.
 
-1. Calls GitHub's commit-associated pull-request API.
-2. Verifies that a staging commit came from a merged working-branch pull request.
-3. Verifies that a production commit came from a merged `staging -> main` pull request.
-4. Re-runs the complete CI workflow against the exact release commit.
-5. Selects the matching GitHub environment.
+The workflow then reuses CI, enters the `production` GitHub environment, checks
+out the exact commit on Oracle, validates the clean checkout and ignored
+`.env.production`, builds Compose images, applies Drizzle migrations, starts the
+application, and waits for the health endpoint.
 
-The deployment job then uses strict SSH host verification and sends `deploy/deploy-release.sh` to Oracle. The remote script refuses dirty checkouts, fetches only the target protected branch, verifies that the exact 40-character commit belongs to that remote branch, checks out the commit in detached mode, validates Compose, builds the commit-tagged image, starts the isolated Compose project, waits for container health, and verifies `/api/health` over Oracle loopback.
+Required production environment configuration:
 
-| Git branch | GitHub environment | Compose project | Oracle loopback port | Environment file |
-| --- | --- | --- | --- | --- |
-| `staging` | `staging` | `jrkc-bookstore-staging` | `3101` | `.env.staging` |
-| `main` | `production` | `jrkc-bookstore-production` | `3100` | `.env.production` |
+| Kind | Name | Purpose |
+| --- | --- | --- |
+| Variable | `ORACLE_DEPLOYMENT_PATH` | Absolute production checkout path |
+| Secret | `ORACLE_HOST` | Oracle SSH host |
+| Secret | `ORACLE_KNOWN_HOSTS` | Pinned SSH known-host record |
+| Secret | `ORACLE_SSH_PRIVATE_KEY` | Deployment SSH private key |
+| Secret | `ORACLE_USER` | Oracle SSH account |
 
-## GitHub environment configuration
+Application and database credentials stay in the ignored Oracle
+`.env.production`; they do not belong in repository variables, workflow logs,
+or public source.
 
-Create GitHub environments named `staging` and `production`. Configure the following in each environment.
+## Review sequence
 
-Environment variable:
+1. Create or update a working branch from `main`.
+2. Run the full validation suite locally.
+3. Push only the working branch.
+4. Open a pull request from the working branch into `main`.
+5. Review the changed files and green CI results.
+6. Merge the pull request.
+7. Confirm the production deployment and application health.
 
-- `ORACLE_DEPLOYMENT_PATH`: Absolute path to that environment's clean JRKC Git checkout on Oracle.
-
-Environment secrets:
-
-- `ORACLE_HOST`: Oracle hostname or IP address.
-- `ORACLE_USER`: Restricted deployment account.
-- `ORACLE_SSH_PRIVATE_KEY`: Private key for the restricted deployment account.
-- `ORACLE_KNOWN_HOSTS`: Pre-verified OpenSSH host-key line for the Oracle host.
-
-Do not obtain `ORACLE_KNOWN_HOSTS` blindly inside CI. Capture the host key during controlled setup and verify its fingerprint through a separate trusted channel before saving it as a GitHub secret.
-
-The Oracle deployment account needs read access to its checkout and permission to run Docker Compose. Each deployment path must contain its ignored environment file before the first deployment. Production and staging must remain different checkouts, environment files, Compose projects, ports, credentials, and data services.
-
-## Release sequence
-
-For the current branch:
-
-```bash
-git push -u origin fix/next15-react-runtime
-```
-
-Then complete the release exclusively through GitHub:
-
-1. Open `fix/next15-react-runtime -> staging`.
-2. Wait for CI and review before merging.
-3. Confirm the staging deployment and application health.
-4. Open `staging -> main`.
-5. Wait for CI and review before merging.
-6. Confirm the production deployment and application health.
-
-Never push local commits directly to either protected branch, and never deploy a working branch over staging or production.
+Never deploy a working branch directly over production and never push local
+commits directly to `main`.

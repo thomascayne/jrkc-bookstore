@@ -7,6 +7,7 @@ export interface IBookInventory {
     authors: string;
     available_quantity: number;
     average_rating: number;
+    catalog_source?: 'database' | 'google';
     categoryId: number;
     category: BookCategory | null
     description: string;

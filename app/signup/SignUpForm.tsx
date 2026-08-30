@@ -1,7 +1,7 @@
 // app/signup/SignUpForm.tsx
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
+import { apiRequest } from "@/utils/apiClient";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { SubmitButton } from "@/components/submit-button";
 import { useRouter } from "next/navigation";
@@ -16,8 +16,6 @@ export default function SignUpForm() {
   const [showConfirmPassword, setConfirmShowPassword] = useState(false);
 
   const router = useRouter();
-  const supabase = createClient();
-
   const signUp = async (formData: FormData) => {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
@@ -84,31 +82,21 @@ export default function SignUpForm() {
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      setErrorMessage("Unable to create account. Please try again.");
-      return;
-    }
-
-    if (data.session) {
+    try {
+      await apiRequest<{ ok: true }>("/api/auth/signup", {
+        body: JSON.stringify({ email, password }),
+        method: "POST",
+      });
       setSuccessMessage("Account created. You are now signed in.");
       router.push("/");
       router.refresh();
-      return;
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to create account. Please try again.",
+      );
     }
-
-    setSuccessMessage(
-      "Account created. Please check your email to verify your account."
-    );
-
-    router.push("/confirm");
   };
 
   return (

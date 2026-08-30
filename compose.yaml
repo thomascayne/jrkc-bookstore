@@ -1,23 +1,83 @@
 services:
+  database:
+    environment:
+      POSTGRES_APP_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-jrkc_bookstore}
+      POSTGRES_PASSWORD: ${POSTGRES_OWNER_PASSWORD:?POSTGRES_OWNER_PASSWORD is required}
+      POSTGRES_USER: jrkc_owner
+    healthcheck:
+      interval: 5s
+      retries: 12
+      start_period: 10s
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      timeout: 5s
+    image: postgres:18.6-bookworm
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: 10m
+    networks:
+      - database
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    shm_size: 256mb
+    stop_grace_period: 60s
+    volumes:
+      - bookstore-postgres-data:/var/lib/postgresql
+      - ./deploy/postgres/initialize-database.sh:/docker-entrypoint-initdb.d/10-initialize-bookstore.sh:ro
+
+  migrate:
+    build:
+      context: .
+      target: migration
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jrkc_bookstore}
+      POSTGRES_HOST: database
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_USER: jrkc_app
+    image: jrkc-bookstore-migrations:${BOOKSTORE_IMAGE_TAG:-local}
+    networks:
+      - database
+    read_only: true
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:mode=1777
+
   bookstore:
     build:
       args:
         NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY: ${NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY:-}
         NEXT_PUBLIC_GOOGLE_BOOKS_API_URL: ${NEXT_PUBLIC_GOOGLE_BOOKS_API_URL:-https://www.googleapis.com/books/v1/volumes}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?NEXT_PUBLIC_SUPABASE_ANON_KEY is required}
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
       context: .
       target: runner
     cap_drop:
       - ALL
     env_file:
       - path: ${BOOKSTORE_ENV_FILE:-.env.production}
-        required: true
+        required: false
     environment:
       HOSTNAME: 0.0.0.0
       NODE_ENV: production
       PORT: 3100
+      POSTGRES_DB: ${POSTGRES_DB:-jrkc_bookstore}
+      POSTGRES_HOST: database
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_USER: jrkc_app
+    depends_on:
+      database:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     image: jrkc-bookstore:${BOOKSTORE_IMAGE_TAG:-local}
     init: true
     logging:
@@ -35,3 +95,15 @@ services:
     tmpfs:
       - /app/.next/cache:mode=0755,uid=1001,gid=1001
       - /tmp:mode=1777
+    networks:
+      - edge
+      - database
+
+networks:
+  database:
+    internal: true
+  edge:
+
+volumes:
+  bookstore-postgres-data:
+    name: ${BOOKSTORE_DATABASE_VOLUME:-jrkc-bookstore-postgres-data}

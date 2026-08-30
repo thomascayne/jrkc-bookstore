@@ -10,12 +10,13 @@ export const useBooksByCategory = (
   searchQuery: string
 ) => {
   const queryClient = useQueryClient();
-  const queryKey = ['books', categoryKey, booksPerPage, filters, page, searchQuery];
+  const queryKey = ['catalog-v2', categoryKey, booksPerPage, filters, page, searchQuery];
 
   const query = useQuery({
     queryKey,
     queryFn: () => fetchBooksByCategory(booksPerPage, categoryKey, filters, page, searchQuery),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: 'always',
+    staleTime: 60 * 1000,
   });
 
   const totalBooks = query.data?.totalBooks || 0;
@@ -24,7 +25,7 @@ export const useBooksByCategory = (
   const prefetchNextPage = useCallback(() => {
     if (page < totalPages) {
       const nextPage = page + 1;
-      const nextPageQueryKey = ['books', categoryKey, booksPerPage, filters, nextPage, searchQuery];
+      const nextPageQueryKey = ['catalog-v2', categoryKey, booksPerPage, filters, nextPage, searchQuery];
       queryClient.prefetchQuery({
         queryKey: nextPageQueryKey,
         queryFn: () => fetchBooksByCategory(booksPerPage, categoryKey, filters, nextPage, searchQuery),

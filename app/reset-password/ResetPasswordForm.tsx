@@ -1,7 +1,6 @@
 // app/reset-password/ResetPasswordForm.tsx
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import { SubmitButton } from "../../components/submit-button";
 import { useState } from "react";
 import Link from "next/link";
@@ -9,22 +8,12 @@ import Link from "next/link";
 export default function ResetPasswordForm() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  const supabase = createClient();
-
   const handleResetPassword = async (formData: FormData) => {
     const email = formData.get("email") as string;
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`,
-    });
-
-    if (error) {
-      setMessage("Error: " + error.message);
-    } else {
-      setMessage(
-        "If your email is in our system, you will receive an email. Please check your inbox."
-      );
-    }
+    setMessage(
+      "Password reset email delivery is not configured. If you can sign in, change your password from Profile."
+    );
   };
 
   return (

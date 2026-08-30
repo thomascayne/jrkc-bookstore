@@ -3,10 +3,10 @@
 "use client";
 
 import React, { useState, useEffect, FormEvent } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { apiRequest } from "@/utils/apiClient";
 import { FaChevronUp, FaPencilAlt, FaPlus } from "react-icons/fa";
 import { Button, Card, Input } from "@heroui/react";
-import { User } from "@supabase/supabase-js";
+import type { AppUser as User } from "@/auth/types";
 import { BillingAddress } from "../../interfaces/BillingAddress";
 import { ShippingAddress } from "@/interfaces/ShippingAddress";
 import { UserProfile } from "@/interfaces/UserProfile";
@@ -44,8 +44,6 @@ export default function ProfileAddress({ user }: AddressProps) {
   const [showBillingAddressForm, setShowBillingAddressForm] = useState(false);
   const [showShippingAddressForm, setShowShippingAddressForm] = useState(false);
 
-  const supabase = createClient();
-
   const [billingAddress, setBillingAddress] =
     useState<BillingAddress>(emptyBillingAddress);
 
@@ -53,7 +51,7 @@ export default function ProfileAddress({ user }: AddressProps) {
     useState<ShippingAddress>(emptyShippingAddress);
 
   const fillAddressByType = (
-    address: BillingAddress | ShippingAddress,
+    address: BillingAddress | ShippingAddress | UserProfile,
     type: "billing" | "shipping"
   ) => {
     if (type === "billing") {
@@ -89,11 +87,10 @@ export default function ProfileAddress({ user }: AddressProps) {
 
   useEffect(() => {
     async function getUserAddresses() {
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user?.id)
-        .single();
+      if (!user) return;
+      const { profile } = await apiRequest<{ profile: UserProfile | null }>(
+        "/api/profile",
+      );
 
       if (profile) {
         setProfileData(profile);
@@ -102,8 +99,8 @@ export default function ProfileAddress({ user }: AddressProps) {
       }
     }
 
-    getUserAddresses();
-  }, [supabase, user?.id]);
+    void getUserAddresses();
+  }, [user]);
 
   const isBillingAddressEmpty = (address: any) => {
     if (!address) return true;
@@ -141,12 +138,10 @@ export default function ProfileAddress({ user }: AddressProps) {
     if (type === "billing") {
       setBillingAddress(billingAddress);
       try {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .update(billingAddress)
-          .eq("id", user?.id)
-          .select("*")
-          .maybeSingle();
+        const { profile } = await apiRequest<{ profile: UserProfile }>(
+          "/api/profile",
+          { body: JSON.stringify(billingAddress), method: "PATCH" },
+        );
 
         if (profile) {
           fillAddressByType(profile, "billing");
@@ -161,12 +156,10 @@ export default function ProfileAddress({ user }: AddressProps) {
     if (type === "shipping") {
       setShippingAddress(shippingAddress);
       try {
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .update(shippingAddress)
-          .eq("id", user?.id)
-          .select("*")
-          .maybeSingle();
+        const { profile } = await apiRequest<{ profile: UserProfile }>(
+          "/api/profile",
+          { body: JSON.stringify(shippingAddress), method: "PATCH" },
+        );
 
         if (profile) {
           fillAddressByType(profile, "shipping");

@@ -1,92 +1,68 @@
-// hooks/useUserProfile.ts
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/utils/supabase/client'
-import { Session } from '@supabase/supabase-js'
-import { UserProfile } from '@/interfaces/UserProfile'
-
-const supabase = createClient()
+import type { AppSession, AppUser } from '@/auth/types';
+import type { UserProfile } from '@/interfaces/UserProfile';
+import { apiRequest } from '@/utils/apiClient';
 
 interface UserProfileData {
-  access_token: string | null;
   profile: UserProfile | null;
-  session: Session | null;
+  session: AppSession | null;
+  user: AppUser | null;
 }
 
 export function useUserProfile() {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
+  const { data, error, isLoading } = useQuery<UserProfileData, Error>({
+    queryFn: async () => {
+      const response = await apiRequest<{
+        profile: UserProfile | null;
+        user: AppUser | null;
+      }>('/api/auth/session');
 
-    const { data, isLoading, error } = useQuery<UserProfileData, Error>({
-        queryKey: ['userProfile'],
-        queryFn: async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) return { profile: null, session: null, access_token: null }
+      return {
+        profile: response.profile,
+        session: response.user ? { user: response.user } : null,
+        user: response.user,
+      };
+    },
+    queryKey: ['userProfile'],
+    staleTime: 1000 * 60 * 5,
+  });
 
-            const { data: profile, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single()
-
-            if (error) {
-                console.log("User profile query error: ", error)
-                throw error
-            }
-
-            return {
-                access_token: session.access_token ?? '',
-                profile: profile as UserProfile,
-                session,
-            }
-        },
-        staleTime: 1000 * 60 * 5, // 5 minutes
-    })
-
-    const updateProfile = async (updates: Partial<UserProfile>) => {
-        if (!data?.session?.user) {
-            console.log('No user logged in from update profile')
-            throw new Error('No user logged in')
-        }
-
-        const { data: updatedProfile, error } = await supabase
-            .from('profiles')
-            .update(updates)
-            .eq('id', data.session.user.id)
-            .single()
-
-        if (error) {
-            console.log("User profile update error: ", error)
-            throw error
-        }
-
-        // Update the cache
-        queryClient.setQueryData<UserProfileData>(['userProfile'], old => ({
-            ...old!,
-            profile: updatedProfile as UserProfile
-        }))
-
-        return updatedProfile as UserProfile
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!data?.user) {
+      throw new Error('No user logged in.');
     }
 
-    const signOut = async () => {
-        const { error } = await supabase.auth.signOut()
-        if (error) {
-            console.log("Sign out error: ", error)
-            throw error
-        }
+    const { profile } = await apiRequest<{ profile: UserProfile }>(
+      '/api/profile',
+      {
+        body: JSON.stringify(updates),
+        method: 'PATCH',
+      },
+    );
 
-        // Clear the user profile data from the cache
-        queryClient.setQueryData(['userProfile'], null)
-        
-        queryClient.invalidateQueries({ queryKey: ['userProfile'] })    }
+    queryClient.setQueryData<UserProfileData>(['userProfile'], (current) => ({
+      profile,
+      session: current?.session ?? null,
+      user: current?.user ?? null,
+    }));
+    return profile;
+  };
 
-    return { 
-        access_token: data?.access_token ?? null, 
-        error, 
-        isLoading, 
-        profile: data?.profile ?? null, 
-        session: data?.session ?? null, 
-        updateProfile,
-        signOut
-    }
+  const signOut = async () => {
+    await apiRequest<{ ok: true }>('/api/auth/signout', { method: 'POST' });
+    queryClient.setQueryData(['userProfile'], null);
+    await queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+  };
+
+  return {
+    access_token: data?.user ? 'cookie-session' : null,
+    error,
+    isLoading,
+    profile: data?.profile ?? null,
+    session: data?.session ?? null,
+    signOut,
+    updateProfile,
+  };
 }

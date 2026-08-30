@@ -10,14 +10,14 @@ import { IBookInventory } from "@/interfaces/IBookInventory";
 interface BookImageProps {
   googleBook?: GoogleBook;
   size?: string;
-  supabaseBook?: IBookInventory;
+  inventoryBook?: IBookInventory;
   useLargeImage?: boolean;
 }
 
 const BookImage: React.FC<BookImageProps> = ({
   googleBook,
   size = "w-32 h-48",
-  supabaseBook,
+  inventoryBook,
   useLargeImage = false,
 }) => {
   const [imageError, setImageError] = useState(false);
@@ -45,14 +45,14 @@ const BookImage: React.FC<BookImageProps> = ({
         googleBook.volumeInfo.imageLinks?.small ||
         googleBook.volumeInfo.imageLinks?.thumbnail;
     } else {
-      newImageUrl = supabaseBook?.thumbnail_image_link;
+      newImageUrl = inventoryBook?.thumbnail_image_link;
     }
 
     setImageUrl(newImageUrl);
     setImageError(false);
     setLoaded(false);
     setFadeIn(false);
-  }, [googleBook, useLargeImage, supabaseBook]);
+  }, [googleBook, inventoryBook, useLargeImage]);
 
   const containerClass = `book-cover-container relative w-full aspect-[3/4] ${
     useLargeImage ? "w-2/3" : size
@@ -74,8 +74,8 @@ const BookImage: React.FC<BookImageProps> = ({
       </div>
       {!imageUrl && (
         <BookCoverPlaceholder
-          title={supabaseBook?.title ?? "Unknown Title"}
-          author={supabaseBook?.authors ?? "Unknown Author"}
+          title={inventoryBook?.title ?? "Unknown Title"}
+          author={inventoryBook?.authors ?? "Unknown Author"}
           size={size}
         />
       )}
@@ -87,7 +87,7 @@ const BookImage: React.FC<BookImageProps> = ({
           }`}
         >
           <Image
-            alt={supabaseBook?.title ?? "Book Cover"}
+            alt={inventoryBook?.title ?? "Book Cover"}
             fill
             sizes={useLargeImage ? "(max-width: 768px) 100vw, 50vw" : "33vw"}
             src={imageUrl}
@@ -100,8 +100,8 @@ const BookImage: React.FC<BookImageProps> = ({
       )}
       {imageError && (
         <BookCoverPlaceholder
-          title={supabaseBook?.title ?? "Unknown Title"}
-          author={supabaseBook?.authors ?? "Unknown Author"}
+          title={inventoryBook?.title ?? "Unknown Title"}
+          author={inventoryBook?.authors ?? "Unknown Author"}
           size={size}
         />
       )}

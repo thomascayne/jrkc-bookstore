@@ -25,22 +25,21 @@ import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import BookDetails from '@/components/BookDetails';
 import { GoogleBook } from '@/interfaces/GoogleBook';
 import { fetchBookDetails } from '@/utils/bookApi';
-import { fetchBookFromSupabase } from '@/utils/bookFromSupabaseApi';
+import { fetchInventoryBook } from '@/utils/bookApi';
 import InputButtonGroup from '@/components/InputButtonGroup';
 import { useRouter } from 'next/navigation';
 import CartLoadingSkeleton from '@/components/CartLoadingSkeleton';
 import { ICustomerCartItem } from '@/interfaces/ICustomerCart';
 import { IBookInventory } from '@/interfaces/IBookInventory';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { createClient } from '@/utils/supabase/client';
+import type { AppUser } from '@/auth/types';
+import { apiRequest } from '@/utils/apiClient';
 
 const CartPage = () => {
   const [isClient, setIsClient] = useState(false);
   const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const supabase = createClient();
-
   const cartItems = useStore(
     cartStore,
     (state) => state.items,
@@ -56,14 +55,16 @@ const CartPage = () => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { user } = await apiRequest<{ user: AppUser | null }>(
+        '/api/auth/session',
+      );
       
       setIsAuthenticated(!!user);
       setIsLoading(false);
     };
 
-    checkAuthStatus();
-  }, [supabase.auth]);
+    void checkAuthStatus();
+  }, []);
 
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity > 0) {
@@ -75,14 +76,13 @@ const CartPage = () => {
 
   const handleBookClick = async (book: IBookInventory) => {
     try {
-      // fetch book details from supabase
-      const supabaseBook = await fetchBookFromSupabase<IBookInventory>(book.id);
+      const databaseBook = await fetchInventoryBook(book.id);
 
       // fetch additional book details from Google Books API
       const googleBookDetails = await fetchBookDetails<GoogleBook>(book.id);
 
       const bookDetails = {
-        ...supabaseBook,
+        ...databaseBook,
         ...googleBookDetails,
       };
 

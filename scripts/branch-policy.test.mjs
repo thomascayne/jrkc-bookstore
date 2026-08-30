@@ -6,52 +6,37 @@ import {
   assertPullRequestFlow,
 } from './branch-policy.mjs';
 
-test('working branches may open pull requests into staging', () => {
+test('working branches may open pull requests into main', () => {
   assert.doesNotThrow(() =>
-    assertPullRequestFlow('staging', 'fix/next15-react-runtime'),
+    assertPullRequestFlow('main', 'fix/postgres-runtime'),
   );
 });
 
-test('only staging may open a pull request into main', () => {
-  assert.doesNotThrow(() => assertPullRequestFlow('main', 'staging'));
-  assert.throws(() => assertPullRequestFlow('main', 'fix/direct-production'));
+test('main cannot open a pull request into itself', () => {
+  assert.throws(() => assertPullRequestFlow('main', 'main'));
 });
 
-test('protected branches cannot be recycled into staging', () => {
-  assert.throws(() => assertPullRequestFlow('staging', 'main'));
-  assert.throws(() => assertPullRequestFlow('staging', 'staging'));
+test('unsupported protected base branches are rejected', () => {
+  assert.throws(() => assertPullRequestFlow('staging', 'feat/catalog'));
 });
 
-test('staging deployment requires a merged working-branch pull request', () => {
+test('production deployment requires a merged working-branch pull request', () => {
   assert.doesNotThrow(() =>
-    assertDeploymentSource('staging', [
+    assertDeploymentSource('main', [
       {
-        base: { ref: 'staging' },
+        base: { ref: 'main' },
         head: { ref: 'feat/catalog-search' },
         merged_at: '2026-08-28T12:00:00Z',
       },
     ]),
   );
 
-  assert.throws(() => assertDeploymentSource('staging', []));
-});
-
-test('production deployment requires a staging-to-main merge', () => {
-  assert.doesNotThrow(() =>
-    assertDeploymentSource('main', [
-      {
-        base: { ref: 'main' },
-        head: { ref: 'staging' },
-        merged_at: '2026-08-28T12:00:00Z',
-      },
-    ]),
-  );
-
+  assert.throws(() => assertDeploymentSource('main', []));
   assert.throws(() =>
     assertDeploymentSource('main', [
       {
         base: { ref: 'main' },
-        head: { ref: 'fix/direct-production' },
+        head: { ref: 'main' },
         merged_at: '2026-08-28T12:00:00Z',
       },
     ]),

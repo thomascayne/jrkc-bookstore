@@ -1,7 +1,7 @@
 import BookImage from "@/components/BookImage";
 import SafeHTML from "@/components/SafeHTML";
 import StarRating from "@/components/StarRating";
-import { useBookFromSupabase } from "@/utils/useBookFromSupabase";
+import { useInventoryBook } from "@/hooks/useInventoryBook";
 import { useGoogleBookDetails } from "@/utils/useGoogleBookDetails";
 import Link from "next/link";
 // components/BookDetails.tsx
@@ -13,7 +13,7 @@ interface BookDetailsProps {
 }
 
 const BookDetails: React.FC<BookDetailsProps> = ({ bookId }) => {
-  const { data: supabaseBook } = useBookFromSupabase(bookId);
+  const { data: inventoryBook } = useInventoryBook(bookId);
   const { data: googleBook } = useGoogleBookDetails(bookId);
 
   return (
@@ -27,15 +27,15 @@ const BookDetails: React.FC<BookDetailsProps> = ({ bookId }) => {
         </h3>
       )}
       <div className="relative shadow-large border bg-transparent pt-4 rounded-sm border-gray-300 dark:border-gray-600">
-        {supabaseBook?.is_promotion && supabaseBook.discount_percentage && (
+        {inventoryBook?.is_promotion && inventoryBook.discount_percentage && (
           <div className="absolute top-0 left-[0] bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-br z-10">
-            {`${supabaseBook.discount_percentage}% OFF`}
+            {`${inventoryBook.discount_percentage}% OFF`}
           </div>
         )}
         <div className="flex items-center px-2">
           <BookImage
             googleBook={googleBook || undefined}
-            supabaseBook={supabaseBook || undefined}
+            inventoryBook={inventoryBook || undefined}
             useLargeImage={true}
           />
         </div>
@@ -45,7 +45,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ bookId }) => {
       </p>
       <p className="mb-2">
         <strong>Published:</strong> {googleBook?.volumeInfo.publishedDate} by{" "}
-        {supabaseBook?.publisher}
+        {inventoryBook?.publisher}
       </p>
       <p className="mb-2">
         <strong>Pages:</strong>
@@ -65,21 +65,24 @@ const BookDetails: React.FC<BookDetailsProps> = ({ bookId }) => {
           {googleBook.volumeInfo.categories.join(", ")}
         </p>
       )}
-      {supabaseBook?.average_rating && (
+      {inventoryBook?.average_rating && (
         <div className="flex gap-2 items-center">
           <strong>Rating:</strong>
-          <StarRating rating={supabaseBook!.average_rating} />
-          <span>({supabaseBook?.ratings_count} ratings)</span>
+          <StarRating rating={inventoryBook.average_rating} />
+          <span>({inventoryBook.ratings_count} ratings)</span>
         </div>
       )}
-      {supabaseBook?.list_price && (
+      {inventoryBook?.list_price && (
         <p className="mb-2">
-          <strong>Price:</strong> ${supabaseBook.list_price}
+          <strong>
+            {inventoryBook.catalog_source === "google" ? "Demo price:" : "Price:"}
+          </strong>{" "}
+          ${inventoryBook.list_price}
         </p>
       )}
-      {supabaseBook?.is_promotion && supabaseBook.discount_percentage && (
+      {inventoryBook?.is_promotion && inventoryBook.discount_percentage && (
         <p className="mb-2 text-red-500">
-          <strong>Discount:</strong> {supabaseBook.discount_percentage}% OFF
+          <strong>Discount:</strong> {inventoryBook.discount_percentage}% OFF
         </p>
       )}
     </div>

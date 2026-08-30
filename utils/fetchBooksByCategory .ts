@@ -1,5 +1,5 @@
-import { IBookInventory } from '@/interfaces/IBookInventory';
-import { createClient } from '@/utils/supabase/client';
+import type { IBookInventory } from '@/interfaces/IBookInventory';
+import { apiRequest } from '@/utils/apiClient';
 
 export interface FilterOptions {
   author?: string;
@@ -19,58 +19,31 @@ export async function fetchBooksByCategory(
   page: number,
   searchQuery: string,
 ) {
-  const supabase = createClient();
+  const parameters = new URLSearchParams({
+    category: categoryKey || 'all',
+    limit: String(booksPerPage),
+    page: String(page),
+    search: searchQuery,
+    sortBy: filters.sort_by || 'average_rating',
+    sortOrder: filters.sort_order || 'DESC',
+  });
+  const optionalParameters: Array<[string, string | number | boolean | undefined]> = [
+    ['author', filters.author],
+    ['discountMin', filters.discount_percentage_min],
+    ['inStock', filters.in_stock],
+    ['priceMax', filters.price?.max],
+    ['priceMin', filters.price?.min],
+    ['ratingMin', filters.rating_min],
+    ['ratingsCountMin', filters.ratings_count_min],
+  ];
 
-  try {
-    // Fetch the category ID if a category key is provided
-    let categoryId = null;
-    if (categoryKey !== 'all') {
-      const { data: category, error: categoryError } = await supabase
-        .from('book_categories')
-        .select('id')
-        .eq('key', categoryKey)
-        .single();
-
-      if (categoryError) throw categoryError;
-      categoryId = category.id;
-    }
-
-    const { data: books, count, error: booksError } = await supabase.rpc('get_books_by_category', {
-      author_filter: filters.author,
-      category_id_filter: categoryId,
-      discount_percentage_min: filters.discount_percentage_min,
-      in_stock_filter: filters.in_stock,
-      limit: booksPerPage,
-      offset: (page - 1) * booksPerPage,
-      price_max: filters.price?.max,
-      price_min: filters.price?.min,
-      rating_min: filters.rating_min,
-      ratings_count_min: filters.ratings_count_min,
-      search_query: searchQuery,
-      sort_by: filters.sort_by || 'average_rating',
-      sort_order: filters.sort_order || 'DESC'
-    });
-
-
-    if (booksError) throw booksError;
-
-    const totalBooks = books && books.length > 0 ? Number(books[0].total_count) : 0;
-
-    return {
-      category: categoryKey || 'all',
-      totalBooks,
-      books: books as IBookInventory[],
-      isLoading: false,
-      error: null,
-    };
-  } catch (error) {
-    console.error('fetchBooksByCategory - Error:', error);
-    return {
-      category: '',
-      totalBooks: 0,
-      books: [],
-      isLoading: false,
-      error: error instanceof Error ? error.message : 'An unknown error occurred',
-    };
+  for (const [key, value] of optionalParameters) {
+    if (value !== undefined) parameters.set(key, String(value));
   }
+
+  return apiRequest<{
+    books: IBookInventory[];
+    category: string;
+    totalBooks: number;
+  }>(`/api/books?${parameters.toString()}`);
 }

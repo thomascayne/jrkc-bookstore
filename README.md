@@ -1,110 +1,108 @@
 # JRKC Bookstore Management System
 
 JRKC Bookstore is a collaborative college project created by Joshua Castillo,
-Ricky Holder, Javon Kelley, and Thomas Cayne as part of the Colorado Technical
-University curriculum. It is preserved as an educational team project and
-should not be represented as the individual professional work of any one
-contributor.
+Ricky Holder, Javon Kelley, and Thomas Cayne for the Colorado Technical
+University curriculum. It is an educational team project, not the individual
+professional work of any one contributor.
 
-The application combines a customer storefront with inventory, checkout,
-point-of-sale, sales reporting, role-aware navigation, and Supabase-backed
-identity and data access. Stripe integration is limited to test-payment
-workflows.
+The public repository supports educational review and self-hosted portfolio
+demonstrations. Public visibility does not grant rights beyond the license and
+permissions published by the repository owners.
 
-- Deployment target: <https://bookstore.thomascayne.com>
+- Live application: <https://bookstore.thomascayne.com>
 - Source: <https://github.com/thomascayne/jrkc-bookstore>
-- Production deployment guide: [docs/001-oracle-docker-deployment.md](docs/001-oracle-docker-deployment.md)
-- CI/CD and branch policy: [docs/002-ci-cd-branch-governance.md](docs/002-ci-cd-branch-governance.md)
-
-## Contributors and project context
-
-The project was developed collaboratively by:
-
-- Joshua Castillo
-- Ricky Holder
-- Javon Kelley
-- Thomas Cayne
-
-The repository is public so the implementation can be reviewed and deployed
-for educational or portfolio demonstrations. Public visibility alone does not
-replace a software license. Anyone redistributing or adapting the project must
-follow the license and permissions published by the repository owners.
+- Deployment guide: [docs/001-oracle-docker-deployment.md](docs/001-oracle-docker-deployment.md)
+- CI and branch policy: [docs/002-ci-cd-branch-governance.md](docs/002-ci-cd-branch-governance.md)
 
 ## Technology
 
-- Next.js 16 and React 19
-- TypeScript
+- Next.js 16, React 19, and strict TypeScript
+- Drizzle ORM with PostgreSQL 18
+- Application-owned password authentication and HTTP-only database sessions
 - HeroUI and Tailwind CSS
-- Supabase Auth and Postgres data APIs
-- Stripe test payments
-- Docker Compose and Caddy deployment on Oracle Cloud
+- Stripe test-payment workflows
+- Docker Compose and Caddy on Oracle Cloud
 
-## Local development
+Drizzle and PostgreSQL are server-only. Browser code calls authenticated Next.js
+API routes; it never receives database credentials or unrestricted query access.
 
-Requirements:
+The public catalog does not require seeded database records. When managed
+inventory is empty or PostgreSQL is temporarily unavailable, `/api/books`
+serves Google Books results and `/api/categories` serves the bundled category
+list. A Google API key is optional. PostgreSQL remains required for accounts,
+managed inventory, authenticated carts, orders, and sales reporting.
+Google volumes without sale pricing receive a clearly labeled demonstration
+price; this is portfolio data, not a live retail offer.
 
-- Node.js 24
-- npm 11 or newer
-- A Supabase project or compatible self-hosted Supabase deployment
+## Quick start with Docker
 
-Clone and install the locked dependencies:
+The local workflow requires only Docker with Compose:
 
 ```bash
-git clone https://github.com/thomascayne/jrkc-bookstore.git
-cd jrkc-bookstore
 npm ci
+npm run docker:build
+npm run docker:up
 ```
 
-Create an ignored `.env.local` containing the two required variables:
+`docker:build` does not require runtime credentials. On the first `docker:up`,
+the zero-dependency launcher generates strong, distinct database passwords in
+the ignored `.env.docker.local` file. It reuses that file so PostgreSQL remains
+accessible after rebuilds and restarts. Before migrations run, the launcher
+safely synchronizes the existing local database roles with that file, allowing
+credential recovery without deleting the persistent volume. Generated values
+are never printed. The launcher also selects the first available loopback port
+from `3100` and saves that choice in the same ignored file, preventing local
+port collisions while Oracle can continue setting `BOOKSTORE_HOST_PORT=3100`
+explicitly.
+
+For Oracle or another production host, create an ignored `.env.production`
+with explicit production credentials:
 
 ```dotenv
-NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-endpoint.example
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anonymous-key
+POSTGRES_OWNER_PASSWORD=replace-with-a-long-random-owner-password
+POSTGRES_PASSWORD=replace-with-a-different-long-random-application-password
 ```
 
-Start development:
+The application is published only on `127.0.0.1:3100`. PostgreSQL has no host
+port and is reachable only through the private Compose network. New accounts,
+profiles, carts, inventory changes, and orders persist in the named Docker
+volume `jrkc-bookstore-postgres-data` across application rebuilds and restarts.
+
+## Optional variables
+
+| Variable | Purpose |
+| --- | --- |
+| `POSTGRES_DB` | Overrides the default `jrkc_bookstore` database name |
+| `BOOKSTORE_DATABASE_VOLUME` | Uses a different persistent Docker volume name |
+| `BOOKSTORE_HOST_PORT` | Overrides the loopback application port, default `3100` |
+| `NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY` | Raises Google Books catalog-enrichment quota |
+| `NEXT_PUBLIC_GOOGLE_BOOKS_API_URL` | Overrides the Google Books volumes endpoint |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Enables client-side Stripe test elements |
+| `STRIPE_SECRET_KEY` | Enables server-side Stripe test PaymentIntents |
+
+Never put database passwords, Stripe secret keys, SSH keys, or other private
+credentials in a `NEXT_PUBLIC_` variable or commit an environment file.
+
+## Local Node.js development
+
+Node.js 24 and npm 11 or newer are required. Point the local Next.js process at
+an independently reachable PostgreSQL database with `DATABASE_URL` or the
+`POSTGRES_*` connection variables. The production Compose database is
+intentionally not published to the host; use the full Docker workflow when you
+want the bundled private database.
 
 ```bash
+npm ci
+npm run db:generate
 npm run dev
 ```
 
-Next.js starts from its framework default port, `3000`. The zero-dependency
-development launcher selects the next available port when `3000` is already in
-use and prints the selected URL.
+`npm run db:generate` creates versioned SQL; it does not change a database.
+Apply committed migrations with `npm run db:migrate`. Production deployments
+run the migration container before starting the application.
 
-## Optional integrations
-
-The core application requires only the Supabase URL and anonymous key. These
-variables enable additional integrations:
-
-| Variable | Purpose | Required |
-| --- | --- | --- |
-| `NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY` | Raises Google Books API quota for catalog enrichment | No |
-| `NEXT_PUBLIC_GOOGLE_BOOKS_API_URL` | Overrides the default Google Books volumes endpoint | No |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Enables client-side Stripe test-payment elements | No |
-| `STRIPE_SECRET_KEY` | Enables server-side Stripe test PaymentIntents | No |
-| `SUPABASE_SERVICE_ROLE_KEY` | Enables trusted server-only Supabase operations | No for browsing and authentication |
-| `CRON_SECRET` | Protects the optional keep-alive endpoint | No |
-| `CRON_SCHEDULE` | Configures an external keep-alive schedule | No |
-
-Never expose `STRIPE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, database
-passwords, JWT secrets, or private keys through a `NEXT_PUBLIC_` variable.
-
-## Docker deployment
-
-Create an ignored `.env.production` with the two required Supabase variables,
-plus any optional integrations you intend to enable. Then run:
-
-```bash
-npm run docker:build
-npm run docker:up
-npm run docker:port
-```
-
-The production container listens on Oracle loopback port `3100` by default.
-Set `BOOKSTORE_HOST_PORT=3101` for an isolated staging deployment. PostgreSQL
-must remain private; Caddy or another TLS reverse proxy should be the only
-public entry point.
+Next.js begins with its framework default port `3000`. The zero-dependency
+launcher automatically selects and prints the next available port if needed.
 
 ## Validation
 
@@ -118,16 +116,12 @@ npm audit --audit-level=moderate
 
 ## Contribution workflow
 
-Install the tracked Git hooks in every clone:
+Install the tracked hook in every clone:
 
 ```bash
 npm run hooks:install
 ```
 
-Changes follow this promotion path:
-
-```text
-working branch -> pull request -> staging -> pull request -> main
-```
-
-Direct pushes to `staging` and `main` are blocked by the tracked pre-push hook.
+Changes follow `working branch -> pull request -> main`. Direct pushes to
+`main` are blocked locally, and deployment accepts only a commit associated
+with a merged pull request into `main`.

@@ -1,4 +1,4 @@
 .githooks/* text eol=lf
 .github/workflows/*.yml text eol=lf
 deploy/*.sh text eol=lf
-deploy/supabase/*.sh text eol=lf
+deploy/postgres/*.sh text eol=lf

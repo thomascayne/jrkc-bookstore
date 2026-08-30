@@ -1,19 +1,17 @@
 import { handleSignOutOfAppCleanupCartLocalStorage } from "@/stores/cartStore";
-import { createClient } from "@/utils/supabase/client";
+import { apiRequest } from "@/utils/apiClient";
 // hooks/useSignOut.ts
 
 import { useRouter } from "next/navigation";
 
 const useSignOut = () => {
     const router = useRouter();
-    const supabase = createClient();
-
     if (typeof window !== 'undefined') {
         localStorage.removeItem('lastVisitedPage');
       }
     
     const signOut = async () => {
-        await supabase.auth.signOut();
+        await apiRequest<{ ok: true }>("/api/auth/signout", { method: "POST" });
         handleSignOutOfAppCleanupCartLocalStorage();
         router.refresh();
     };
