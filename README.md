@@ -67,6 +67,13 @@ The application is published only on `127.0.0.1:3100`. PostgreSQL has no host
 port and is reachable only through the private Compose network. New accounts,
 profiles, carts, inventory changes, and orders persist in the named Docker
 volume `jrkc-bookstore-postgres-data` across application rebuilds and restarts.
+Production uses the Compose project `jrkc-bookstore-production`, including
+project-specific application and migration image names and Compose-scoped
+container and network names. Before changing anything, deployment verifies
+that port `3100` and the persistent database volume are either unused or owned
+by the expected bookstore service. It refuses to reuse another application's
+Docker resources. The application health endpoint also executes a PostgreSQL
+query, so a release cannot report success while only Next.js is running.
 
 ## Optional variables
 
@@ -75,6 +82,7 @@ volume `jrkc-bookstore-postgres-data` across application rebuilds and restarts.
 | `POSTGRES_DB` | Overrides the default `jrkc_bookstore` database name |
 | `BOOKSTORE_DATABASE_VOLUME` | Uses a different persistent Docker volume name |
 | `BOOKSTORE_HOST_PORT` | Overrides the loopback application port, default `3100` |
+| `BOOKSTORE_IMAGE_REPOSITORY` | Prefixes application and migration images for an isolated deployment |
 | `NEXT_PUBLIC_GOOGLE_BOOKS_API_KEY` | Raises Google Books catalog-enrichment quota |
 | `NEXT_PUBLIC_GOOGLE_BOOKS_API_URL` | Overrides the Google Books volumes endpoint |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Enables client-side Stripe test elements |

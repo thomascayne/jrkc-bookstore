@@ -1,21 +1,18 @@
 // components/BookImage.tsx
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import BookCoverPlaceholder from "./BookCoverPlaceholder";
-import { GoogleBook } from "@/interfaces/GoogleBook";
 import BookDetailsSkeleton from "@/components/BookDetailsSkeleton";
 import { IBookInventory } from "@/interfaces/IBookInventory";
 
 interface BookImageProps {
-  googleBook?: GoogleBook;
   size?: string;
   inventoryBook?: IBookInventory;
   useLargeImage?: boolean;
 }
 
 const BookImage: React.FC<BookImageProps> = ({
-  googleBook,
   size = "w-32 h-48",
   inventoryBook,
   useLargeImage = false,
@@ -23,36 +20,17 @@ const BookImage: React.FC<BookImageProps> = ({
   const [imageError, setImageError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
-  const [fadeIn, setFadeIn] = useState(false);
-
-  const imageRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (imageRef.current && imageRef.current.complete) {
-      setLoaded(true);
-      setTimeout(() => setFadeIn(true), 50);
-    }
-  }, [imageRef]);
-
-  useEffect(() => {
-    let newImageUrl: string | undefined;
-
-    if (useLargeImage && googleBook) {
-      newImageUrl =
-        googleBook.volumeInfo.imageLinks?.extraLarge ||
-        googleBook.volumeInfo.imageLinks?.large ||
-        googleBook.volumeInfo.imageLinks?.medium ||
-        googleBook.volumeInfo.imageLinks?.small ||
-        googleBook.volumeInfo.imageLinks?.thumbnail;
-    } else {
-      newImageUrl = inventoryBook?.thumbnail_image_link;
-    }
+    const newImageUrl =
+      inventoryBook?.thumbnail_image_link ||
+      inventoryBook?.small_thumbnail_image_link ||
+      undefined;
 
     setImageUrl(newImageUrl);
     setImageError(false);
     setLoaded(false);
-    setFadeIn(false);
-  }, [googleBook, inventoryBook, useLargeImage]);
+  }, [inventoryBook]);
 
   const containerClass = `book-cover-container relative w-full aspect-[3/4] ${
     useLargeImage ? "w-2/3" : size
@@ -60,32 +38,26 @@ const BookImage: React.FC<BookImageProps> = ({
 
   const loadingImageComplete = () => {
     setLoaded(true);
-    setTimeout(() => setFadeIn(true), 50);
   };
+
+  const showPlaceholder = !imageUrl || imageError;
 
   return (
     <div className={containerClass}>
-      <div
-        className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
-          fadeIn ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        <BookDetailsSkeleton />
-      </div>
-      {!imageUrl && (
+      {imageUrl && !loaded && !imageError && (
+        <div className="absolute inset-0">
+          <BookDetailsSkeleton />
+        </div>
+      )}
+      {showPlaceholder && (
         <BookCoverPlaceholder
           title={inventoryBook?.title ?? "Unknown Title"}
           author={inventoryBook?.authors ?? "Unknown Author"}
-          size={size}
+          size="h-full w-full"
         />
       )}
-      {imageUrl && (
-        <div
-          ref={imageRef}
-          className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${
-            fadeIn ? "opacity-100" : "opacity-0"
-          }`}
-        >
+      {imageUrl && !imageError && (
+        <div className={`absolute inset-0 transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}>
           <Image
             alt={inventoryBook?.title ?? "Book Cover"}
             fill
@@ -93,17 +65,9 @@ const BookImage: React.FC<BookImageProps> = ({
             src={imageUrl}
             style={{ objectFit: "contain" }}
             onLoad={loadingImageComplete}
-            onLoadingComplete={loadingImageComplete}
             onError={() => setImageError(true)}
           />
         </div>
-      )}
-      {imageError && (
-        <BookCoverPlaceholder
-          title={inventoryBook?.title ?? "Unknown Title"}
-          author={inventoryBook?.authors ?? "Unknown Author"}
-          size={size}
-        />
       )}
     </div>
   );

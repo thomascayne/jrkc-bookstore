@@ -57,6 +57,10 @@ function getPool() {
   return globalDatabase.bookstorePool;
 }
 
+export async function checkDatabaseConnection(): Promise<void> {
+  await getPool().query('select 1');
+}
+
 export function getDatabase() {
   return drizzle({ client: getPool(), schema });
 }

@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "../hero.ts";
 @source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 @custom-variant dark (&:is(.dark *));
@@ -173,7 +173,7 @@ html {
 }
 
 .cart-button-group {
-  [data-slot="input-wrapper"] {
+  [data-slot='input-wrapper'] {
     min-height: 28px !important;
     height: 28px !important;
   }
@@ -184,8 +184,14 @@ html {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -194,46 +200,48 @@ html {
 
 .filter-custom-select {
   --size: 0.4rem;
-  
+
   width: 100%;
   position: relative;
 
   & select {
     appearance: none;
-    background-color: #fff;
+    background-color: hsl(var(--heroui-content2));
     border-radius: 0.25rem 0.25rem 0 0;
-    border: 1px solid #caced1;
-    color: #000;
+    border: 1px solid hsl(var(--heroui-divider));
+    color: hsl(var(--heroui-foreground));
     cursor: pointer;
     font-size: 0.9rem;
     padding: 0.25rem;
     width: 100%;
   }
-  
+
   & option {
-    padding: 2rem !important; 
+    background-color: hsl(var(--heroui-content2));
+    color: hsl(var(--heroui-foreground));
+    padding: 2rem !important;
   }
 
   &::before,
   &::after {
     --size: 0.3rem;
-    content: "";
+    content: '';
     position: absolute;
     right: 1rem;
     pointer-events: none;
   }
-  
+
   &::before {
     border-left: var(--size) solid transparent;
     border-right: var(--size) solid transparent;
-    border-bottom: var(--size) solid black;
+    border-bottom: var(--size) solid hsl(var(--heroui-foreground));
     top: 40%;
   }
-  
+
   &::after {
     border-left: var(--size) solid transparent;
     border-right: var(--size) solid transparent;
-    border-top: var(--size) solid black;
+    border-top: var(--size) solid hsl(var(--heroui-foreground));
     top: 55%;
   }
 }

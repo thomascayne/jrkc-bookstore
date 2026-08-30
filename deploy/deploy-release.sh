@@ -94,9 +94,32 @@ git checkout --detach "$releaseCommit"
 
 sh deploy/ensure-deployment-environment.sh "$environmentFile"
 
+databaseVolume=$(awk '
+  index($0, "BOOKSTORE_DATABASE_VOLUME=") == 1 {
+    settingValue = substr($0, length("BOOKSTORE_DATABASE_VOLUME=") + 1)
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "", settingValue)
+    firstCharacter = substr(settingValue, 1, 1)
+    lastCharacter = substr(settingValue, length(settingValue), 1)
+    if (length(settingValue) >= 2 &&
+        ((firstCharacter == "\"" && lastCharacter == "\"") ||
+         (firstCharacter == "\047" && lastCharacter == "\047"))) {
+      settingValue = substr(settingValue, 2, length(settingValue) - 2)
+    }
+  }
+  END { print settingValue }
+' "$environmentFile")
+databaseVolume=${databaseVolume:-jrkc-bookstore-postgres-data}
+
+export BOOKSTORE_DATABASE_VOLUME=$databaseVolume
 export BOOKSTORE_HOST_PORT=$hostPort
+export BOOKSTORE_IMAGE_REPOSITORY=$composeProject
 export BOOKSTORE_IMAGE_TAG=$releaseCommit
 export BOOKSTORE_ENV_FILE=$environmentFile
+
+sh deploy/verify-docker-isolation.sh \
+  "$composeProject" \
+  "$hostPort" \
+  "$databaseVolume"
 
 docker compose \
   --project-name "$composeProject" \
@@ -130,6 +153,10 @@ while ! curl --fail --silent --show-error "http://127.0.0.1:${hostPort}/api/heal
   if [ "$healthAttempt" -ge "$maximumHealthAttempts" ]; then
     printf 'Deployment health check failed after %s attempts.\n' "$maximumHealthAttempts" >&2
     docker compose --project-name "$composeProject" --env-file "$environmentFile" ps >&2
+    docker compose \
+      --project-name "$composeProject" \
+      --env-file "$environmentFile" \
+      logs --tail 100 database migrate bookstore >&2
     exit 1
   fi
 

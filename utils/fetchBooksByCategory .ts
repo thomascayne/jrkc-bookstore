@@ -1,16 +1,8 @@
 import type { IBookInventory } from '@/interfaces/IBookInventory';
 import { apiRequest } from '@/utils/apiClient';
+import type { FilterOptions } from '@/utils/catalogFilters';
 
-export interface FilterOptions {
-  author?: string;
-  discount_percentage_min?: number;
-  in_stock?: boolean;
-  price?: { min?: number; max?: number };
-  rating_min?: number;
-  ratings_count_min?: number;
-  sort_by?: 'discount_percentage' | 'price' | 'average_rating';
-  sort_order?: 'ASC' | 'DESC';
-}
+export type { FilterOptions } from '@/utils/catalogFilters';
 
 export async function fetchBooksByCategory(
   booksPerPage: number,
@@ -27,7 +19,9 @@ export async function fetchBooksByCategory(
     sortBy: filters.sort_by || 'average_rating',
     sortOrder: filters.sort_order || 'DESC',
   });
-  const optionalParameters: Array<[string, string | number | boolean | undefined]> = [
+  const optionalParameters: Array<
+    [string, string | number | boolean | undefined]
+  > = [
     ['author', filters.author],
     ['discountMin', filters.discount_percentage_min],
     ['inStock', filters.in_stock],

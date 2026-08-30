@@ -4,9 +4,7 @@
 
 import { useSidePanel } from "@/contexts/SidePanelContext";
 import { waitSomeTime } from "@/utils/wait-some-time";
-import { Card, CardBody, CardFooter, CardHeader } from "@heroui/react";
 import React, { useEffect, useState } from "react";
-import { IoMdClose } from "react-icons/io";
 
 interface SidePanelProps {
   side: "left" | "right";
@@ -49,7 +47,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ side }) => {
 
   return (
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 bg-slate-900/15 backdrop-blur-[1px] transition-opacity duration-300 dark:bg-slate-950/25 ${
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
       onClick={isDismissable ? closePanel : undefined}
@@ -62,7 +60,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ side }) => {
             ? "-translate-x-full"
             : "translate-x-full"
         } ${width || "w-full sm:w-[400px] md:w-[640px] lg:w-[768px]"}`}
-        onClick={isDismissable ? closePanel : undefined}
+        onClick={(event) => event.stopPropagation()}
       >
         {content}
       </div>

@@ -50,6 +50,7 @@
     "patch-update": "node update-version.mjs patch",
     "start": "next start",
     "test:branch-policy": "node --test scripts/branch-policy.test.mjs",
+    "test:catalog-filters": "node --test scripts/catalog-filters.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

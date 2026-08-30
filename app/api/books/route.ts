@@ -7,6 +7,7 @@ import {
   gte,
   gt,
   ilike,
+  lt,
   lte,
   or,
 } from 'drizzle-orm';
@@ -16,6 +17,7 @@ import { fetchGoogleBook, fetchGoogleCatalog } from '@/catalog/google-books';
 import { serializeBook } from '@/db/book';
 import { getDatabase } from '@/db/client';
 import { bookCategories, books } from '@/db/schema';
+import { exactRatingRange } from '@/utils/catalogFilters';
 
 function optionalNumber(value: string | null) {
   if (value === null || value.trim() === '') return null;
@@ -36,7 +38,9 @@ async function databaseBook(bookId: string) {
 
 async function databaseCatalog(parameters: URLSearchParams) {
   const database = getDatabase();
-  const [inventoryTotal] = await database.select({ value: count() }).from(books);
+  const [inventoryTotal] = await database
+    .select({ value: count() })
+    .from(books);
   if (inventoryTotal.value < 1) return null;
 
   const page = Math.max(1, optionalNumber(parameters.get('page')) ?? 1);
@@ -50,6 +54,7 @@ async function databaseCatalog(parameters: URLSearchParams) {
   const minimumPrice = optionalNumber(parameters.get('priceMin'));
   const maximumPrice = optionalNumber(parameters.get('priceMax'));
   const minimumRating = optionalNumber(parameters.get('ratingMin'));
+  const ratingRange = exactRatingRange(minimumRating);
   const minimumRatingsCount = optionalNumber(parameters.get('ratingsCountMin'));
 
   if (categoryKey && categoryKey !== 'all') {
@@ -57,7 +62,10 @@ async function databaseCatalog(parameters: URLSearchParams) {
   }
   if (search) {
     conditions.push(
-      or(ilike(books.title, `%${search}%`), ilike(books.authors, `%${search}%`))!,
+      or(
+        ilike(books.title, `%${search}%`),
+        ilike(books.authors, `%${search}%`),
+      )!,
     );
   }
   if (author) conditions.push(ilike(books.authors, `%${author}%`));
@@ -69,8 +77,11 @@ async function databaseCatalog(parameters: URLSearchParams) {
   }
   if (minimumPrice !== null) conditions.push(gte(books.price, minimumPrice));
   if (maximumPrice !== null) conditions.push(lte(books.price, maximumPrice));
-  if (minimumRating !== null) {
-    conditions.push(gte(books.averageRating, minimumRating));
+  if (ratingRange) {
+    conditions.push(gte(books.averageRating, ratingRange.minimum));
+    if (ratingRange.maximumExclusive !== undefined) {
+      conditions.push(lt(books.averageRating, ratingRange.maximumExclusive));
+    }
   }
   if (minimumRatingsCount !== null) {
     conditions.push(gte(books.ratingsCount, minimumRatingsCount));
@@ -89,7 +100,7 @@ async function databaseCatalog(parameters: URLSearchParams) {
     .from(books)
     .leftJoin(bookCategories, eq(books.categoryId, bookCategories.id))
     .where(where)
-    .orderBy(sortDirection(sortColumn))
+    .orderBy(sortDirection(sortColumn), asc(books.id))
     .limit(limit)
     .offset((page - 1) * limit);
   const [total] = await database
@@ -144,6 +155,8 @@ export async function GET(request: NextRequest) {
     const catalog = await fetchGoogleCatalog({
       author: parameters.get('author')?.trim(),
       categoryKey: parameters.get('category') ?? 'all',
+      inStock: parameters.get('inStock') === 'true',
+      minimumDiscount: optionalNumber(parameters.get('discountMin')),
       maximumPrice: optionalNumber(parameters.get('priceMax')),
       minimumPrice: optionalNumber(parameters.get('priceMin')),
       minimumRating: optionalNumber(parameters.get('ratingMin')),

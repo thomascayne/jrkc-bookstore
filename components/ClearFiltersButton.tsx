@@ -1,37 +1,40 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Link } from "@heroui/react";
-import { FaTimes } from "react-icons/fa";
-import { FilterOptions } from '@/utils/fetchBooksByCategory '; // Adjust the import path as needed
+import { FaArrowRotateLeft } from 'react-icons/fa6';
+
+import type { FilterOptions } from '@/utils/catalogFilters';
 
 interface ClearFiltersButtonProps {
   filters: FilterOptions;
   onClearFilters: () => void;
 }
 
-const ClearFiltersButton: React.FC<ClearFiltersButtonProps> = ({ filters, onClearFilters }) => {
+const ClearFiltersButton: React.FC<ClearFiltersButtonProps> = ({
+  filters,
+  onClearFilters,
+}) => {
   const hasActiveFilters = useMemo(() => {
-    return Object.values(filters).some(value => 
-      value !== undefined && value !== null && value !== '' && 
-      !(Array.isArray(value) && value.length === 0)
+    return Object.values(filters).some(
+      (value) =>
+        value !== undefined &&
+        value !== null &&
+        value !== '' &&
+        !(Array.isArray(value) && value.length === 0),
     );
   }, [filters]);
 
-  if (!hasActiveFilters) {
-    return null;
-  }
-
   return (
-    <Link
-      href="#"
-      color="primary"
+    <button
+      type="button"
       onClick={onClearFilters}
-      className="mb-4 w-full flex border text-small border-gray-300 items-center px-4 py-2 rounded hover:bg-gray-200"
+      aria-label="Clear all filters"
+      className="flex size-8 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-default-200 disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      disabled={!hasActiveFilters}
+      title={hasActiveFilters ? 'Clear all filters' : 'No active filters'}
     >
-      <span>Clear Filters</span>
-      <FaTimes className="ml-2" />
-    </Link>
+      <FaArrowRotateLeft aria-hidden="true" />
+    </button>
   );
 };
 

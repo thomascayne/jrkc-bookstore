@@ -2,24 +2,29 @@
 
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useBooksByCategory } from '@/hooks/useBooksByCategory';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
 import { Button, Input, Link, Slider } from '@heroui/react';
 import Image from 'next/image';
 import StarRating from '@/components/StarRating';
-import { addCartItem } from '@/stores/cartStore';
 import BookDetails from '@/components/BookDetails';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { IBookInventory } from '@/interfaces/IBookInventory';
 import { FaTimes } from 'react-icons/fa';
-import { BookCategory } from '@/interfaces/BookCategory';
-import { fetchBookCategories } from '@/utils/bookCategoriesApi';
-import { FilterOptions } from '@/utils/fetchBooksByCategory ';
 import { useUrlSync } from '@/hooks/useUrlSync';
 import BookPagination from '@/components/BookPagination';
 import ClearFiltersButton from '@/components/ClearFiltersButton';
 import { useCachedCategories } from '@/hooks/useCachedCategories';
+import {
+  catalogSearchParamsWithFilters,
+  catalogUrl,
+  type CatalogSortBy,
+  type CatalogSortOrder,
+  type FilterOptions,
+  positivePageNumber,
+  withCatalogFilter,
+} from '@/utils/catalogFilters';
 
 export default function CategoryContent({
   params,
@@ -31,13 +36,10 @@ export default function CategoryContent({
   const searchParams = useSearchParams();
 
   const booksPerPage = 24;
-  const [currentPage, setCurrentPage] = useState(() => {
-    return Number(searchParams && searchParams.get('page')) || 1;
-  });
-
-  const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const activePathname = pathname ?? `/category/${params.key}`;
+  const currentPage = positivePageNumber(searchParams?.get('page') ?? null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
-  const { openFullScreenModal: openFullScreenModal } = useFullScreenModal();
+  const { openFullScreenModal } = useFullScreenModal();
   const {
     categories,
     isLoading: isCategoriesLoading,
@@ -45,9 +47,13 @@ export default function CategoryContent({
   } = useCachedCategories();
 
   const [filters, setFilters] = useState<FilterOptions>({});
-  const searchQuery = searchParams ? searchParams.get('q') || '' : '';
+  const searchQuery = searchParams?.get('q') || '';
 
-  useUrlSync(filters, setFilters);
+  useUrlSync(setFilters);
+
+  useEffect(() => {
+    setPriceRange([filters.price?.min ?? 0, filters.price?.max ?? 100]);
+  }, [filters.price?.max, filters.price?.min]);
 
   const {
     displayedBooks,
@@ -59,7 +65,7 @@ export default function CategoryContent({
     prefetchNextPage,
   } = useBooksByCategory(
     booksPerPage,
-    'all',
+    params.key,
     filters,
     currentPage,
     searchQuery,
@@ -67,72 +73,27 @@ export default function CategoryContent({
 
   const updateURLParams = useCallback(
     (newFilters: FilterOptions) => {
-      const params = new URLSearchParams(window.location.search);
-
-      // Remove all existing filter params
-      Array.from(params.keys()).forEach((key) => {
-        if (key !== 'q' && key !== 'page') {
-          // Preserve search query and page number
-          params.delete(key);
-        }
-      });
-
-      // Add new filter params
-      Object.entries(newFilters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (key === 'price' && typeof value === 'object') {
-            params.set(key, `${value.min},${value.max}`);
-          } else {
-            params.set(key, value.toString());
-          }
-        }
-      });
-
-      const newUrl = `${window.location.pathname}?${params.toString()}`;
-      router.push(newUrl);
+      const parameters = catalogSearchParamsWithFilters(
+        searchParams,
+        newFilters,
+      );
+      router.push(catalogUrl(activePathname, parameters), { scroll: false });
     },
-    [router],
+    [activePathname, router, searchParams],
   );
 
   const handleFilterChange = useCallback(
-    (filterName: keyof FilterOptions, value: any) => {
-      const newFilters = { ...filters };
-
-      if (filterName === 'sort_by' || filterName === 'sort_order') {
-        newFilters[filterName] = value;
-      } else if (filterName === 'price') {
-        if (
-          newFilters.price &&
-          newFilters.price.min === value.min &&
-          newFilters.price.max === value.max
-        ) {
-          delete newFilters.price;
-        } else {
-          newFilters.price = value;
-        }
-      } else if (newFilters[filterName] === value) {
-        delete newFilters[filterName];
-      } else {
-        newFilters[filterName] = value;
-      }
-
-      // Remove undefined or null values
-      Object.keys(newFilters).forEach((key) => {
-        if (
-          newFilters[key as keyof FilterOptions] === undefined ||
-          newFilters[key as keyof FilterOptions] === null
-        ) {
-          delete newFilters[key as keyof FilterOptions];
-        }
-      });
-
-      updateURLParams(newFilters);
+    (
+      filterName: keyof FilterOptions,
+      value: FilterOptions[keyof FilterOptions],
+    ) => {
+      updateURLParams(withCatalogFilter(filters, filterName, value));
     },
     [filters, updateURLParams],
   );
 
   const clearAllFilters = () => {
-    router.push(pathname as string);
+    updateURLParams({});
   };
 
   const handlePriceFilterGo = () => {
@@ -143,25 +104,15 @@ export default function CategoryContent({
     openFullScreenModal(<BookDetails bookId={book.id} />, `${book.title}`);
   };
 
-  const handleAddToCart = (book: IBookInventory) => {
-    addCartItem(book);
-  };
-
   const handlePageChange = useCallback(
     (newPage: number) => {
-      setCurrentPage(newPage);
-
-      if (!searchParams) {
-        return;
-      }
-
-      const current = new URLSearchParams(Array.from(searchParams.entries()));
+      const current = new URLSearchParams(
+        searchParams ? Array.from(searchParams.entries()) : [],
+      );
       current.set('page', newPage.toString());
-      const search = current.toString();
-      const query = search ? `?${search}` : '';
-      router.push(`${pathname}${query}`);
+      router.push(catalogUrl(activePathname, current), { scroll: false });
     },
-    [pathname, router, searchParams],
+    [activePathname, router, searchParams],
   );
 
   if (error) return <div>Error loading books: {error.message}</div>;
@@ -169,17 +120,19 @@ export default function CategoryContent({
   return (
     <div className="flex w-full flex-col md:flex-row">
       {/* Filters column */}
-      <div className="w-full md:w-[200px] p-4 transition-transform-background bg-content1 text-background box-border">
-        <h2 className="text-xl font-bold mb-4">Filters</h2>
-        <ClearFiltersButton
-          filters={filters}
-          onClearFilters={clearAllFilters}
-        />
+      <aside className="sidebarfilter-area w-full box-border border-divider bg-content1 p-4 text-foreground transition-transform-background md:w-[200px] md:border-r">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold">Filters</h2>
+          <ClearFiltersButton
+            filters={filters}
+            onClearFilters={clearAllFilters}
+          />
+        </div>
 
         <div className="space-y-4">
           {/* Price Filter */}
           <div className="flex flex-col items-start">
-            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+            <h3 className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">
               Price
             </h3>
             <Slider
@@ -199,7 +152,7 @@ export default function CategoryContent({
                 readOnly
                 className="max-w-[100px] mr-2"
               />
-              <Button isIconOnly size="sm" onClick={handlePriceFilterGo}>
+              <Button size="sm" onPress={handlePriceFilterGo}>
                 Go
               </Button>
             </div>
@@ -207,64 +160,76 @@ export default function CategoryContent({
 
           {/* Rating Filter */}
           <div>
-            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+            <h3 className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">
               Customer Rating
             </h3>
             {[5, 4, 3, 2, 1].map((rating) => (
-              <Link
+              <button
+                type="button"
                 key={rating}
-                className={`flex px-2 rounded-md hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${filters.rating_min === rating ? 'bg-success-400 text-white' : ''}`}
+                className={`mb-1 flex cursor-pointer rounded-md px-2 text-[0.9rem] text-foreground hover:bg-default-100 hover:underline hover:underline-offset-2 ${filters.rating_min === rating ? 'bg-success text-success-foreground' : ''}`}
+                aria-pressed={filters.rating_min === rating}
                 onClick={() => handleFilterChange('rating_min', rating)}
               >
                 <StarRating rating={rating} />
                 <span className="mx-2 text-sm">{rating}</span>
                 {filters.rating_min === rating && <FaTimes />}
-              </Link>
+              </button>
             ))}
           </div>
 
           {/* Availability Filter */}
           <div>
-            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+            <h3 className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">
               Availability
             </h3>
-            <Link
-              className={`flex px-2 hover:underline rounded-lg hover:underline-offset-2 text-[0.9rem] mb-1 cursor-pointer ${filters.in_stock ? 'bg-success text-white' : ''}`}
-              onClick={() => handleFilterChange('in_stock', !filters.in_stock)}
+            <button
+              type="button"
+              className={`mb-1 flex cursor-pointer rounded-lg px-2 text-[0.9rem] text-foreground hover:bg-default-100 hover:underline hover:underline-offset-2 ${filters.in_stock ? 'bg-success text-success-foreground' : ''}`}
+              aria-pressed={Boolean(filters.in_stock)}
+              onClick={() => handleFilterChange('in_stock', true)}
             >
               <span className="mr-2">Hide out of stock</span>
               <span>{filters.in_stock && <FaTimes />}</span>
-            </Link>
+            </button>
           </div>
 
           {/* Discount Filter */}
           <div>
-            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+            <h3 className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">
               Discounts
             </h3>
             {[80, 70, 60, 50, 40, 30, 20, 10].map((percent) => (
-              <Link
+              <button
+                type="button"
                 key={percent}
-                className={`flex px-2 hover:underline hover:underline-offset-2 text-[0.9rem] cursor-pointer ${filters.discount_percentage_min === percent ? 'bg-success text-white' : ''}`}
+                className={`flex cursor-pointer px-2 text-[0.9rem] text-foreground hover:bg-default-100 hover:underline hover:underline-offset-2 ${filters.discount_percentage_min === percent ? 'bg-success text-success-foreground' : ''}`}
+                aria-pressed={filters.discount_percentage_min === percent}
                 onClick={() =>
                   handleFilterChange('discount_percentage_min', percent)
                 }
               >
                 <span className="mr-2">{percent}% off or more</span>
                 {filters.discount_percentage_min === percent && <FaTimes />}
-              </Link>
+              </button>
             ))}
           </div>
 
           {/* Sort Options */}
           <div>
-            <h3 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+            <h3 className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">
               Sort By
             </h3>
             <div className="filter-custom-select mb-2">
               <select
+                aria-label="Sort books by"
                 value={filters.sort_by || 'average_rating'}
-                onChange={(e) => handleFilterChange('sort_by', e.target.value)}
+                onChange={(event) =>
+                  handleFilterChange(
+                    'sort_by',
+                    event.target.value as CatalogSortBy,
+                  )
+                }
               >
                 <option value="discount_percentage">Percent off</option>
                 <option value="price">Price</option>
@@ -273,11 +238,12 @@ export default function CategoryContent({
             </div>
             <div className="filter-custom-select mb-4">
               <select
+                aria-label="Sort direction"
                 value={filters.sort_order || 'DESC'}
-                onChange={(e) =>
+                onChange={(event) =>
                   handleFilterChange(
                     'sort_order',
-                    e.target.value as 'ASC' | 'DESC',
+                    event.target.value as CatalogSortOrder,
                   )
                 }
               >
@@ -289,17 +255,17 @@ export default function CategoryContent({
 
           {/* Categories */}
           <div className="flex flex-col items-start">
-            <h4 className="flex mb-3 font-semibold py-1 px-2 bg-primary-400 text-white rounded-md w-full">
+            <h4 className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">
               Categories
             </h4>
             {isCategoriesLoading ? (
-              <p>Loading categories...</p>
+              <p className="px-2 text-foreground/70">Loading categories...</p>
             ) : categoriesError ? (
-              <p>Error loading categories</p>
+              <p className="px-2 text-danger">Error loading categories</p>
             ) : (
               categories.map((category, index) => (
                 <Link
-                  className="px-2 hover:underline hover:underline-offset-2 text-[0.9rem]"
+                  className={`w-full px-2 text-[0.9rem] text-foreground hover:bg-default-100 hover:text-primary hover:underline hover:underline-offset-2 ${category.key === params.key ? 'font-bold text-primary' : ''}`}
                   id={`${category.id}-${index}`}
                   key={`${category.key}-${index}`}
                   href={`/category/${category.key}`}
@@ -310,12 +276,12 @@ export default function CategoryContent({
             )}{' '}
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Book List and Content Area */}
-      <div className="w-full flex-flex-grow p-4 relative">
-        {isLoading || isFilterLoading ? (
-          <div className="absolute inset-0 bg-white bg-opacity-50 z-10 flex items-center justify-center">
+      <div className="relative min-w-0 w-full flex-1 p-4">
+        {isLoading || isFetching ? (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 text-foreground">
             <div className="loader">Loading...</div>
           </div>
         ) : null}
@@ -325,7 +291,7 @@ export default function CategoryContent({
           <BookPagination
             currentPage={currentPage}
             totalPages={totalPages}
-            basePath={pathname as string}
+            basePath={activePathname}
             onPageChange={handlePageChange}
             onNextPageHover={prefetchNextPage}
           />
@@ -337,36 +303,28 @@ export default function CategoryContent({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+            <div className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
               {displayedBooks.map((book, index) => (
                 <div
                   key={book.id}
-                  className="flex flex-col h-full border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 ease-in-out group opacity-0 animate-fade-in"
+                  className="group flex h-fit self-start flex-col overflow-hidden rounded-lg border border-divider bg-content1 text-foreground opacity-0 shadow-sm transition-all duration-300 ease-in-out hover:shadow-md animate-fade-in"
                   style={{
                     animationDelay: `${index * 50}ms`,
                     animationFillMode: 'forwards',
                   }}
                 >
                   <div
-                    className="relative aspect-[2/3] cursor-pointer px-2 pt-2 pb-0"
+                    className="relative aspect-[3/4] cursor-pointer overflow-hidden bg-default-100"
                     onClick={() => handleBookClick(book)}
                   >
                     {book.thumbnail_image_link && (
-                      <div className="relative w-full h-full flex items-start justify-center">
-                        <div
-                          className="relative w-full"
-                          style={{ paddingBottom: '150%' }}
-                        >
-                          <Image
-                            alt={book.title}
-                            src={book.thumbnail_image_link}
-                            layout="fill"
-                            objectFit="contain"
-                            objectPosition="top"
-                            className="transition-transform rounded-tl rounded-tr duration-300 ease-in-out group-hover:scale-105"
-                          />
-                        </div>
-                      </div>
+                      <Image
+                        alt={book.title}
+                        src={book.thumbnail_image_link}
+                        fill
+                        sizes="(min-width: 1400px) 10vw, (min-width: 1280px) 12.5vw, (min-width: 1024px) 16.67vw, (min-width: 768px) 25vw, (min-width: 640px) 33.33vw, 50vw"
+                        className="object-cover object-top transition-transform duration-300 ease-in-out group-hover:scale-105"
+                      />
                     )}
                     {book.is_promotion && book.discount_percentage && (
                       <div className="absolute top-0 left-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-br z-10">
@@ -375,40 +333,39 @@ export default function CategoryContent({
                     )}
                   </div>
 
-                  <div className="flex-grow p-2 flex flex-col justify-between">
+                  <div className="flex h-28 flex-none flex-col justify-between p-2">
                     <div>
-                      <h2 className="text-sm font-normal line-clamp-2 mb-2">
+                      <h2 className="mb-1 min-h-8 line-clamp-2 text-sm font-normal leading-4">
                         {book.title}
                       </h2>
-                      <p className="text-xs text-gray-600 line-clamp-1">
+                      <p className="h-4 line-clamp-1 text-xs text-foreground/70">
                         {book.authors}
                       </p>
                     </div>
 
                     <div className="mt-auto">
-                      {book.average_rating && (
-                        <div className="flex items-center mb-2">
-                          <StarRating rating={book.average_rating} />
-                          <span className="ml-2 text-sm">
-                            {book.average_rating}
-                          </span>
-                        </div>
-                      )}
-                      {book.list_price && (
-                        <div className="text-sm">$ {book.list_price}</div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="relative">
-                    <div
-                      className="absolute bottom-0 left-0 right-0 bg-blue-500 text-white text-center py-2 cursor-pointer transform translate-y-full transition-transform duration-300 ease-in-out group-hover:translate-y-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(book);
-                      }}
-                    >
-                      QUICK ADD
+                      <div className="mb-1 flex h-4 items-center">
+                        {book.average_rating ? (
+                          <>
+                            <StarRating rating={book.average_rating} />
+                            <span className="ml-2 text-sm">
+                              {book.average_rating}
+                            </span>
+                          </>
+                        ) : null}
+                      </div>
+                      <div className="h-5 line-clamp-1 text-sm">
+                        {book.is_promotion ? (
+                          <>
+                            <span className="mr-1 text-gray-500 line-through">
+                              ${book.list_price.toFixed(2)}
+                            </span>
+                            <span>${book.price.toFixed(2)}</span>
+                          </>
+                        ) : (
+                          <span>${book.price.toFixed(2)}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -418,7 +375,7 @@ export default function CategoryContent({
               <BookPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                basePath={pathname as string}
+                basePath={activePathname}
                 onPageChange={handlePageChange}
                 onNextPageHover={prefetchNextPage}
               />
