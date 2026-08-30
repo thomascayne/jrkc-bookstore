@@ -86,17 +86,38 @@ jobs:
 
       - name: Deploy verified commit
         run: |
+          remoteDeployScript="/tmp/jrkc-bookstore-deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.sh"
+
+          cleanupRemoteDeployScript() {
+            ssh \
+              -i "$HOME/.ssh/jrkc_oracle" \
+              -o BatchMode=yes \
+              -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes \
+              "$ORACLE_USER@$ORACLE_HOST" \
+              rm -f -- "$remoteDeployScript"
+          }
+
+          trap cleanupRemoteDeployScript EXIT
+
+          scp \
+            -i "$HOME/.ssh/jrkc_oracle" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            deploy/deploy-release.sh \
+            "$ORACLE_USER@$ORACLE_HOST:$remoteDeployScript"
+
           ssh \
             -i "$HOME/.ssh/jrkc_oracle" \
             -o BatchMode=yes \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "$ORACLE_USER@$ORACLE_HOST" \
-            bash -s -- \
+            bash "$remoteDeployScript" \
               "$DEPLOYMENT_PATH" \
               "$GITHUB_SHA" \
               "$GITHUB_REF_NAME" \
               "$DEPLOY_ENV_FILE" \
               "$COMPOSE_PROJECT" \
-              "$HOST_PORT" \
-            < deploy/deploy-release.sh
+              "$HOST_PORT"

@@ -41,6 +41,7 @@
     "test:branch-policy": "node --test scripts/branch-policy.test.mjs",
     "test:catalog-filters": "node --test scripts/catalog-filters.test.mjs",
     "test:deployment-runtime": "sh scripts/deployment-runtime.test.sh",
+    "test:deployment-transport": "sh scripts/deployment-transport.test.sh",
     "test:stripe-mode": "node --test scripts/stripe-test-mode.test.mjs",
     "typecheck": "tsc --noEmit"
   },
