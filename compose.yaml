@@ -67,6 +67,7 @@ services:
       - path: ${BOOKSTORE_ENV_FILE:-.env.production}
         required: false
     environment:
+      BOOKSTORE_RELEASE_COMMIT: ${BOOKSTORE_IMAGE_TAG:-local}
       HOSTNAME: 0.0.0.0
       NODE_ENV: production
       PORT: 3100

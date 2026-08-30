@@ -2,22 +2,47 @@ import { checkDatabaseConnection } from '@/db/client';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(): Promise<Response> {
+export async function GET(request: Request): Promise<Response> {
+  const release = process.env.BOOKSTORE_RELEASE_COMMIT ?? 'local';
+  const expectedRelease = request.headers.get('x-expected-bookstore-release');
+
+  if (expectedRelease && expectedRelease !== release) {
+    return Response.json(
+      {
+        database: 'unchecked',
+        expectedRelease,
+        release,
+        status: 'release-mismatch',
+      },
+      {
+        headers: { 'Cache-Control': 'no-store' },
+        status: 409,
+      },
+    );
+  }
+
   try {
     await checkDatabaseConnection();
 
-    return new Response(null, {
-      headers: {
-        'Cache-Control': 'no-store',
+    return Response.json(
+      {
+        database: 'available',
+        release,
+        status: 'ok',
       },
-      status: 204,
-    });
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   } catch {
-    return new Response(null, {
-      headers: {
-        'Cache-Control': 'no-store',
+    return Response.json(
+      {
+        database: 'unavailable',
+        release,
+        status: 'degraded',
       },
-      status: 503,
-    });
+      {
+        headers: { 'Cache-Control': 'no-store' },
+        status: 503,
+      },
+    );
   }
 }

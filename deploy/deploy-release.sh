@@ -146,23 +146,28 @@ docker compose \
   --env-file "$environmentFile" \
   up --detach --wait
 
-healthAttempt=1
-maximumHealthAttempts=12
+docker compose \
+  --project-name "$composeProject" \
+  --env-file "$environmentFile" \
+  up --detach --wait --no-deps --force-recreate bookstore
 
-while ! curl --fail --silent --show-error "http://127.0.0.1:${hostPort}/api/health" >/dev/null; do
-  if [ "$healthAttempt" -ge "$maximumHealthAttempts" ]; then
-    printf 'Deployment health check failed after %s attempts.\n' "$maximumHealthAttempts" >&2
-    docker compose --project-name "$composeProject" --env-file "$environmentFile" ps >&2
-    docker compose \
-      --project-name "$composeProject" \
-      --env-file "$environmentFile" \
-      logs --tail 100 database migrate bookstore >&2
-    exit 1
-  fi
-
-  healthAttempt=$((healthAttempt + 1))
-  sleep 5
-done
+if ! sh deploy/verify-release-runtime.sh \
+  "$composeProject" \
+  "$environmentFile" \
+  "$hostPort" \
+  "$releaseCommit"; then
+  printf 'Deployment verification failed for release %s.\n' \
+    "$releaseCommit" >&2
+  docker compose \
+    --project-name "$composeProject" \
+    --env-file "$environmentFile" \
+    ps >&2
+  docker compose \
+    --project-name "$composeProject" \
+    --env-file "$environmentFile" \
+    logs --tail 100 database migrate bookstore >&2
+  exit 1
+fi
 
 printf 'Deployed %s from %s on 127.0.0.1:%s.\n' \
   "$releaseCommit" "$releaseBranch" "$hostPort"

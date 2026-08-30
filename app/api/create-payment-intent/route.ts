@@ -3,11 +3,16 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 
+import { stripeTestSecretKey } from '@/utils/stripeTestMode';
+
 export async function POST(req: Request) {
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  const stripeSecretKey = stripeTestSecretKey(process.env.STRIPE_SECRET_KEY);
   if (!stripeSecretKey) {
     return NextResponse.json(
-      { error: 'Stripe test payments are not configured.' },
+      {
+        error:
+          'Stripe test payments are unavailable. Live payments are disabled for this portfolio deployment.',
+      },
       { status: 503 },
     );
   }

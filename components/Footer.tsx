@@ -8,7 +8,7 @@ import * as packageInfo from "../package.json";
 import { Link } from "@heroui/react";
 
 export default function Footer() {
-  const authors = packageInfo?.authors || [];
+  const author = packageInfo?.author;
   const projectContext = packageInfo?.projectContext || '';
   const repositoryUrl = packageInfo?.repositoryUrl || '';
   const version = packageInfo?.version || "";
@@ -20,19 +20,10 @@ export default function Footer() {
           {projectContext}
         </p>
       ) : null}
-      <p className="font-semibold">Created collaboratively by</p>
-      <ul className="flex flex-col justify-center sm:flex-row">
-        {authors.map((author) => (
-          <li
-            key={author.name}
-            className="border-gray-300 dark:border-gray-600 sm:[&:not(:first-child)]:ml-4 sm:[&:not(:last-child)]:border-r"
-          >
-            <span className="mr-2 whitespace-nowrap font-bold sm:mr-4">
-              {author.name}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <p className="font-semibold">
+        Designed, developed, tested, documented, and deployed by
+      </p>
+      <p className="font-bold">{author.name}</p>
       <p className="text-xs sm:text-sm">
         &copy; {new Date().getFullYear()} JRKC Bookstore.
       </p>

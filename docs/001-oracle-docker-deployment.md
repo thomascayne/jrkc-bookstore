@@ -72,11 +72,15 @@ workload from silently sharing the same PostgreSQL data directory.
 Only a pull request merged into `main` may deploy. GitHub Actions validates the
 associated merged pull request, reruns CI, connects to Oracle by the configured
 SSH identity, checks out the exact verified commit, validates Compose, builds
-the isolated images, applies migrations, and waits for the application health
-check. That endpoint runs `select 1` through the same `jrkc_app` connection pool
-used by authenticated APIs. GitHub reports a failed deployment if PostgreSQL
-cannot authenticate, accept a connection, or execute the query, even when the
-Next.js process itself is reachable.
+the isolated images, applies migrations, and force-recreates the `bookstore`
+service from the image tagged with the exact Git commit. Runtime verification
+then confirms the container image tag and calls the health endpoint with the
+expected release identifier. That endpoint runs `select 1` through the same
+`jrkc_app` connection pool used by authenticated APIs. The deployment also
+requires nonempty responses from `/api/categories` and `/api/books`, preventing
+a stale or incomplete Next.js image from producing a false green deployment.
+GitHub reports a failed deployment if the release identity, PostgreSQL
+connection, category route, or public catalog is unavailable.
 
 The workflow never transmits database credentials from GitHub or the public
 repository. Optional integration values can be added directly to the ignored
@@ -113,7 +117,9 @@ previous configuration if validation or reload fails.
 
 After deployment verify:
 
-- `https://bookstore.thomascayne.com/api/health` responds successfully;
+- `https://bookstore.thomascayne.com/api/health` reports `status: ok`,
+  `database: available`, and the deployed release commit;
+- category and book endpoints return nonempty catalog results;
 - account creation survives an application container restart;
 - sign-in issues a secure HTTP-only session cookie;
 - catalog browsing and category filters return PostgreSQL records;

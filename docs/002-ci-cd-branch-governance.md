@@ -49,7 +49,11 @@ requires a merged working-branch pull request whose base is `main`.
 The workflow then reuses CI, enters the `production` GitHub environment, checks
 out the exact commit on Oracle, validates the clean checkout and ignored
 `.env.production`, builds Compose images, applies Drizzle migrations, starts the
-application, and waits for the health endpoint.
+application, and force-recreates the application service from the exact
+commit-tagged image. Deployment succeeds only after the running image tag and
+health response identify that commit, PostgreSQL answers through the
+application connection pool, and the category and book APIs return nonempty
+catalog results.
 
 Required production environment configuration:
 

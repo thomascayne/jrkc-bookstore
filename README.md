@@ -1,9 +1,25 @@
 # JRKC Bookstore Management System
 
-JRKC Bookstore is a collaborative college project created by Joshua Castillo,
-Ricky Holder, Javon Kelley, and Thomas Cayne for the Colorado Technical
-University curriculum. It is an educational team project, not the individual
-professional work of any one contributor.
+During a five-week course at Colorado Technical University, the professor
+provided several project options. Thomas Cayne selected the bookstore option
+for his group and completed all software architecture, application design,
+implementation, database development, testing, documentation, CI/CD, and
+deployment. Another group selected the same option, but this was the course's
+working end-to-end bookstore application rather than a demonstration or
+concept-only submission.
+
+This remains identified as a college project rather than client or paid
+commercial work. The repository history preserves the project record while the
+public attribution identifies the person responsible for its complete software
+development lifecycle.
+
+The application demonstrates a production-capable commerce architecture,
+including Stripe integration, but the current public deployment is a portfolio
+experience and does not offer books for actual sale. The application accepts
+only Stripe test-mode keys and rejects live keys. Enabling real commerce in the
+future would require an authorized book supplier, real inventory and
+fulfillment processes, customer policies, and an explicitly approved production
+payment configuration.
 
 The public repository supports educational review and self-hosted portfolio
 demonstrations. Public visibility does not grant rights beyond the license and
@@ -31,8 +47,8 @@ inventory is empty or PostgreSQL is temporarily unavailable, `/api/books`
 serves Google Books results and `/api/categories` serves the bundled category
 list. A Google API key is optional. PostgreSQL remains required for accounts,
 managed inventory, authenticated carts, orders, and sales reporting.
-Google volumes without sale pricing receive a clearly labeled demonstration
-price; this is portfolio data, not a live retail offer.
+Google volumes without sale pricing receive deterministic portfolio catalog
+pricing; this is portfolio data, not a live retail offer.
 
 ## Quick start with Docker
 
@@ -74,6 +90,10 @@ that port `3100` and the persistent database volume are either unused or owned
 by the expected bookstore service. It refuses to reuse another application's
 Docker resources. The application health endpoint also executes a PostgreSQL
 query, so a release cannot report success while only Next.js is running.
+Deployment also confirms that the running container uses the exact merged
+commit image and that the category and book APIs return nonempty results. A
+stale image or unavailable public catalog therefore fails the release instead
+of producing a false green deployment.
 
 ## Optional variables
 
@@ -116,6 +136,8 @@ launcher automatically selects and prints the next available port if needed.
 
 ```bash
 npm run test:branch-policy
+npm run test:deployment-runtime
+npm run test:stripe-mode
 npm run typecheck
 npm run lint
 npm run build
