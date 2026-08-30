@@ -52,7 +52,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="body-it-self flex min-h-screen flex-col">
+      <body className="body-it-self flex min-h-screen flex-col bg-background text-foreground">
         <TanstackQueryClientProvider>
           <UserProfileProvider>
             <FullScreenModalProvider>

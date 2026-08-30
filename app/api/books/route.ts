@@ -36,7 +36,9 @@ async function databaseBook(bookId: string) {
 
 async function databaseCatalog(parameters: URLSearchParams) {
   const database = getDatabase();
-  const [inventoryTotal] = await database.select({ value: count() }).from(books);
+  const [inventoryTotal] = await database
+    .select({ value: count() })
+    .from(books);
   if (inventoryTotal.value < 1) return null;
 
   const page = Math.max(1, optionalNumber(parameters.get('page')) ?? 1);
@@ -57,7 +59,10 @@ async function databaseCatalog(parameters: URLSearchParams) {
   }
   if (search) {
     conditions.push(
-      or(ilike(books.title, `%${search}%`), ilike(books.authors, `%${search}%`))!,
+      or(
+        ilike(books.title, `%${search}%`),
+        ilike(books.authors, `%${search}%`),
+      )!,
     );
   }
   if (author) conditions.push(ilike(books.authors, `%${author}%`));
@@ -89,7 +94,7 @@ async function databaseCatalog(parameters: URLSearchParams) {
     .from(books)
     .leftJoin(bookCategories, eq(books.categoryId, bookCategories.id))
     .where(where)
-    .orderBy(sortDirection(sortColumn))
+    .orderBy(sortDirection(sortColumn), asc(books.id))
     .limit(limit)
     .offset((page - 1) * limit);
   const [total] = await database
@@ -144,6 +149,8 @@ export async function GET(request: NextRequest) {
     const catalog = await fetchGoogleCatalog({
       author: parameters.get('author')?.trim(),
       categoryKey: parameters.get('category') ?? 'all',
+      inStock: parameters.get('inStock') === 'true',
+      minimumDiscount: optionalNumber(parameters.get('discountMin')),
       maximumPrice: optionalNumber(parameters.get('priceMax')),
       minimumPrice: optionalNumber(parameters.get('priceMin')),
       minimumRating: optionalNumber(parameters.get('ratingMin')),
