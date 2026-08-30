@@ -3,7 +3,7 @@
 export default function FullScreenOverlay() {
   return (
     <div
-      className="full-screen-overlay z-[-1] absolute top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 block"
+      className="full-screen-overlay absolute inset-0 z-[-1] block bg-slate-900/20 backdrop-blur-[2px] dark:bg-slate-950/30"
       aria-hidden="true"
     ></div>
   );
