@@ -13,6 +13,16 @@ The application binds to `127.0.0.1:3100`. Caddy terminates public TLS for
 PostgreSQL is attached only to an internal Docker network and publishes no host
 port.
 
+Production always runs under the Compose project
+`jrkc-bookstore-production`. Compose therefore scopes container and network
+names to the bookstore, while release images use the same project prefix.
+Before a release builds or starts containers, an isolation preflight verifies
+that port `3100` is either free or owned by the production `bookstore` service.
+It also verifies that `jrkc-bookstore-postgres-data` is owned by the production
+project and attached only to its `database` service. A foreign Compose project,
+an unmanaged container, or a non-Docker listener stops the release before any
+runtime resource is changed.
+
 ## Private configuration
 
 Production stores its private configuration in the ignored
@@ -53,12 +63,20 @@ subsequent deployments, so registered users and later writes persist.
 Changing `BOOKSTORE_DATABASE_VOLUME` intentionally selects a different
 database. Do not change it during an ordinary release.
 
+The preflight never deletes, renames, recreates, or copies this volume. That
+preserves existing accounts and inventory while preventing another Oracle
+workload from silently sharing the same PostgreSQL data directory.
+
 ## Deployment sequence
 
 Only a pull request merged into `main` may deploy. GitHub Actions validates the
 associated merged pull request, reruns CI, connects to Oracle by the configured
 SSH identity, checks out the exact verified commit, validates Compose, builds
-the images, applies migrations, and waits for the application health check.
+the isolated images, applies migrations, and waits for the application health
+check. That endpoint runs `select 1` through the same `jrkc_app` connection pool
+used by authenticated APIs. GitHub reports a failed deployment if PostgreSQL
+cannot authenticate, accept a connection, or execute the query, even when the
+Next.js process itself is reachable.
 
 The workflow never transmits database credentials from GitHub or the public
 repository. Optional integration values can be added directly to the ignored
