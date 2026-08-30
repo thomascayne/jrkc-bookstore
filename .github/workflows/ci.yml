@@ -40,8 +40,14 @@ jobs:
       - name: Test branch policy
         run: npm run test:branch-policy
 
+      - name: Test catalog filter conversion
+        run: npm run test:catalog-filters
+
       - name: Test deployment environment bootstrap
         run: sh scripts/deployment-environment.test.sh
+
+      - name: Test Docker resource isolation
+        run: sh scripts/docker-isolation.test.sh
 
   validation:
     name: Validate application
