@@ -89,9 +89,10 @@ const BookDetails: React.FC<BookDetailsProps> = ({ bookId }) => {
         <strong>ISBN:</strong>{' '}
         {inventoryBook.isbn13 || inventoryBook.isbn10 || 'Unavailable'}
       </p>
-      {inventoryBook.category && (
+      {(inventoryBook.category_label_check || inventoryBook.category) && (
         <p className="mb-2">
-          <strong>Category:</strong> {inventoryBook.category.label}
+          <strong>Category:</strong>{' '}
+          {inventoryBook.category_label_check || inventoryBook.category?.label}
         </p>
       )}
       {inventoryBook.average_rating > 0 && (

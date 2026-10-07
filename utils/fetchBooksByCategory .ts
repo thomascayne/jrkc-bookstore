@@ -38,6 +38,7 @@ export async function fetchBooksByCategory(
   return apiRequest<{
     books: IBookInventory[];
     category: string;
+    relatedSearch?: boolean;
     totalBooks: number;
   }>(`/api/books?${parameters.toString()}`);
 }

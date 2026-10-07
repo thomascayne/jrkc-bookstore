@@ -3,6 +3,8 @@
 
 import BookDetails from '@/components/BookDetails';
 import BookPagination from '@/components/BookPagination';
+import CatalogEmptyState from '@/components/CatalogEmptyState';
+import CatalogResultSummary from '@/components/CatalogResultSummary';
 import ClearFiltersButton from '@/components/ClearFiltersButton';
 import StarRating from '@/components/StarRating';
 import { useFullScreenModal } from '@/contexts/FullScreenModalContext';
@@ -58,6 +60,7 @@ export default function LandingPageContent() {
     totalPages,
     isFetching,
     prefetchNextPage,
+    refetch,
   } = useBooksByCategory(
     booksPerPage,
     'all',
@@ -91,6 +94,10 @@ export default function LandingPageContent() {
     updateURLParams({});
   };
 
+  const resetCatalog = () => {
+    router.push(activePathname, { scroll: false });
+  };
+
   const handlePriceFilterGo = () => {
     handleFilterChange('price', { min: priceRange[0], max: priceRange[1] });
   };
@@ -109,8 +116,6 @@ export default function LandingPageContent() {
     },
     [activePathname, router, searchParams],
   );
-
-  if (error) return <div>Error loading books: {error.message}</div>;
 
   return (
     <div className="flex w-full flex-col md:flex-row">
@@ -260,9 +265,19 @@ export default function LandingPageContent() {
 
           {/* Categories */}
           <div className="flex flex-col items-start">
-            <h4 className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground">
+            <h4
+              id="catalog-categories"
+              className="mb-3 flex w-full rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground"
+            >
               Categories
             </h4>
+            <Link
+              aria-current="page"
+              className="w-full rounded-md bg-primary/10 px-2 py-1 text-[0.9rem] font-semibold text-primary"
+              href="/"
+            >
+              All books
+            </Link>
             {isCategoriesLoading ? (
               <p className="px-2 text-foreground/70">Loading categories...</p>
             ) : categoriesError ? (
@@ -291,21 +306,32 @@ export default function LandingPageContent() {
           </div>
         ) : null}
 
-        <div className="mb-4 flex flex-colo items-center md:flex-row md:justify-between">
-          <h1 className="text-3xl font-bold">JRKC Book Store</h1>
-          <BookPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            basePath={activePathname}
-            onPageChange={handlePageChange}
-            onNextPageHover={prefetchNextPage}
-          />
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">All books</h1>
+            {!isLoading && !error && (
+              <CatalogResultSummary totalBooks={totalBooks} />
+            )}
+          </div>
+          {totalPages > 1 && (
+            <BookPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              basePath={activePathname}
+              onPageChange={handlePageChange}
+              onNextPageHover={prefetchNextPage}
+            />
+          )}
         </div>
 
-        {displayedBooks.length === 0 && !isFetching ? (
-          <div className="w-full text-center py-4 bg-yellow-100 text-yellow-800 mb-4">
-            No books found matching the current filters.
-          </div>
+        {error || (displayedBooks.length === 0 && !isFetching) ? (
+          <CatalogEmptyState
+            error={Boolean(error)}
+            filters={filters}
+            onReset={resetCatalog}
+            onRetry={() => void refetch()}
+            searchQuery={searchQuery}
+          />
         ) : (
           <>
             <div className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
