@@ -11,6 +11,7 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
 WORKDIR /app
 
 COPY package.json package-lock.json ./
+COPY tooling/next-eslint-glob ./tooling/next-eslint-glob
 RUN set -eu; \
     installAttempt=1; \
     maximumAttempts=3; \

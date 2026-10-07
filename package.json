@@ -14,13 +14,18 @@
     "node": ">=24.0.0 <25"
   },
   "overrides": {
+    "@next/eslint-plugin-next@16.3.8": {
+      "fast-glob": "$fast-glob"
+    },
     "@typescript-eslint/typescript-estree": {
       "minimatch": "^9.0.9"
     },
     "esbuild": "^0.28.2",
     "postcss": "$postcss",
     "react": "$react",
-    "react-dom": "$react-dom"
+    "react-dom": "$react-dom",
+    "sharp": "^0.35.5",
+    "source-map-js": "^1.2.2"
   },
   "scripts": {
     "build": "next build",
@@ -43,6 +48,7 @@
     "test:catalog-filters": "node --test scripts/catalog-filters.test.mjs",
     "test:deployment-runtime": "sh scripts/deployment-runtime.test.sh",
     "test:deployment-transport": "sh scripts/deployment-transport.test.sh",
+    "test:lint-config": "node --test scripts/eslint-config.test.mjs",
     "test:stripe-mode": "node --test scripts/stripe-test-mode.test.mjs",
     "typecheck": "tsc --noEmit"
   },
@@ -62,7 +68,7 @@
     "framer-motion": "^13.1.1",
     "geist": "^1.7.2",
     "libphonenumber-js": "^1.13.12",
-    "next": "^16.3.3",
+    "next": "16.3.8",
     "pg": "^8.23.0",
     "react": "^19.2.8",
     "react-chartjs-2": "^5.3.1",
@@ -81,8 +87,9 @@
     "@types/react-dom": "^19.2.5",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.3",
+    "eslint-config-next": "16.3.8",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "fast-glob": "file:tooling/next-eslint-glob",
     "postcss": "^8.5.26",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",

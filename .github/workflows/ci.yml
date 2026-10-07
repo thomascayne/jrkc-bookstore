@@ -91,6 +91,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test lint rules and directory discovery
+        run: npm run test:lint-config
+
       - name: Build
         env:
           NODE_ENV: production
