@@ -85,6 +85,9 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
+      - name: Test catalog fallback and presentation
+        run: npm run test:catalog
+
       - name: Lint
         run: npm run lint
 

@@ -1,38 +1,80 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
-import { fetchBooksByCategory, FilterOptions } from '@/utils/fetchBooksByCategory ';
+import {
+  fetchBooksByCategory,
+  FilterOptions,
+} from '@/utils/fetchBooksByCategory ';
 
 export const useBooksByCategory = (
   booksPerPage: number,
   categoryKey: string | null,
   filters: FilterOptions = {},
   page: number,
-  searchQuery: string
+  searchQuery: string,
 ) => {
   const queryClient = useQueryClient();
-  const queryKey = ['catalog-v2', categoryKey, booksPerPage, filters, page, searchQuery];
+  const queryKey = [
+    'catalog-v2',
+    categoryKey,
+    booksPerPage,
+    filters,
+    page,
+    searchQuery,
+  ];
 
   const query = useQuery({
     queryKey,
-    queryFn: () => fetchBooksByCategory(booksPerPage, categoryKey, filters, page, searchQuery),
+    queryFn: () =>
+      fetchBooksByCategory(
+        booksPerPage,
+        categoryKey,
+        filters,
+        page,
+        searchQuery,
+      ),
     refetchOnMount: 'always',
     staleTime: 60 * 1000,
   });
 
   const totalBooks = query.data?.totalBooks || 0;
-  const totalPages = useMemo(() => Math.ceil(totalBooks / booksPerPage), [totalBooks, booksPerPage]);
+  const totalPages = useMemo(
+    () => Math.ceil(totalBooks / booksPerPage),
+    [totalBooks, booksPerPage],
+  );
 
   const prefetchNextPage = useCallback(() => {
     if (page < totalPages) {
       const nextPage = page + 1;
-      const nextPageQueryKey = ['catalog-v2', categoryKey, booksPerPage, filters, nextPage, searchQuery];
+      const nextPageQueryKey = [
+        'catalog-v2',
+        categoryKey,
+        booksPerPage,
+        filters,
+        nextPage,
+        searchQuery,
+      ];
       queryClient.prefetchQuery({
         queryKey: nextPageQueryKey,
-        queryFn: () => fetchBooksByCategory(booksPerPage, categoryKey, filters, nextPage, searchQuery),
+        queryFn: () =>
+          fetchBooksByCategory(
+            booksPerPage,
+            categoryKey,
+            filters,
+            nextPage,
+            searchQuery,
+          ),
         staleTime: 5 * 60 * 1000, // 5 minutes
       });
     }
-  }, [page, totalPages, categoryKey, booksPerPage, filters, searchQuery, queryClient]);
+  }, [
+    page,
+    totalPages,
+    categoryKey,
+    booksPerPage,
+    filters,
+    searchQuery,
+    queryClient,
+  ]);
 
   return {
     category: query.data?.category || '',
@@ -41,6 +83,8 @@ export const useBooksByCategory = (
     isFetching: query.isFetching,
     isLoading: query.isLoading,
     prefetchNextPage,
+    refetch: query.refetch,
+    relatedSearch: query.data?.relatedSearch ?? false,
     totalBooks,
     totalPages,
   };

@@ -36,18 +36,17 @@ function secureImageUrl(imageUrl?: string) {
   return imageUrl?.replace(/^http:\/\//, 'https://') ?? '';
 }
 
-function categoryForVolume(volume: GoogleBook, requestedCategoryKey?: string) {
-  const requestedCategory = bookCategories.find(
-    (category) => category.key === requestedCategoryKey,
-  );
-  if (requestedCategory) return requestedCategory;
-
-  const googleCategory = volume.volumeInfo.categories?.[0]?.toLowerCase() ?? '';
-  return (
-    bookCategories.find((category) =>
-      googleCategory.includes(category.label.toLowerCase()),
-    ) ?? bookCategories.find((category) => category.key === 'fiction')!
-  );
+function categoryForVolume(volume: GoogleBook) {
+  const normalizeCategory = (value: string) =>
+    value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  for (const subject of volume.volumeInfo.categories ?? []) {
+    const category = bookCategories.find(
+      (candidate) =>
+        normalizeCategory(candidate.label) === normalizeCategory(subject),
+    );
+    if (category) return category;
+  }
+  return null;
 }
 
 function identifier(volume: GoogleBook, type: string) {
@@ -99,11 +98,9 @@ function commerceData(volume: GoogleBook) {
   };
 }
 
-function serializeGoogleBook(
-  volume: GoogleBook,
-  requestedCategoryKey?: string,
-): IBookInventory {
-  const category = categoryForVolume(volume, requestedCategoryKey);
+function serializeGoogleBook(volume: GoogleBook): IBookInventory {
+  const category = categoryForVolume(volume);
+  const categoryLabel = volume.volumeInfo.categories?.join(', ') ?? '';
   const commerce = commerceData(volume);
 
   return {
@@ -112,9 +109,9 @@ function serializeGoogleBook(
     average_rating: commerce.averageRating,
     catalog_source: 'google',
     category,
-    category_id_check: category.id,
-    category_label_check: category.label,
-    categoryId: category.id,
+    category_id_check: category?.id ?? 0,
+    category_label_check: categoryLabel,
+    categoryId: category?.id ?? 0,
     description: volume.volumeInfo.description ?? '',
     discount_percentage: commerce.discountPercentage,
     etag: volume.etag,
@@ -132,7 +129,7 @@ function serializeGoogleBook(
     quantity: commerce.quantity,
     ratings_count: commerce.ratingsCount,
     retail_price: commerce.retailPrice,
-    section: category.label,
+    section: categoryLabel,
     self_link: volume.selfLink,
     shelf: 'Online catalog',
     small_thumbnail_image_link: secureImageUrl(
@@ -146,14 +143,32 @@ function serializeGoogleBook(
   };
 }
 
-function googleSearchQuery(filters: CatalogFilters) {
+function googleSearchQuery(filters: CatalogFilters, categoryTerm?: string) {
   const searchTerms = [];
   if (filters.search) searchTerms.push(filters.search);
   if (filters.author) searchTerms.push(`inauthor:${filters.author}`);
-  if (filters.categoryKey && filters.categoryKey !== 'all') {
-    searchTerms.push(`subject:${filters.categoryKey.replaceAll('-', ' ')}`);
+  if (categoryTerm) searchTerms.push(categoryTerm);
+  return searchTerms.join(' ') || 'fiction';
+}
+
+function catalogSearchQueries(filters: CatalogFilters) {
+  if (!filters.categoryKey || filters.categoryKey === 'all') {
+    return filters.search || filters.author
+      ? [googleSearchQuery(filters)]
+      : ['subject:fiction', 'fiction'];
   }
-  return searchTerms.join(' ') || 'subject:fiction';
+
+  const categoryKeyTerm = filters.categoryKey.replaceAll('-', ' ');
+  const categoryLabel = bookCategories.find(
+    (category) => category.key === filters.categoryKey,
+  )?.label;
+  return Array.from(
+    new Set(
+      [`subject:${categoryKeyTerm}`, categoryKeyTerm, categoryLabel]
+        .filter((categoryTerm): categoryTerm is string => Boolean(categoryTerm))
+        .map((categoryTerm) => googleSearchQuery(filters, categoryTerm)),
+    ),
+  );
 }
 
 function filterAndSortBooks(books: IBookInventory[], filters: CatalogFilters) {
@@ -218,18 +233,33 @@ export async function fetchGoogleBook(bookId: string) {
 }
 
 export async function fetchGoogleCatalog(filters: CatalogFilters) {
-  const createCatalogRequestUrl = (startIndex: number) =>
+  const createCatalogRequestUrl = (startIndex: number, query: string) =>
     createGoogleBooksUrl('', {
       langRestrict: 'en',
       maxResults: catalogBatchSize,
       printType: 'books',
       projection: 'full',
-      q: googleSearchQuery(filters),
+      q: query,
       startIndex,
     });
-  const firstResponse = await getGoogleBooksResponse(
-    createCatalogRequestUrl(0),
-  );
+  const candidateQueries = catalogSearchQueries(filters);
+  let activeQuery = candidateQueries[0];
+  let firstResponse: GoogleBooksResponse | undefined;
+  let lastError: unknown;
+  for (const candidateQuery of candidateQueries) {
+    try {
+      const response = await getGoogleBooksResponse(
+        createCatalogRequestUrl(0, candidateQuery),
+      );
+      activeQuery = candidateQuery;
+      firstResponse = response;
+      if (response.items?.length) break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  // A valid empty response remains usable even if another query failed.
+  if (!firstResponse) throw lastError;
   const availableResults = Math.min(
     firstResponse.totalItems ?? firstResponse.items?.length ?? 0,
     maximumCatalogResults,
@@ -241,7 +271,10 @@ export async function fetchGoogleCatalog(filters: CatalogFilters) {
   const remainingResponses = await Promise.allSettled(
     Array.from({ length: batchCount - 1 }, (_, batchIndex) =>
       getGoogleBooksResponse(
-        createCatalogRequestUrl((batchIndex + 1) * catalogBatchSize),
+        createCatalogRequestUrl(
+          (batchIndex + 1) * catalogBatchSize,
+          activeQuery,
+        ),
       ),
     ),
   );
@@ -257,15 +290,18 @@ export async function fetchGoogleCatalog(filters: CatalogFilters) {
       uniqueVolumes.set(volume.id, volume);
   }
   const filteredBooks = filterAndSortBooks(
-    Array.from(uniqueVolumes.values()).map((volume) =>
-      serializeGoogleBook(volume, filters.categoryKey),
-    ),
+    Array.from(uniqueVolumes.values()).map(serializeGoogleBook),
     filters,
   );
   const startIndex = (filters.page - 1) * filters.pageSize;
 
   return {
     books: filteredBooks.slice(startIndex, startIndex + filters.pageSize),
+    relatedSearch: Boolean(
+      filters.categoryKey &&
+      filters.categoryKey !== 'all' &&
+      activeQuery !== candidateQueries[0],
+    ),
     totalBooks: filteredBooks.length,
   };
 }
